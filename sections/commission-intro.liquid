@@ -1,0 +1,77 @@
+<section class="commission-page commission-intro">
+  <div class="commission-intro__inner">
+    <div class="commission-intro__left">
+      {% if section.settings.step_number != blank %}
+        <p class="commission-intro__step-num" aria-hidden="true">{{ section.settings.step_number }}</p>
+      {% endif %}
+      {% if section.settings.title != blank %}
+        <h2 class="commission-intro__title">{{ section.settings.title | escape }}</h2>
+      {% endif %}
+      {% if section.settings.richtext != blank %}
+        <div class="commission-intro__richtext">
+          {{ section.settings.richtext }}
+        </div>
+      {% endif %}
+    </div>
+    <div class="commission-intro__right">
+      <ul class="commission-intro__bullets">
+        {% for block in section.blocks %}
+          {% if block.type == 'bullet' and block.settings.text != blank %}
+            <li>{{ block.settings.text | escape }}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Commission Intro",
+  "tag": "section",
+  "class": "section-commission-intro",
+  "settings": [
+    {
+      "type": "text",
+      "id": "step_number",
+      "label": "Step number (e.g. 02)"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "How It Works"
+    },
+    {
+      "type": "richtext",
+      "id": "richtext",
+      "label": "Copy",
+      "default": "<p>Each commission is a collaboration. Share your ideas, preferences, and timeline, and we'll guide you from concept to finished piece.</p>"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "bullet",
+      "name": "Bullet point",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission Intro",
+      "blocks": [
+        { "type": "bullet", "settings": { "text": "Precious metals: gold, platinum, silver" } },
+        { "type": "bullet", "settings": { "text": "Lead time typically 4–8 weeks" } },
+        { "type": "bullet", "settings": { "text": "Pricing based on design and materials" } },
+        { "type": "bullet", "settings": { "text": "Worldwide shipping available" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,75 @@
+<section class="commission-page commission-process">
+  <div class="commission-process__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="commission-process__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% assign step_blocks = section.blocks | where: 'type', 'step' %}
+    {% if step_blocks.size > 0 %}
+      <div class="commission-process__steps">
+        {% assign step_start = section.settings.step_start | default: 1 %}
+        {% for block in step_blocks %}
+          <div class="commission-process__step" {{ block.shopify_attributes }}>
+            {% assign step_num = step_start | plus: forloop.index0 %}<span class="commission-process__step-num" aria-hidden="true">{% if step_num < 10 %}0{% endif %}{{ step_num }}</span>
+            {% if block.settings.title != blank %}
+              <h3 class="commission-process__step-title">{{ block.settings.title | escape }}</h3>
+            {% endif %}
+            {% if block.settings.text != blank %}
+              <p class="commission-process__step-text">{{ block.settings.text | escape }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Commission Process",
+  "tag": "section",
+  "class": "section-commission-process",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "The Process"
+    },
+    {
+      "type": "number",
+      "id": "step_start",
+      "label": "First step number (e.g. 3 for 03, 04…)",
+      "default": 1
+    }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission Process",
+      "blocks": [
+        { "type": "step", "settings": { "title": "Consultation", "text": "Share your vision, budget, and timeline. We'll discuss materials and design direction." } },
+        { "type": "step", "settings": { "title": "Design", "text": "Sketches or 3D renders for your approval before any metal is cast." } },
+        { "type": "step", "settings": { "title": "Crafting", "text": "Your piece is made by hand in our workshop." } },
+        { "type": "step", "settings": { "title": "Delivery", "text": "Finishing, quality check, and secure shipping to you." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

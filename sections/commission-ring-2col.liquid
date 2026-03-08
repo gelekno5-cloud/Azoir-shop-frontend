@@ -1,0 +1,319 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+
+{% assign slide_blocks = section.blocks | where: 'type', 'slide' %}
+<section class="commission-page commission-two-col" id="commission-form">
+  <div class="commission-two-col__grid">
+    <aside class="commission-two-col__media">
+      <div class="commission-two-col__media-sticky">
+        <div class="commission-two-col__slideshow" data-slideshow>
+          {% if slide_blocks.size > 0 %}
+            {% if slide_blocks.size > 1 %}
+              <button type="button" class="commission-two-col__slideshow-nav commission-two-col__slideshow-nav--prev" data-slide-prev aria-label="Previous slide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button type="button" class="commission-two-col__slideshow-nav commission-two-col__slideshow-nav--next" data-slide-next aria-label="Next slide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            {% endif %}
+            {% for block in slide_blocks %}
+              <div class="commission-two-col__slide{% if forloop.first %} is-active{% endif %}" {{ block.shopify_attributes }}>
+                {% if block.settings.video != blank %}
+                  <div class="commission-two-col__slide-video">
+                    {% if block.settings.video.host == 'youtube' %}
+                      {{
+                        block.settings.video
+                        | external_video_url: autoplay: true, loop: true, playlist: block.settings.video.external_id, mute: '1', controls: false
+                        | external_video_tag: class: 'commission-two-col__video-embed'
+                      }}
+                    {% elsif block.settings.video.host == 'vimeo' %}
+                      {{
+                        block.settings.video
+                        | external_video_url: autoplay: true, loop: true, mute: '1', controls: false
+                        | external_video_tag: class: 'commission-two-col__video-embed'
+                      }}
+                    {% else %}
+                      {{
+                        block.settings.video
+                        | video_tag: image_size: '1200x', autoplay: true, loop: true, controls: false, muted: true, playsinline: true, class: 'commission-two-col__video-native'
+                      }}
+                    {% endif %}
+                  </div>
+                {% elsif block.settings.image != blank %}
+                  {% if forloop.first %}
+                  {{ block.settings.image | image_url: width: 1200 | image_tag: loading: 'eager', alt: block.settings.alt | default: 'Commission' | escape }}
+                {% else %}
+                  {{ block.settings.image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: block.settings.alt | default: 'Commission' | escape }}
+                {% endif %}
+                {% else %}
+                  <div class="commission-two-col__slide-placeholder"></div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="commission-two-col__slide is-active">
+              <div class="commission-two-col__slide-placeholder"></div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </aside>
+
+    <div class="commission-two-col__form">
+      <div class="commission-form__inner commission-rings-form__inner">
+        {% if section.settings.page_title != blank %}
+          <h1 class="commission-two-col__page-title">{{ section.settings.page_title | escape }}</h1>
+        {% endif %}
+        {% if section.settings.page_subtitle != blank %}
+          <p class="commission-two-col__page-subtitle">{{ section.settings.page_subtitle | escape }}</p>
+        {% endif %}
+        <p class="commission-rings-form__step-label"><span class="commission-rings-form__step-num">01</span></p>
+        <h2 class="commission-form__heading">{{ section.settings.heading | default: 'Defining Your Vision' | escape }}</h2>
+        <p class="commission-form__subheading commission-rings-form__timeline">Timeline: {{ section.settings.timeline | default: '1–2 days' | escape }}</p>
+        <p class="commission-form__subheading">{{ section.settings.subheading | default: 'Share your concept — the symbols, proportions, mood, references, or even just a rough direction.' | escape }}</p>
+
+        {% form 'contact', class: 'commission-form__form commission-rings-form__form' %}
+          {% if form.posted_successfully? %}
+            <div class="commission-form__message commission-form__message--success" role="status">
+              {{ section.settings.success_message | default: "Thank you. We'll be in touch within 1–2 business days." }}
+            </div>
+          {% endif %}
+          {% if form.errors %}
+            <div class="commission-form__message commission-form__message--error" role="alert">
+              {{ form.errors | default_errors }}
+            </div>
+          {% endif %}
+
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Describe Your Project</h3>
+            <div class="commission-form__row">
+              <label for="cr2c-describe" class="commission-form__label">{{ section.settings.label_describe | default: 'Describe your vision' | escape }}</label>
+              <textarea
+                id="cr2c-describe"
+                name="contact[notes]"
+                class="commission-form__textarea"
+                rows="4"
+                placeholder="{{ section.settings.placeholder_describe | default: 'I want a ring with...' }}"
+              >{{ form.notes }}</textarea>
+            </div>
+          </div>
+
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Upload Reference Photos</h3>
+            <div class="commission-form__row">
+              <label for="cr2c-reference" class="commission-form__label">{{ section.settings.label_reference | default: "Paste image links or we'll contact you for photos" | escape }}</label>
+              <input
+                type="text"
+                id="cr2c-reference"
+                name="contact[reference_links]"
+                class="commission-form__input"
+                placeholder="Google Drive, Dropbox, or image URLs"
+                value="{{ form.reference_links }}"
+              >
+              <p class="commission-form__upload-note">{{ section.settings.upload_note | default: "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." }}</p>
+            </div>
+          </div>
+
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Metal & Stones</h3>
+            <div class="commission-form__row">
+              <label for="cr2c-metal" class="commission-form__label commission-form__label--required">Select your preferred metal</label>
+              <select id="cr2c-metal" name="contact[metal]" class="commission-form__select" required>
+                <option value="">Select metal *</option>
+                <option value="Sterling Silver">Sterling Silver</option>
+                <option value="10K Yellow Gold">10K Yellow Gold</option>
+                <option value="10K White Gold">10K White Gold</option>
+                <option value="10K Rose Gold">10K Rose Gold</option>
+                <option value="14K Yellow Gold">14K Yellow Gold</option>
+                <option value="14K White Gold">14K White Gold</option>
+                <option value="14K Rose Gold">14K Rose Gold</option>
+                <option value="18K Yellow Gold">18K Yellow Gold</option>
+                <option value="18K White Gold">18K White Gold</option>
+                <option value="18K Rose Gold">18K Rose Gold</option>
+                <option value="Platinum">Platinum</option>
+                <option value="24K Yellow Gold">24K Yellow Gold</option>
+              </select>
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-stones" class="commission-form__label">Does your design contain any stones?</label>
+              <select id="cr2c-stones" name="contact[stones]" class="commission-form__select">
+                <option value="">Select</option>
+                <option value="No Stones">No Stones</option>
+                <option value="Lab-Grown Diamonds">Lab-Grown Diamonds</option>
+                <option value="Natural Diamonds">Natural Diamonds</option>
+                <option value="Other Stone">Other Stone</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Contact Info</h3>
+            <p class="commission-rings-form__section-desc">So we can reach out with your quote and any questions.</p>
+            <div class="commission-form__row">
+              <label for="cr2c-name" class="commission-form__label commission-form__label--required">Full name</label>
+              <input type="text" id="cr2c-name" name="contact[name]" class="commission-form__input" required autocomplete="name" value="{{ form.name }}">
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-email" class="commission-form__label commission-form__label--required">Email</label>
+              <input type="email" id="cr2c-email" name="contact[email]" class="commission-form__input" required autocomplete="email" value="{{ form.email }}">
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-country" class="commission-form__label">Country</label>
+              <input type="text" id="cr2c-country" name="contact[country]" class="commission-form__input" autocomplete="country-name" placeholder="e.g. United States" value="{{ form.country }}">
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-phone" class="commission-form__label">Phone</label>
+              <input type="tel" id="cr2c-phone" name="contact[phone]" class="commission-form__input" autocomplete="tel" value="{{ form.phone }}">
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-contact-method" class="commission-form__label">Preferred method of contact</label>
+              <select id="cr2c-contact-method" name="contact[contact_method]" class="commission-form__select">
+                <option value="">Select</option>
+                <option value="By Email">By Email</option>
+                <option value="By Text Message">By Text Message</option>
+                <option value="By WhatsApp">By WhatsApp</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="commission-rings-form__pricing">
+            <div class="commission-rings-form__pricing-row commission-rings-form__pricing-row--total">
+              <span class="commission-rings-form__pricing-label">Estimated Total</span>
+              <span class="commission-rings-form__pricing-value">from {{ section.settings.price_total | default: '$570' }}</span>
+            </div>
+            <p class="commission-rings-form__pricing-note">Actual cost may vary based on materials and complexity</p>
+            <div class="commission-rings-form__pricing-row">
+              <span class="commission-rings-form__pricing-label">Design fee</span>
+              <span class="commission-rings-form__pricing-value">{{ section.settings.price_design | default: '$29' }} – {{ section.settings.price_design_alt | default: '$89' }}</span>
+            </div>
+            <div class="commission-rings-form__pricing-row">
+              <span class="commission-rings-form__pricing-label">3D Modeling + Production</span>
+              <span class="commission-rings-form__pricing-value">from {{ section.settings.price_production | default: '$541' }}</span>
+            </div>
+            <div class="commission-rings-form__pricing-row">
+              <span class="commission-rings-form__pricing-label">Shipping</span>
+              <span class="commission-rings-form__pricing-value">{{ section.settings.shipping_label | default: 'Free' }}</span>
+            </div>
+            <p class="commission-rings-form__pricing-footer">{{ section.settings.pricing_footer | default: "You only pay the design fee to begin. Production costs are quoted individually and split into two payments. Shipping is always free." }}</p>
+          </div>
+
+          <input type="hidden" name="contact[form_type]" value="commission_rings">
+          <input type="hidden" name="contact[body]" id="cr2c-body-combined" value="">
+          <button type="submit" class="commission-btn commission-btn--primary commission-form__submit commission-rings-form__submit">
+            {{ section.settings.submit_label | default: 'Submit for Review' }}
+          </button>
+        {% endform %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var form = document.querySelector('.commission-two-col .commission-rings-form__form');
+  var bodyInput = document.getElementById('cr2c-body-combined');
+  if (form && bodyInput) {
+    form.addEventListener('submit', function () {
+      var parts = [];
+      var describe = form.querySelector('[name="contact[notes]"]');
+      var reference = form.querySelector('[name="contact[reference_links]"]');
+      var metal = form.querySelector('[name="contact[metal]"]');
+      var stones = form.querySelector('[name="contact[stones]"]');
+      var country = form.querySelector('[name="contact[country]"]');
+      var phone = form.querySelector('[name="contact[phone]"]');
+      var method = form.querySelector('[name="contact[contact_method]"]');
+      if (describe && describe.value) parts.push('Project: ' + describe.value);
+      if (reference && reference.value) parts.push('Reference links: ' + reference.value);
+      if (metal && metal.value) parts.push('Metal: ' + metal.value);
+      if (stones && stones.value) parts.push('Stones: ' + stones.value);
+      if (country && country.value) parts.push('Country: ' + country.value);
+      if (phone && phone.value) parts.push('Phone: ' + phone.value);
+      if (method && method.value) parts.push('Contact method: ' + method.value);
+      bodyInput.value = parts.join('\n\n');
+    });
+  }
+
+  var slideshow = document.querySelector('[data-slideshow]');
+  if (!slideshow) return;
+  var slides = slideshow.querySelectorAll('.commission-two-col__slide');
+  var dots = slideshow.querySelectorAll('.commission-two-col__dot');
+  if (slides.length < 2) return;
+
+  function goTo(index) {
+    var i = ((index % slides.length) + slides.length) % slides.length;
+    slides.forEach(function (s, n) { s.classList.toggle('is-active', n === i); });
+    dots.forEach(function (d, n) { d.classList.toggle('is-active', n === i); });
+  }
+
+  dots.forEach(function (dot, i) {
+    dot.addEventListener('click', function () { goTo(i); });
+  });
+
+  var prevBtn = slideshow.querySelector('[data-slide-prev]');
+  var nextBtn = slideshow.querySelector('[data-slide-next]');
+  if (prevBtn) prevBtn.addEventListener('click', function () { current = (current - 1 + slides.length) % slides.length; goTo(current); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { current = (current + 1) % slides.length; goTo(current); });
+
+  var current = 0;
+  var autoplay = setInterval(function () { current = (current + 1) % slides.length; goTo(current); }, 5000);
+  slideshow.addEventListener('mouseenter', function () { clearInterval(autoplay); });
+
+  // Keep native videos playing (no pause), no controls
+  slideshow.querySelectorAll('.commission-two-col__video-native').forEach(function (video) {
+    video.controls = false;
+    video.muted = true;
+    video.playsInline = true;
+    video.addEventListener('pause', function () { video.play(); });
+    video.addEventListener('click', function (e) { e.preventDefault(); video.play(); });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Ring: Two column",
+  "tag": "section",
+  "class": "section-commission-ring-two-column",
+  "settings": [
+    { "type": "header", "content": "Page title" },
+    { "type": "text", "id": "page_title", "label": "Title", "default": "Commission a Ring" },
+    { "type": "text", "id": "page_subtitle", "label": "Subtitle", "default": "Share your vision for a bespoke ring, handcrafted in Italy." },
+    { "type": "header", "content": "Form content" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Defining Your Vision" },
+    { "type": "text", "id": "timeline", "label": "Timeline", "default": "1–2 days" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Share your concept — the symbols, proportions, mood, references, or even just a rough direction. We carefully study everything you provide to translate it into a clear creative direction." },
+    { "type": "text", "id": "label_describe", "label": "Describe label", "default": "Describe your vision" },
+    { "type": "text", "id": "placeholder_describe", "label": "Describe placeholder", "default": "I want a ring with..." },
+    { "type": "text", "id": "label_reference", "label": "Reference label", "default": "Paste image links or we'll contact you for photos" },
+    { "type": "textarea", "id": "upload_note", "label": "Upload note", "default": "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." },
+    { "type": "text", "id": "price_total", "label": "Estimated total", "default": "$570" },
+    { "type": "text", "id": "price_design", "label": "Design fee low", "default": "$29" },
+    { "type": "text", "id": "price_design_alt", "label": "Design fee high", "default": "$89" },
+    { "type": "text", "id": "price_production", "label": "Production from", "default": "$541" },
+    { "type": "text", "id": "shipping_label", "label": "Shipping label", "default": "Free" },
+    { "type": "textarea", "id": "pricing_footer", "label": "Pricing footer text", "default": "You only pay the design fee to begin. Production costs are quoted individually and split into two payments. Shipping is always free." },
+    { "type": "text", "id": "submit_label", "label": "Submit button", "default": "Submit for Review" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Thank you. We'll be in touch within 1–2 business days." }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide (image or video)",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "video", "id": "video", "label": "Video" },
+        { "type": "text", "id": "alt", "label": "Alt text" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Ring: Two column",
+      "blocks": [
+        { "type": "slide" },
+        { "type": "slide" },
+        { "type": "slide" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,769 @@
+{% doc %}
+  @prompt
+    Multicolumn
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-multicolumn-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+    padding: {{ block.settings.section_padding_top }}px 0 {{ block.settings.section_padding_bottom }}px;
+  }
+
+  .ai-multicolumn-container-{{ ai_gen_id }} {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-multicolumn-header-{{ ai_gen_id }} {
+    text-align: {{ block.settings.heading_alignment }};
+    margin-bottom: {{ block.settings.heading_spacing }}px;
+  }
+
+  .ai-multicolumn-heading-{{ ai_gen_id }} {
+    margin: 0 0 12px;
+    color: {{ block.settings.heading_color }};
+    font-size: {{ block.settings.heading_size }}px;
+  }
+
+  .ai-multicolumn-subheading-{{ ai_gen_id }} {
+    margin: 0;
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.subheading_size }}px;
+    line-height: 1.6;
+  }
+
+  .ai-multicolumn-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+    gap: {{ block.settings.column_gap }}px;
+    margin-bottom: {{ block.settings.button_spacing }}px;
+  }
+
+  .ai-multicolumn-item-{{ ai_gen_id }} {
+    text-align: {{ block.settings.content_alignment }};
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ai-multicolumn-image-wrapper-{{ ai_gen_id }} {
+    width: 100%;
+    margin: 0 auto;
+    max-width: {{ block.settings.image_width }}px;
+  }
+
+  .ai-multicolumn-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: {{ block.settings.image_border_radius }}px;
+  }
+
+  .ai-multicolumn-image-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    aspect-ratio: 1;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: {{ block.settings.image_border_radius }}px;
+  }
+
+  .ai-multicolumn-image-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .ai-multicolumn-icon-{{ ai_gen_id }} {
+    font-size: {{ block.settings.icon_size }}px;
+    line-height: 1;
+    color: {{ block.settings.icon_color }};
+  }
+
+  .ai-multicolumn-item-heading-{{ ai_gen_id }} {
+    margin: 0;
+    color: {{ block.settings.heading_color }};
+    font-size: {{ block.settings.item_heading_size }}px;
+    font-weight: 600;
+  }
+
+  .ai-multicolumn-item-text-{{ ai_gen_id }} {
+    margin: 0;
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.item_text_size }}px;
+    line-height: 1.6;
+  }
+
+  .ai-multicolumn-button-wrapper-{{ ai_gen_id }} {
+    text-align: {{ block.settings.button_alignment }};
+  }
+
+  .ai-multicolumn-button-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 14px 32px;
+    background-color: {{ block.settings.button_background }};
+    color: {{ block.settings.button_text_color }};
+    text-decoration: none;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: {{ block.settings.button_border_width }}px solid {{ block.settings.button_border_color }};
+  }
+
+  .ai-multicolumn-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_background }};
+    color: {{ block.settings.button_hover_text_color }};
+    border-color: {{ block.settings.button_hover_border_color }};
+  }
+
+  @media screen and (max-width: 989px) {
+    .ai-multicolumn-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_tablet }}, 1fr);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-multicolumn-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);
+      gap: {{ block.settings.column_gap | times: 0.75 }}px;
+    }
+
+    .ai-multicolumn-heading-{{ ai_gen_id }} {
+      font-size: {{ block.settings.heading_size | times: 0.7 }}px;
+    }
+
+    .ai-multicolumn-item-heading-{{ ai_gen_id }} {
+      font-size: {{ block.settings.item_heading_size | times: 0.85 }}px;
+    }
+  }
+{% endstyle %}
+
+<multicolumn-block-{{ ai_gen_id }} class="ai-multicolumn-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-multicolumn-container-{{ ai_gen_id }}">
+    {% if block.settings.heading != blank or block.settings.subheading != blank %}
+      <div class="ai-multicolumn-header-{{ ai_gen_id }}">
+        {% if block.settings.heading != blank %}
+          <h2 class="ai-multicolumn-heading-{{ ai_gen_id }}">{{ block.settings.heading }}</h2>
+        {% endif %}
+        {% if block.settings.subheading != blank %}
+          <div class="ai-multicolumn-subheading-{{ ai_gen_id }}">{{ block.settings.subheading }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="ai-multicolumn-grid-{{ ai_gen_id }}">
+      {% for i in (1..6) %}
+        {% liquid
+          assign image_key = 'column_' | append: i | append: '_image'
+          assign icon_key = 'column_' | append: i | append: '_icon'
+          assign heading_key = 'column_' | append: i | append: '_heading'
+          assign text_key = 'column_' | append: i | append: '_text'
+          
+          assign column_image = block.settings[image_key]
+          assign column_icon = block.settings[icon_key]
+          assign column_heading = block.settings[heading_key]
+          assign column_text = block.settings[text_key]
+        %}
+
+        {% if column_heading != blank or column_text != blank or column_image != blank or column_icon != blank %}
+          <div class="ai-multicolumn-item-{{ ai_gen_id }}">
+            {% if block.settings.media_type == 'image' %}
+              <div class="ai-multicolumn-image-wrapper-{{ ai_gen_id }}">
+                {% if column_image != blank %}
+                  <img
+                    src="{{ column_image | image_url: width: 600 }}"
+                    alt="{{ column_image.alt | escape }}"
+                    loading="lazy"
+                    width="{{ column_image.width }}"
+                    height="{{ column_image.height }}"
+                    class="ai-multicolumn-image-{{ ai_gen_id }}"
+                  >
+                {% else %}
+                  <div class="ai-multicolumn-image-placeholder-{{ ai_gen_id }}">
+                    {{ 'image' | placeholder_svg_tag }}
+                  </div>
+                {% endif %}
+              </div>
+            {% elsif block.settings.media_type == 'icon' and column_icon != blank %}
+              <div class="ai-multicolumn-icon-{{ ai_gen_id }}">
+                {{ column_icon }}
+              </div>
+            {% endif %}
+
+            {% if column_heading != blank %}
+              <h3 class="ai-multicolumn-item-heading-{{ ai_gen_id }}">{{ column_heading }}</h3>
+            {% endif %}
+
+            {% if column_text != blank %}
+              <div class="ai-multicolumn-item-text-{{ ai_gen_id }}">{{ column_text }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if block.settings.button_label != blank %}
+      <div class="ai-multicolumn-button-wrapper-{{ ai_gen_id }}">
+        <a href="{{ block.settings.button_link }}" class="ai-multicolumn-button-{{ ai_gen_id }}">
+          {{ block.settings.button_label }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</multicolumn-block-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class MulticolumnBlock{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        this.style.display = 'block';
+      }
+    }
+
+    customElements.define('multicolumn-block-{{ ai_gen_id }}', MulticolumnBlock{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Multicolumn",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section heading"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Why choose us"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "<p>Discover the benefits of working with our luxury jewelry manufacturing team</p>"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "min": 16,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "subheading_size",
+      "label": "Subheading size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "heading_spacing",
+      "label": "Heading spacing",
+      "min": 20,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "label": "Columns on tablet",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Column gap",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "select",
+      "id": "media_type",
+      "label": "Media type",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "image",
+          "label": "Image"
+        },
+        {
+          "value": "icon",
+          "label": "Icon"
+        }
+      ],
+      "default": "image"
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "label": "Image width",
+      "min": 50,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "default": 200
+    },
+    {
+      "type": "range",
+      "id": "image_border_radius",
+      "label": "Image border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Icon size",
+      "min": 20,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "header",
+      "content": "Column 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_1_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_1_icon",
+      "label": "Icon",
+      "default": "✦"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_1_heading",
+      "label": "Heading",
+      "default": "Expert craftsmanship"
+    },
+    {
+      "type": "richtext",
+      "id": "column_1_text",
+      "label": "Text",
+      "default": "<p>Over 20 years of luxury jewelry manufacturing experience</p>"
+    },
+    {
+      "type": "header",
+      "content": "Column 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_2_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_2_icon",
+      "label": "Icon",
+      "default": "◆"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_2_heading",
+      "label": "Heading",
+      "default": "Custom design"
+    },
+    {
+      "type": "richtext",
+      "id": "column_2_text",
+      "label": "Text",
+      "default": "<p>Bespoke pieces tailored to your exact specifications</p>"
+    },
+    {
+      "type": "header",
+      "content": "Column 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_3_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_3_icon",
+      "label": "Icon",
+      "default": "★"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_3_heading",
+      "label": "Heading",
+      "default": "Wholesale pricing"
+    },
+    {
+      "type": "richtext",
+      "id": "column_3_text",
+      "label": "Text",
+      "default": "<p>Competitive rates for bulk orders and trade partners</p>"
+    },
+    {
+      "type": "header",
+      "content": "Column 4"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_4_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_4_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_4_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "column_4_text",
+      "label": "Text"
+    },
+    {
+      "type": "header",
+      "content": "Column 5"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_5_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_5_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_5_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "column_5_text",
+      "label": "Text"
+    },
+    {
+      "type": "header",
+      "content": "Column 6"
+    },
+    {
+      "type": "image_picker",
+      "id": "column_6_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "column_6_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "column_6_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "column_6_text",
+      "label": "Text"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "item_heading_size",
+      "label": "Item heading size",
+      "min": 14,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "item_text_size",
+      "label": "Item text size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "button_alignment",
+      "label": "Button alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "button_spacing",
+      "label": "Button spacing",
+      "min": 20,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "button_border_width",
+      "label": "Button border width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "default": 1
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Button border",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background",
+      "label": "Button hover background",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button hover text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_border_color",
+      "label": "Button hover border",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "Multicolumn"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,104 @@
+{% layout 'theme' %}
+
+<div class="bz-commission bz-enter">
+  <div class="page-width bz-commission__grid">
+
+    <!-- LEFT: Sticky media -->
+    <div class="bz-commission__media">
+      <div class="bz-commission__mediaSticky bz-reveal">
+        <!-- Replace with your own image/video -->
+        <div class="bz-mediaCard">
+          <img
+            src="{{ 'commission-hero.jpg' | asset_url }}"
+            alt="Azoir commission"
+            loading="eager"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Content -->
+    <div class="bz-commission__right">
+
+      <div class="bz-pill bz-reveal">
+        <div class="bz-pill__top">200+ Handcrafted Custom Pieces</div>
+        <div class="bz-pill__sub">Trusted by collectors worldwide</div>
+      </div>
+
+      <h1 class="bz-h1 bz-reveal">Commission</h1>
+      <p class="bz-sub bz-reveal">Select the direction of your commission.</p>
+
+      <!-- OPTION BOXES (link to individual pages) -->
+      <div class="bz-options bz-reveal">
+      <a class="bz-option" href="/pages/commission-ring">
+          <div>
+            <div class="bz-option__title">Rings</div>
+            <div class="bz-option__meta">Start your ring</div>
+          </div>
+          <div class="bz-option__cta">DESIGN RING →</div>
+        </a>
+
+        <a class="bz-option" href="/pages/commission-pendant">
+          <div>
+            <div class="bz-option__title">Pendants</div>
+            <div class="bz-option__meta">Start your pendant</div>
+          </div>
+          <div class="bz-option__cta">DESIGN PENDANT →</div>
+        </a>
+
+        <a class="bz-option" href="/pages/commission-necklace">
+          <div>
+            <div class="bz-option__title">Necklaces</div>
+            <div class="bz-option__meta">Start your necklace</div>
+          </div>
+          <div class="bz-option__cta">DESIGN NECKLACE →</div>
+        </a>
+
+        <a class="bz-option" href="/pages/commission-bracelet">
+          <div>
+            <div class="bz-option__title">Bracelets</div>
+            <div class="bz-option__meta">Start your bracelet</div>
+          </div>
+          <div class="bz-option__cta">DESIGN BRACELET →</div>
+        </a>
+
+        <a class="bz-option bz-option--dark" href="/pages/custom-inquiry">
+          <div>
+            <div class="bz-option__title">Custom Inquiry</div>
+            <div class="bz-option__meta">For complex or stone-set designs</div>
+          </div>
+          <div class="bz-option__cta">SUBMIT INQUIRY →</div>
+        </a>
+      </div>
+
+      <!-- OPTIONAL: embed your form for the hub page
+           (or keep the hub as links only) -->
+      {%- if page.content != blank -%}
+        <div class="bz-formWrap bz-reveal">
+          {{ page.content }}
+        </div>
+      {%- endif -%}
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Page-load entrance
+  document.documentElement.classList.add('bz-js');
+
+  // Scroll reveal animation (like Bertel feel)
+  const els = document.querySelectorAll('.bz-reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  els.forEach(el => io.observe(el));
+})();
+</script>

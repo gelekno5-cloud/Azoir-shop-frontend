@@ -1,0 +1,48 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+
+<section class="commission-page commission-rings-info">
+  <div class="commission-rings-info__inner">
+    {% for block in section.blocks %}
+      {% case block.type %}
+        {% when 'item' %}
+          <div class="commission-rings-info__item" {{ block.shopify_attributes }}>
+            <h3 class="commission-rings-info__title">{{ block.settings.title | escape }}</h3>
+            {% if block.settings.content != blank %}
+              <div class="commission-rings-info__content">
+                {{ block.settings.content }}
+              </div>
+            {% endif %}
+          </div>
+      {% endcase %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Commission Rings Info",
+  "tag": "section",
+  "class": "section-commission-rings-info",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Info block",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "richtext", "id": "content", "label": "Content" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission Rings Info",
+      "blocks": [
+        { "type": "item", "settings": { "title": "Shipping and Returns", "content": "<p>Your piece is carefully packaged and insured for delivery. Shipping is free. Contact us for return policy details.</p>" } },
+        { "type": "item", "settings": { "title": "Dimensions", "content": "<p>Final dimensions depend on your design and ring size. We'll confirm all details before production.</p>" } },
+        { "type": "item", "settings": { "title": "Materials", "content": "<p>We work with sterling silver, gold (10K–24K), platinum, and quality stones. All materials are sourced with care.</p>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

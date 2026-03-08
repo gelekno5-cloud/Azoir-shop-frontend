@@ -1,0 +1,153 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+
+{% assign hero_alt = section.settings.title | escape %}
+<section class="commission-page commission-hero" id="commission-hero">
+  <div class="commission-hero__media commission-hero__media--desktop">
+    {% if section.settings.image_desktop != blank %}
+      {{ section.settings.image_desktop | image_url: width: 1600 | image_tag: loading: 'eager', alt: hero_alt }}
+    {% else %}
+      <div style="width:100%;height:100%;background:linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);"></div>
+    {% endif %}
+  </div>
+  <div class="commission-hero__media commission-hero__media--mobile">
+    {% if section.settings.image_mobile != blank %}
+      {{ section.settings.image_mobile | image_url: width: 800 | image_tag: loading: 'eager', alt: hero_alt }}
+    {% elsif section.settings.image_desktop != blank %}
+      {{ section.settings.image_desktop | image_url: width: 800 | image_tag: loading: 'eager', alt: hero_alt }}
+    {% else %}
+      <div style="width:100%;height:100%;background:linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);"></div>
+    {% endif %}
+  </div>
+  <div
+    class="commission-hero__overlay"
+    style="opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};"
+    aria-hidden="true"
+  ></div>
+  <div class="commission-hero__content">
+    {% if section.settings.badge_line_1 != blank or section.settings.badge_line_2 != blank %}
+      <div class="commission-hero__badge">
+        {% if section.settings.badge_line_1 != blank %}<span>{{ section.settings.badge_line_1 | escape }}</span>{% endif %}
+        {% if section.settings.badge_line_2 != blank %}<small>{{ section.settings.badge_line_2 | escape }}</small>{% endif %}
+      </div>
+    {% endif %}
+    <h1 class="commission-hero__title">{{ section.settings.title | escape }}</h1>
+    {% if section.settings.subtitle != blank %}
+      <p class="commission-hero__subtitle">{{ section.settings.subtitle | escape }}</p>
+    {% endif %}
+    <div class="commission-hero__ctas">
+      <a href="#commission-form" class="commission-btn commission-btn--primary">
+        {{ section.settings.cta_label | default: 'Request a Commission' }}
+      </a>
+      {% if section.settings.cta_secondary_label != blank %}
+        {% if section.settings.cta_secondary_scroll == true %}
+          <a href="{{ section.settings.cta_secondary_link | default: '#commission-gallery' }}" class="commission-btn commission-btn--secondary">
+            {{ section.settings.cta_secondary_label }}
+          </a>
+        {% elsif section.settings.cta_secondary_link != blank %}
+          <a href="{{ section.settings.cta_secondary_link }}" class="commission-btn commission-btn--secondary" target="_blank" rel="noopener">
+            {{ section.settings.cta_secondary_label }}
+          </a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Commission Hero",
+  "tag": "section",
+  "class": "section-commission-hero",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Images"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_desktop",
+      "label": "Hero image (desktop)"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Hero image (mobile)",
+      "info": "Optional. Falls back to desktop image."
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Overlay opacity",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "badge_line_1",
+      "label": "Badge line 1"
+    },
+    {
+      "type": "text",
+      "id": "badge_line_2",
+      "label": "Badge line 2"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Headline",
+      "default": "Commission a Ring"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subheadline",
+      "default": "Bespoke pieces crafted to your vision"
+    },
+    {
+      "type": "header",
+      "content": "Primary CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Button label",
+      "default": "Request a Commission",
+      "info": "Scrolls to commission form (#commission-form)."
+    },
+    {
+      "type": "header",
+      "content": "Secondary CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_secondary_label",
+      "label": "Secondary button label",
+      "default": "View Examples"
+    },
+    {
+      "type": "url",
+      "id": "cta_secondary_link",
+      "label": "Secondary button link",
+      "info": "Leave blank to scroll to gallery."
+    },
+    {
+      "type": "checkbox",
+      "id": "cta_secondary_scroll",
+      "label": "Secondary CTA scrolls to gallery",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission Hero"
+    }
+  ]
+}
+{% endschema %}

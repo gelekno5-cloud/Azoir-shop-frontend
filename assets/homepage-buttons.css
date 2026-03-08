@@ -1,0 +1,28 @@
+/* Both buttons: match NYC Handcrafted text style - body font, bold */
+a.button[href*="start-your-piece"],
+a.button[href*="get-a-quote"] {
+  font-family: var(--font-body--family) !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+}
+
+/* Start Your Custom Piece: add outline when white on hover */
+a.button[href*="start-your-piece"]:hover {
+  border: 0.5px solid rgba(10, 10, 10, 0.5) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(10, 10, 10, 0.5) !important;
+}
+
+/* Get a Consultation button: white bg, black text, black border */
+a.button[href*="get-a-quote"] {
+  background-color: #fff !important;
+  color: #0a0a0a !important;
+  border: 0.5px solid rgba(10, 10, 10, 0.5) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(10, 10, 10, 0.5) !important;
+}
+
+a.button[href*="get-a-quote"]:hover {
+  background-color: #fff !important;
+  color: #0a0a0a !important;
+  border: 0.5px solid rgba(10, 10, 10, 0.5) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(10, 10, 10, 0.5) !important;
+}

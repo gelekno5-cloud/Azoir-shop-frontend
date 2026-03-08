@@ -1,0 +1,173 @@
+{
+  "sections": {
+    "dr_two_col": {
+      "type": "commission-ring-2col",
+      "blocks": {
+        "slide_1": { "type": "slide", "settings": {} },
+        "slide_2": { "type": "slide", "settings": {} },
+        "slide_3": { "type": "slide", "settings": {} }
+      },
+      "block_order": ["slide_1", "slide_2", "slide_3"],
+      "settings": {
+        "page_title": "Commission a Ring",
+        "page_subtitle": "Share your vision for a bespoke ring, handcrafted in Italy.",
+        "heading": "Defining Your Vision",
+        "timeline": "1–2 days",
+        "subheading": "Share your concept — the symbols, proportions, mood, references, or even just a rough direction. We carefully study everything you provide to translate it into a clear creative direction.",
+        "price_total": "$570",
+        "price_design": "$29",
+        "price_design_alt": "$89",
+        "price_production": "$541",
+        "submit_label": "Submit for Review"
+      }
+    },
+    "dr_intro": {
+      "type": "commission-intro",
+      "settings": {
+        "step_number": "02",
+        "title": "What Happens Next",
+        "richtext": "<p>After you submit, here is how your piece comes to life.</p>"
+      }
+    },
+    "dr_process": {
+      "type": "commission-process",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "title": "Design Concept Development",
+            "text": "2–4 days. Design fee $29–$89. Our master jeweler creates three original design concepts based on your vision. You'll receive a refined digital visualization. Revisions included."
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "title": "Precision 3D Modeling",
+            "text": "2–4 days. Quoted. 50% deposit before modeling begins. A detailed digital model is built. You'll receive an interactive 3D preview to examine from every angle."
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "title": "Handcrafted Production in Italy",
+            "text": "10–15 days. Quoted. Remaining 50% before production. Experienced artisans bring your piece to life. Every detail inspected before completion."
+          }
+        },
+        "step_4": {
+          "type": "step",
+          "settings": {
+            "title": "Secure Worldwide Delivery",
+            "text": "5–10 business days. Free. Insured & tracked worldwide. Your piece is carefully packaged in our branded presentation box."
+          }
+        }
+      },
+      "block_order": [
+        "step_1",
+        "step_2",
+        "step_3",
+        "step_4"
+      ],
+      "settings": {
+        "heading": "",
+        "step_start": 3
+      }
+    },
+    "dr_info": {
+      "type": "commission-rings-info",
+      "blocks": {
+        "shipping": {
+          "type": "item",
+          "settings": {
+            "title": "Shipping and Returns",
+            "content": "<p>Your piece is carefully packaged and insured for delivery. Shipping is free. Contact us for return policy details.</p>"
+          }
+        },
+        "dimensions": {
+          "type": "item",
+          "settings": {
+            "title": "Dimensions",
+            "content": "<p>Final dimensions depend on your design and ring size. We'll confirm all details before production.</p>"
+          }
+        },
+        "materials": {
+          "type": "item",
+          "settings": {
+            "title": "Materials",
+            "content": "<p>We work with sterling silver, gold (10K–24K), platinum, and quality stones. All materials are sourced with care.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "shipping",
+        "dimensions",
+        "materials"
+      ],
+      "settings": {}
+    },
+    "dr_faq": {
+      "type": "commission-faq",
+      "blocks": {
+        "faq_1": {
+          "type": "item",
+          "settings": {
+            "question": "How long does a custom piece take?",
+            "answer": "<p>From concept to delivery, typically 3–6 weeks depending on complexity and revisions.</p>"
+          }
+        },
+        "faq_2": {
+          "type": "item",
+          "settings": {
+            "question": "Can I send reference images?",
+            "answer": "<p>Yes. Paste links to your images in the form (e.g. Google Drive, Dropbox), or we'll contact you to request references.</p>"
+          }
+        },
+        "faq_3": {
+          "type": "item",
+          "settings": {
+            "question": "What materials do you work with?",
+            "answer": "<p>Sterling silver, 10K–24K gold (yellow, white, rose), platinum, and quality stones including lab-grown and natural diamonds.</p>"
+          }
+        },
+        "faq_4": {
+          "type": "item",
+          "settings": {
+            "question": "Is there a minimum budget?",
+            "answer": "<p>Rings start around $570. We'll provide a detailed quote after reviewing your vision.</p>"
+          }
+        },
+        "faq_5": {
+          "type": "item",
+          "settings": {
+            "question": "Where are pieces made?",
+            "answer": "<p>Our pieces are handcrafted by experienced artisans. We work with trusted workshops to ensure quality and ethical sourcing.</p>"
+          }
+        },
+        "faq_6": {
+          "type": "item",
+          "settings": {
+            "question": "Are all sales final?",
+            "answer": "<p>Custom commissions are made to your specifications. Contact us for our return and revision policy.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "faq_1",
+        "faq_2",
+        "faq_3",
+        "faq_4",
+        "faq_5",
+        "faq_6"
+      ],
+      "settings": {
+        "heading": "Frequently Asked Questions"
+      }
+    }
+  },
+  "order": [
+    "dr_two_col",
+    "dr_intro",
+    "dr_process",
+    "dr_info",
+    "dr_faq"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "start_your_piece": {
+      "type": "start-your-piece",
+      "settings": {}
+    }
+  },
+  "order": [
+    "start_your_piece"
+  ]
+}

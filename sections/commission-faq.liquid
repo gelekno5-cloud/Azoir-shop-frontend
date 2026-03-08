@@ -1,0 +1,116 @@
+<section class="commission-page commission-faq">
+  <div class="commission-faq__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="commission-faq__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% assign faq_blocks = section.blocks | where: 'type', 'item' %}
+    {% if faq_blocks.size > 0 %}
+      <div class="commission-faq__list">
+        {% for block in faq_blocks %}
+          {% if block.settings.question != blank %}
+            <div class="commission-faq__item" {{ block.shopify_attributes }}>
+              <h3 class="commission-faq__item-heading">
+                <button
+                  type="button"
+                  class="commission-faq__trigger"
+                  aria-expanded="false"
+                  aria-controls="commission-faq-panel-{{ section.id }}-{{ block.id }}"
+                  id="commission-faq-trigger-{{ section.id }}-{{ block.id }}"
+                  data-faq-trigger
+                >
+                  <span>{{ block.settings.question | escape }}</span>
+                  <span class="commission-faq__icon" aria-hidden="true"></span>
+                </button>
+              </h3>
+              <div
+                class="commission-faq__panel"
+                id="commission-faq-panel-{{ section.id }}-{{ block.id }}"
+                role="region"
+                aria-labelledby="commission-faq-trigger-{{ section.id }}-{{ block.id }}"
+                aria-hidden="true"
+                hidden
+              >
+                <div class="commission-faq__panel-inner">
+                <div class="commission-faq__content">
+                  {% if block.settings.answer != blank %}
+                    {{ block.settings.answer }}
+                  {% endif %}
+                </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function () {
+  var triggers = document.querySelectorAll('.commission-faq [data-faq-trigger]');
+  triggers.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var expanded = this.getAttribute('aria-expanded') === 'true';
+      var panel = document.getElementById(this.getAttribute('aria-controls'));
+      if (!panel) return;
+      this.setAttribute('aria-expanded', !expanded);
+      panel.setAttribute('aria-hidden', expanded);
+      if (expanded) {
+        panel.classList.remove('is-open');
+        panel.addEventListener('transitionend', function onEnd() {
+          panel.removeEventListener('transitionend', onEnd);
+          panel.hidden = true;
+        }, { once: true });
+      } else {
+        panel.hidden = false;
+        requestAnimationFrame(function () { panel.classList.add('is-open'); });
+      }
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Commission FAQ",
+  "tag": "section",
+  "class": "section-commission-faq",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Frequently Asked Questions"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "FAQ item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission FAQ",
+      "blocks": [
+        { "type": "item", "settings": { "question": "How long does a commission take?", "answer": "<p>Typically 4–8 weeks from design approval to completion, depending on complexity.</p>" } },
+        { "type": "item", "settings": { "question": "Do you work with my own stones?", "answer": "<p>Yes. We can set your existing stones into a new design. Bring or ship them to us for assessment.</p>" } },
+        { "type": "item", "settings": { "question": "What is the typical price range?", "answer": "<p>Rings vary widely by design and materials. We'll provide an estimate after the initial consultation.</p>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

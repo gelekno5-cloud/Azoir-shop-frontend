@@ -1,0 +1,59 @@
+/* Footer layout: reference style – 3 columns + centered bottom */
+
+/* Columns: centered within each column */
+.footer-content {
+  justify-items: center;
+  text-align: center;
+}
+
+.footer-content .menu {
+  text-align: center;
+  width: 100%;
+}
+
+.footer-content .menu .details-content ul {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Column headings: bold, uppercase, centered */
+.footer-content .menu summary.menu__heading {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.footer-content .menu .menu__heading {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Bottom utilities: always stacked and centered (like reference) */
+.footer-utilities .utilities {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--gap);
+}
+
+.footer-utilities .utilities > * {
+  justify-self: center;
+  text-align: center;
+}
+
+@media screen and (min-width: 750px) {
+  .footer-utilities .utilities {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-utilities .utilities > * {
+    justify-self: center;
+    text-align: center;
+  }
+}

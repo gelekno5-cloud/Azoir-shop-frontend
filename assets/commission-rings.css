@@ -1,0 +1,975 @@
+/* Commission Rings page – luxury, minimal, scoped under .commission-page */
+
+.commission-page {
+  --cr-max-width: 1120px;
+  --cr-padding-y: 96px;
+  --cr-padding-y-mobile: 48px;
+  --cr-padding-x: 24px;
+  --cr-gap: 24px;
+  --cr-border: 1px solid rgba(0, 0, 0, 0.08);
+  --cr-border-hover: 1px solid rgba(0, 0, 0, 0.16);
+  --cr-transition: 0.25s ease;
+  box-sizing: border-box;
+}
+
+.commission-page *,
+.commission-page *::before,
+.commission-page *::after {
+  box-sizing: border-box;
+}
+
+/* Two column: sticky media left, form right (Bertel-style proportions) */
+.commission-two-col {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.commission-two-col__grid {
+  display: grid;
+  grid-template-columns: 48% 52%;
+  gap: 0 48px;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.commission-two-col__media {
+  position: relative;
+  background: #fff;
+}
+
+.commission-two-col__media-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 0 2rem 1.25rem;
+}
+
+/* Reference: media well-contained, 4:5 portrait */
+.commission-two-col__slideshow {
+  position: relative;
+  width: 100%;
+  max-width: 550px;
+  aspect-ratio: 4 / 5;
+  max-height: min(687px, 78vh);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.commission-two-col__slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.commission-two-col__slide.is-active {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
+
+.commission-two-col__slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.commission-two-col__slide-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.commission-two-col__slide-video .commission-two-col__video-native,
+.commission-two-col__slide-video .commission-two-col__video-embed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.commission-two-col__slide-video .commission-two-col__video-native {
+  pointer-events: none;
+}
+
+.commission-two-col__slide-video .commission-two-col__video-native::-webkit-media-controls,
+.commission-two-col__slide-video .commission-two-col__video-native::-webkit-media-controls-panel,
+.commission-two-col__slide-video .commission-two-col__video-native::-webkit-media-controls-play-button,
+.commission-two-col__slide-video .commission-two-col__video-native::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+.commission-two-col__slide-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commission-two-col__slide-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: #eee;
+}
+
+.commission-two-col__slideshow-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #333;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+.commission-two-col__slideshow-nav:hover {
+  opacity: 0.7;
+}
+.commission-two-col__slideshow-nav--prev { left: 0.75rem; }
+.commission-two-col__slideshow-nav--next { right: 0.75rem; }
+.commission-two-col__slideshow-nav svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.commission-two-col__slideshow-dots {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  z-index: 2;
+}
+
+.commission-two-col__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.commission-two-col__dot:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.commission-two-col__dot.is-active {
+  background: rgba(0, 0, 0, 0.5);
+  transform: scale(1.2);
+}
+
+.commission-two-col__form {
+  padding: 3rem 2.5rem 2.5rem 0;
+  overflow: auto;
+  max-width: 640px;
+}
+
+.commission-two-col__form .commission-form__inner {
+  max-width: 100%;
+}
+
+.commission-two-col__page-title {
+  margin: 0 0 0.35em;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.commission-two-col__page-subtitle {
+  margin: 0 0 2.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+@media (max-width: 989px) {
+  .commission-two-col__grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .commission-two-col__media-sticky {
+    position: relative;
+    height: auto;
+    min-height: 60vh;
+    padding: var(--cr-padding-y-mobile) var(--cr-padding-x);
+  }
+
+  .commission-two-col__slideshow {
+    max-width: 100%;
+  }
+
+  .commission-two-col__form {
+    padding: var(--cr-padding-y-mobile) var(--cr-padding-x);
+  }
+}
+
+/* Hero */
+.commission-hero {
+  position: relative;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.commission-hero__media {
+  position: absolute;
+  inset: 0;
+}
+
+.commission-hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commission-hero__media--mobile {
+  display: none;
+}
+
+@media (max-width: 749px) {
+  .commission-hero__media--desktop {
+    display: none;
+  }
+  .commission-hero__media--mobile {
+    display: block;
+  }
+}
+
+.commission-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.commission-hero__content {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  padding: var(--cr-padding-x);
+}
+
+.commission-hero__badge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.commission-hero__badge small {
+  font-size: 0.6875rem;
+  opacity: 0.85;
+}
+
+.commission-hero__title {
+  margin: 0 0 0.5em;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.commission-hero__subtitle {
+  margin: 0 0 1.5em;
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.commission-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Buttons */
+.commission-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--cr-transition), color var(--cr-transition), border-color var(--cr-transition);
+}
+
+.commission-btn--primary {
+  background: #0a0a0a;
+  color: #fff;
+  border-color: #0a0a0a;
+}
+
+.commission-btn--primary:hover {
+  background: #333;
+  border-color: #333;
+}
+
+.commission-btn--secondary {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.commission-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+}
+
+/* Intro */
+.commission-intro {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+  padding-top: 48px;
+  padding-bottom: 14px;
+}
+
+.commission-intro__inner {
+  max-width: var(--cr-max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+@media (max-width: 989px) {
+  .commission-intro__inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.commission-intro__step-num {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.commission-intro__title {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.commission-intro__richtext {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.commission-intro__richtext p {
+  margin: 0 0 0.75em;
+}
+
+.commission-intro__richtext p:last-child {
+  margin-bottom: 0;
+}
+
+.commission-intro__bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.commission-intro__bullets li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.commission-intro__bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* Gallery */
+.commission-gallery {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.commission-gallery__inner {
+  max-width: var(--cr-max-width);
+  margin: 0 auto;
+}
+
+.commission-gallery__heading {
+  margin: 0 0 2rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.commission-gallery__grid {
+  display: grid;
+  gap: var(--cr-gap);
+}
+
+.commission-gallery__grid--cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.commission-gallery__grid--cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 749px) {
+  .commission-gallery__grid--cols-2,
+  .commission-gallery__grid--cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+.commission-gallery__card {
+  background: #fff;
+  border: var(--cr-border);
+  overflow: hidden;
+  transition: border-color var(--cr-transition), box-shadow var(--cr-transition);
+}
+
+.commission-gallery__card:hover {
+  border-color: var(--cr-border-hover);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.commission-gallery__card-image {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.commission-gallery__card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.commission-gallery__card-body {
+  padding: 1.25rem;
+}
+
+.commission-gallery__card-title {
+  margin: 0 0 0.35em;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.commission-gallery__card-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* Process */
+.commission-process {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+  padding-top: 14px;
+  padding-bottom: 36px;
+}
+
+.commission-process__inner {
+  max-width: var(--cr-max-width);
+  margin: 0 auto;
+}
+
+.commission-process__heading {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.commission-process__steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--cr-gap);
+}
+
+.commission-process__step {
+  padding: 0.5rem;
+  border: var(--cr-border);
+  background: #fff;
+  transition: border-color var(--cr-transition);
+}
+
+.commission-process__step:hover {
+  border-color: var(--cr-border-hover);
+}
+
+.commission-process__step-num {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.commission-process__step-title {
+  margin: 0 0 0.2em;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.commission-process__step-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Form */
+.commission-form {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.commission-form__inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.commission-form__heading {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.commission-form__subheading {
+  margin: 0 0 2rem;
+  font-size: 0.9375rem;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.commission-form__form {
+  padding: 2rem;
+  border: var(--cr-border);
+  background: #fff;
+}
+
+.commission-form__row {
+  margin-bottom: 1.25rem;
+}
+
+.commission-form__row:last-of-type {
+  margin-bottom: 0;
+}
+
+.commission-form__label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.commission-form__label--required::after {
+  content: ' *';
+  color: #c00;
+}
+
+.commission-form__input,
+.commission-form__select,
+.commission-form__textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: var(--cr-border);
+  background: #fff;
+  transition: border-color var(--cr-transition);
+}
+
+.commission-form__input:focus,
+.commission-form__select:focus,
+.commission-form__textarea:focus {
+  outline: none;
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.commission-form__textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.commission-form__submit {
+  margin-top: 1.5rem;
+  width: 100%;
+  min-height: 52px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.commission-form__message {
+  margin-top: 1rem;
+  padding: 1rem;
+  font-size: 0.9375rem;
+  border: var(--cr-border);
+}
+
+.commission-form__message--success {
+  background: rgba(0, 128, 0, 0.06);
+  border-color: rgba(0, 128, 0, 0.3);
+  color: #0a5c0a;
+}
+
+.commission-form__message--error {
+  background: rgba(200, 0, 0, 0.06);
+  border-color: rgba(200, 0, 0, 0.3);
+  color: #a00;
+}
+
+.commission-form__upload-note {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Commission Rings Form (Bertel-style) */
+.commission-rings-form__step-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.commission-rings-form__step-num {
+  display: inline-block;
+}
+
+.commission-rings-form__timeline {
+  margin-bottom: 0.25rem !important;
+}
+
+.commission-rings-form__section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: var(--cr-border);
+}
+
+.commission-rings-form__section:first-of-type {
+  margin-top: 1.5rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.commission-rings-form__section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.commission-rings-form__section-desc {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.commission-rings-form__pricing {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.04);
+  border: var(--cr-border);
+}
+
+.commission-rings-form__pricing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.commission-rings-form__pricing-row--total {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.commission-rings-form__pricing-label {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.commission-rings-form__pricing-value {
+  white-space: nowrap;
+}
+
+.commission-rings-form__pricing-note {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.commission-rings-form__pricing-footer {
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  border-top: var(--cr-border);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.commission-rings-form__submit {
+  margin-top: 1.5rem;
+}
+
+/* FAQ */
+.commission-faq {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+}
+
+.commission-faq__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.commission-faq__heading {
+  margin: 0 0 2rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.commission-faq__list {
+  border-top: var(--cr-border);
+}
+
+.commission-faq__item {
+  border-bottom: var(--cr-border);
+}
+
+.commission-faq__trigger {
+  width: 100%;
+  padding: 0.5rem 0 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color var(--cr-transition);
+}
+
+.commission-faq__trigger:hover {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.commission-faq__trigger[aria-expanded="true"] {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.commission-faq__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  position: relative;
+}
+
+.commission-faq__icon::before,
+.commission-faq__icon::after {
+  content: '';
+  position: absolute;
+  background: currentColor;
+  transition: transform var(--cr-transition);
+}
+
+.commission-faq__icon::before {
+  width: 10px;
+  height: 2px;
+  left: 3px;
+  top: 7px;
+}
+
+.commission-faq__icon::after {
+  width: 2px;
+  height: 10px;
+  left: 7px;
+  top: 3px;
+}
+
+.commission-faq__trigger[aria-expanded="true"] .commission-faq__icon::after {
+  transform: rotate(90deg);
+}
+
+.commission-faq__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.commission-faq__panel[hidden] {
+  display: none;
+}
+
+.commission-faq__panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.commission-faq__panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.commission-faq__content {
+  padding: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.commission-faq__content p {
+  margin: 0 0 0.5em;
+}
+
+.commission-faq__content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Commission Rings Info (Shipping, Dimensions, Materials) */
+.commission-rings-info {
+  padding: var(--cr-padding-y) var(--cr-padding-x);
+  padding-top: 36px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.commission-rings-info__inner {
+  max-width: var(--cr-max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 989px) {
+  .commission-rings-info__inner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.commission-rings-info__item {
+  padding: 0.5rem;
+  border: var(--cr-border);
+  background: #fff;
+}
+
+.commission-rings-info__title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.commission-rings-info__content {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.commission-rings-info__content p {
+  margin: 0 0 0.5em;
+}
+
+.commission-rings-info__content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile spacing */
+@media (max-width: 749px) {
+  .commission-hero {
+    min-height: 60vh;
+  }
+
+  .commission-intro,
+  .commission-gallery,
+  .commission-process,
+  .commission-form,
+  .commission-faq,
+  .commission-rings-info {
+    padding-top: var(--cr-padding-y-mobile);
+    padding-bottom: var(--cr-padding-y-mobile);
+  }
+
+  .commission-form__form {
+    padding: 1.5rem;
+  }
+}
+
+/* Smooth scroll for CTA */
+html {
+  scroll-behavior: smooth;
+}

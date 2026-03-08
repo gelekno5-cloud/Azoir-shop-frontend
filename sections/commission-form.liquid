@@ -1,0 +1,326 @@
+<section class="commission-page commission-form" id="commission-form">
+  <div class="commission-form__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="commission-form__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="commission-form__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    {% form 'contact', class: 'commission-form__form' %}
+      {% if form.posted_successfully? %}
+        <div class="commission-form__message commission-form__message--success" role="status">
+          {{ section.settings.success_message | default: 'Thank you. We’ll be in touch within 1–2 business days.' }}
+        </div>
+      {% endif %}
+      {% if form.errors %}
+        <div class="commission-form__message commission-form__message--error" role="alert">
+          {{ form.errors | default_errors }}
+        </div>
+      {% endif %}
+
+      <div class="commission-form__row">
+        <label for="commission-contact-name" class="commission-form__label commission-form__label--required">Full name</label>
+        <input
+          type="text"
+          id="commission-contact-name"
+          name="contact[name]"
+          class="commission-form__input"
+          required
+          autocomplete="name"
+          value="{{ form.name }}"
+        >
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-contact-email" class="commission-form__label commission-form__label--required">Email</label>
+        <input
+          type="email"
+          id="commission-contact-email"
+          name="contact[email]"
+          class="commission-form__input"
+          required
+          autocomplete="email"
+          value="{{ form.email }}"
+        >
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-contact-phone" class="commission-form__label">Phone</label>
+        <input
+          type="tel"
+          id="commission-contact-phone"
+          name="contact[phone]"
+          class="commission-form__input"
+          autocomplete="tel"
+          value="{{ form.phone }}"
+        >
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-budget" class="commission-form__label">Budget range</label>
+        <select id="commission-budget" name="contact[budget]" class="commission-form__select">
+          <option value="">Select range</option>
+          {% for i in (1..5) %}
+            {% assign key = 'budget_option_' | append: i %}
+            {% if section.settings[key] != blank %}
+              <option value="{{ section.settings[key] | escape }}">{{ section.settings[key] | escape }}</option>
+            {% endif %}
+          {% endfor %}
+          {% if section.settings.budget_option_1 == blank %}
+            <option value="Under $1,000">Under $1,000</option>
+            <option value="$1,000 – $3,000">$1,000 – $3,000</option>
+            <option value="$3,000 – $5,000">$3,000 – $5,000</option>
+            <option value="$5,000 – $10,000">$5,000 – $10,000</option>
+            <option value="Over $10,000">Over $10,000</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-metal" class="commission-form__label">Metal</label>
+        <select id="commission-metal" name="contact[metal]" class="commission-form__select">
+          <option value="">Select metal</option>
+          {% for i in (1..6) %}
+            {% assign key = 'metal_option_' | append: i %}
+            {% if section.settings[key] != blank %}
+              <option value="{{ section.settings[key] | escape }}">{{ section.settings[key] | escape }}</option>
+            {% endif %}
+          {% endfor %}
+          {% if section.settings.metal_option_1 == blank %}
+            <option value="Yellow gold">Yellow gold</option>
+            <option value="White gold">White gold</option>
+            <option value="Rose gold">Rose gold</option>
+            <option value="Platinum">Platinum</option>
+            <option value="Silver">Silver</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-ring-size" class="commission-form__label">Ring size</label>
+        <input
+          type="text"
+          id="commission-ring-size"
+          name="contact[ring_size]"
+          class="commission-form__input"
+          placeholder="e.g. 6, 6.5, M"
+          value="{{ form.ring_size }}"
+        >
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-timeline" class="commission-form__label">Timeline</label>
+        <select id="commission-timeline" name="contact[timeline]" class="commission-form__select">
+          <option value="">Select timeline</option>
+          {% for i in (1..5) %}
+            {% assign key = 'timeline_option_' | append: i %}
+            {% if section.settings[key] != blank %}
+              <option value="{{ section.settings[key] | escape }}">{{ section.settings[key] | escape }}</option>
+            {% endif %}
+          {% endfor %}
+          {% if section.settings.timeline_option_1 == blank %}
+            <option value="As soon as possible">As soon as possible</option>
+            <option value="1–2 months">1–2 months</option>
+            <option value="2–4 months">2–4 months</option>
+            <option value="4+ months">4+ months</option>
+            <option value="No rush">No rush</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-reference-links" class="commission-form__label">Reference links</label>
+        <input
+          type="text"
+          id="commission-reference-links"
+          name="contact[reference_links]"
+          class="commission-form__input"
+          placeholder="Pinterest, Google Drive, Dropbox, or image URLs"
+          value="{{ form.reference_links }}"
+        >
+        <p class="commission-form__upload-note">
+          {{ section.settings.upload_note | default: "Shopify contact forms don't support file uploads. Paste links to images (e.g. Google Drive, Dropbox) or reference URLs above." }}
+        </p>
+      </div>
+
+      <div class="commission-form__row">
+        <label for="commission-notes" class="commission-form__label">Notes / description</label>
+        <textarea
+          id="commission-notes"
+          name="contact[notes]"
+          class="commission-form__textarea"
+          rows="5"
+          placeholder="Describe your vision, style, stones, or any specific requests..."
+        ></textarea>
+      </div>
+
+      <input type="hidden" name="contact[form_type]" value="commission_rings">
+      <input type="hidden" name="contact[body]" id="commission-body-combined" value="">
+      <button type="submit" class="commission-btn commission-btn--primary commission-form__submit">
+        {{ section.settings.submit_label | default: 'Submit Request' }}
+      </button>
+    {% endform %}
+  </div>
+</section>
+
+<script>
+(function () {
+  var form = document.querySelector('.commission-form__form');
+  var bodyInput = document.getElementById('commission-body-combined');
+  if (!form || !bodyInput) return;
+  form.addEventListener('submit', function () {
+    var parts = [];
+    var budget = form.querySelector('[name="contact[budget]"]');
+    var metal = form.querySelector('[name="contact[metal]"]');
+    var ringSize = form.querySelector('[name="contact[ring_size]"]');
+    var timeline = form.querySelector('[name="contact[timeline]"]');
+    var refs = form.querySelector('[name="contact[reference_links]"]');
+    var notes = form.querySelector('[name="contact[notes]"]');
+    if (budget && budget.value) parts.push('Budget: ' + budget.value);
+    if (metal && metal.value) parts.push('Metal: ' + metal.value);
+    if (ringSize && ringSize.value) parts.push('Ring size: ' + ringSize.value);
+    if (timeline && timeline.value) parts.push('Timeline: ' + timeline.value);
+    if (refs && refs.value) parts.push('Reference links: ' + refs.value);
+    if (notes && notes.value) parts.push('Notes: ' + notes.value);
+    bodyInput.value = parts.join('\n\n');
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Commission Form",
+  "tag": "section",
+  "class": "section-commission-form",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Request a Commission"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Fill out the form below and we'll respond within 1–2 business days."
+    },
+    {
+      "type": "text",
+      "id": "submit_label",
+      "label": "Submit button label",
+      "default": "Submit Request"
+    },
+    {
+      "type": "text",
+      "id": "success_message",
+      "label": "Success message",
+      "default": "Thank you. We'll be in touch within 1–2 business days."
+    },
+    {
+      "type": "textarea",
+      "id": "upload_note",
+      "label": "File upload / reference note",
+      "default": "Shopify contact forms don't support file uploads. Paste links to images (e.g. Google Drive, Dropbox) or reference URLs above."
+    },
+    {
+      "type": "header",
+      "content": "Budget options (optional)"
+    },
+    {
+      "type": "text",
+      "id": "budget_option_1",
+      "label": "Budget 1"
+    },
+    {
+      "type": "text",
+      "id": "budget_option_2",
+      "label": "Budget 2"
+    },
+    {
+      "type": "text",
+      "id": "budget_option_3",
+      "label": "Budget 3"
+    },
+    {
+      "type": "text",
+      "id": "budget_option_4",
+      "label": "Budget 4"
+    },
+    {
+      "type": "text",
+      "id": "budget_option_5",
+      "label": "Budget 5"
+    },
+    {
+      "type": "header",
+      "content": "Metal options (optional)"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_1",
+      "label": "Metal 1"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_2",
+      "label": "Metal 2"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_3",
+      "label": "Metal 3"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_4",
+      "label": "Metal 4"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_5",
+      "label": "Metal 5"
+    },
+    {
+      "type": "text",
+      "id": "metal_option_6",
+      "label": "Metal 6"
+    },
+    {
+      "type": "header",
+      "content": "Timeline options (optional)"
+    },
+    {
+      "type": "text",
+      "id": "timeline_option_1",
+      "label": "Timeline 1"
+    },
+    {
+      "type": "text",
+      "id": "timeline_option_2",
+      "label": "Timeline 2"
+    },
+    {
+      "type": "text",
+      "id": "timeline_option_3",
+      "label": "Timeline 3"
+    },
+    {
+      "type": "text",
+      "id": "timeline_option_4",
+      "label": "Timeline 4"
+    },
+    {
+      "type": "text",
+      "id": "timeline_option_5",
+      "label": "Timeline 5"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commission Form"
+    }
+  ]
+}
+{% endschema %}

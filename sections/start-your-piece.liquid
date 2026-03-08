@@ -1,0 +1,89 @@
+<section class="syp syp--enter">
+  <div class="page-width">
+    <div class="syp__wrap">
+      <p class="syp__eyebrow syp__reveal">Handcrafted in New York</p>
+      <h1 class="syp__title syp__reveal">Craft Your Azoir Piece</h1>
+      <p class="syp__sub syp__reveal">Choose the foundation for your custom creation.</p>
+
+      <nav class="syp__list" aria-label="Commission options">
+        <a class="syp__card syp__reveal" href="{{ pages['design-ring'].url | default: '/pages/design-ring' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Rings</span>
+            <span class="syp__cardMeta">Custom crafted starting at $570</span>
+          </div>
+          <span class="syp__cardCta">DESIGN RING -</span>
+        </a>
+        <a class="syp__card syp__reveal" href="{{ pages['commission-pendant'].url | default: '/pages/commission-pendant' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Pendants</span>
+            <span class="syp__cardMeta">Custom crafted starting at $590</span>
+          </div>
+          <span class="syp__cardCta">DESIGN PENDANT -</span>
+        </a>
+        <a class="syp__card syp__reveal" href="{{ pages['commission-necklace'].url | default: '/pages/commission-necklace' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Necklaces</span>
+            <span class="syp__cardMeta">Custom crafted starting at $820</span>
+          </div>
+          <span class="syp__cardCta">DESIGN NECKLACE -</span>
+        </a>
+        <a class="syp__card syp__reveal" href="{{ pages['commission-bracelet'].url | default: '/pages/commission-bracelet' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Bracelets</span>
+            <span class="syp__cardMeta">Custom crafted starting at $750</span>
+          </div>
+          <span class="syp__cardCta">DESIGN BRACELET -</span>
+        </a>
+        <a class="syp__card syp__card--dark syp__reveal" href="{{ pages['custom-inquiry'].url | default: '/pages/custom-inquiry' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Bespoke Commission</span>
+            <span class="syp__cardMeta">For intricate or gemstone-set designs.</span>
+          </div>
+          <span class="syp__cardCta">SUBMIT INQUIRY -</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var els = document.querySelectorAll('.syp__reveal');
+  var delay = 200;
+  var stagger = 180;
+
+  function run() {
+    els.forEach(function (el) {
+      el.style.transitionDelay = (delay + 'ms');
+      delay += stagger;
+    });
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        document.documentElement.classList.add('syp-js');
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Start Your Piece",
+  "tag": "section",
+  "class": "section-start-your-piece",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "presets": [
+    {
+      "name": "Start Your Piece"
+    }
+  ]
+}
+{% endschema %}

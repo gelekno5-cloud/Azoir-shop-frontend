@@ -1,4 +1,5 @@
 {{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+{%- comment -%}v2{%- endcomment -%}
 
 <section class="commission-page commission-form" id="commission-form">
   <div class="commission-form__inner commission-rings-form__inner">
@@ -36,16 +37,23 @@
       <div class="commission-rings-form__section">
         <h3 class="commission-rings-form__section-title">Upload Reference Photos</h3>
         <div class="commission-form__row">
-          <label for="cr-reference" class="commission-form__label">{{ section.settings.label_reference | default: "Paste image links or we'll contact you for photos" | escape }}</label>
-          <input
-            type="text"
-            id="cr-reference"
-            name="contact[reference_links]"
-            class="commission-form__input"
-            placeholder="Google Drive, Dropbox, or image URLs"
-            value="{{ form.reference_links }}"
-          >
-          <p class="commission-form__upload-note">{{ section.settings.upload_note | default: "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." }}</p>
+          <div class="cr-upload" id="cr-upload">
+            <div class="cr-upload__zone" id="cr-upload-zone" tabindex="0" role="button" aria-label="Upload reference photos">
+              <input type="file" id="cr-file-input" accept="image/*" multiple class="cr-upload__input" tabindex="-1">
+              <svg class="cr-upload__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 16V8M12 8L9 11M12 8L15 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 20H17M3 12C3 7.029 7.029 3 12 3s9 4.029 9 9-4.029 9-9 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <p class="cr-upload__label">Drag &amp; drop photos here</p>
+              <p class="cr-upload__or">or</p>
+              <span class="cr-upload__browse">Browse files</span>
+              <p class="cr-upload__hint">JPG, PNG, WEBP &middot; up to 5 photos &middot; 10 MB each</p>
+            </div>
+            <div class="cr-upload__previews" id="cr-upload-previews" hidden></div>
+          </div>
+          <input type="hidden" name="contact[reference_links]" id="cr-reference-links" value="">
+          <p class="commission-form__upload-note" id="cr-upload-note">{{ section.settings.upload_note | default: "Your photos are uploaded securely when you submit the form. We use them only to understand your vision." }}</p>
+          <p class="commission-form__upload-note cr-upload__error" id="cr-upload-error" hidden></p>
         </div>
       </div>
 
@@ -70,14 +78,22 @@
           </select>
         </div>
         <div class="commission-form__row">
-          <label for="cr-stones" class="commission-form__label">Does your design contain any stones?</label>
-          <select id="cr-stones" name="contact[stones]" class="commission-form__select">
-            <option value="">Select</option>
-            <option value="No Stones">No Stones</option>
-            <option value="Lab-Grown Diamonds">Lab-Grown Diamonds</option>
-            <option value="Natural Diamonds">Natural Diamonds</option>
-            <option value="Other Stone">Other Stone</option>
-          </select>
+          <label class="commission-form__label">Does your design contain any stones?</label>
+          <div class="cr-stone-btns" role="group" aria-label="Stone selection">
+            <button type="button" class="cr-stone-btn" data-value="No Stones">No Stones</button>
+            <button type="button" class="cr-stone-btn" data-value="Lab-Grown Diamonds">Lab-Grown Diamonds</button>
+            <button type="button" class="cr-stone-btn" data-value="Natural Diamonds">Natural Diamonds</button>
+          </div>
+          <input type="hidden" name="contact[stones]" id="cr-stones-hidden" value="">
+          <div class="commission-form__row cr-stone-other" id="cr-stone-other" style="margin-top:0.75rem;margin-bottom:0;">
+            <label for="cr-stones-other" class="commission-form__label">Other stone — describe below</label>
+            <input
+              type="text"
+              id="cr-stones-other"
+              class="commission-form__input"
+              placeholder="e.g. Sapphire, Ruby, Emerald…"
+            >
+          </div>
         </div>
       </div>
 
@@ -119,7 +135,7 @@
         <p class="commission-rings-form__pricing-note">Actual cost may vary based on materials and complexity</p>
         <div class="commission-rings-form__pricing-row">
           <span class="commission-rings-form__pricing-label">Design fee</span>
-          <span class="commission-rings-form__pricing-value">{{ section.settings.price_design | default: '$29' }} – {{ section.settings.price_design_alt | default: '$89' }}</span>
+          <span class="commission-rings-form__pricing-value">{{ section.settings.price_design | default: '$59' }}</span>
         </div>
         <div class="commission-rings-form__pricing-row">
           <span class="commission-rings-form__pricing-label">3D Modeling + Production</span>
@@ -143,26 +159,228 @@
 
 <script>
 (function () {
+  /* ── Body combiner ─────────────────────────────────────────── */
   var form = document.querySelector('.commission-rings-form__form');
   var bodyInput = document.getElementById('cr-body-combined');
   if (!form || !bodyInput) return;
-  form.addEventListener('submit', function () {
+
+  /* ── File upload ────────────────────────────────────────────── */
+  var SUPABASE_URL    = {{ section.settings.supabase_url    | json }};
+  var SUPABASE_KEY    = {{ section.settings.supabase_anon_key | json }};
+  var SUPABASE_BUCKET = {{ section.settings.supabase_bucket | default: 'commission-uploads' | json }};
+  var MAX_FILES = 5;
+  var MAX_SIZE  = 10 * 1024 * 1024; // 10 MB
+
+  var zone       = document.getElementById('cr-upload-zone');
+  var fileInput  = document.getElementById('cr-file-input');
+  var previews   = document.getElementById('cr-upload-previews');
+  var hiddenRef  = document.getElementById('cr-reference-links');
+  var errorEl    = document.getElementById('cr-upload-error');
+
+  var uploadedFiles = []; // { id, file }
+  var nextId = 0;
+
+  function showError(msg) {
+    if (!errorEl) return;
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+  }
+
+  /* Zone click / keyboard */
+  zone.addEventListener('click', function () { fileInput.click(); });
+  zone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+
+  /* Drag & drop */
+  zone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    zone.classList.add('is-dragover');
+  });
+  ['dragleave', 'dragend'].forEach(function (ev) {
+    zone.addEventListener(ev, function () { zone.classList.remove('is-dragover'); });
+  });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zone.classList.remove('is-dragover');
+    addFiles(Array.from(e.dataTransfer.files));
+  });
+
+  /* File input change */
+  fileInput.addEventListener('change', function () {
+    addFiles(Array.from(fileInput.files));
+    fileInput.value = '';
+  });
+
+  function addFiles(newFiles) {
+    showError('');
+    var imageFiles = newFiles.filter(function (f) {
+      if (!f.type.startsWith('image/')) {
+        showError('Only image files are accepted (JPG, PNG, WEBP).');
+        return false;
+      }
+      if (f.size > MAX_SIZE) {
+        showError('"' + f.name + '" exceeds the 10 MB limit.');
+        return false;
+      }
+      return true;
+    });
+
+    var slots = MAX_FILES - uploadedFiles.length;
+    if (imageFiles.length > slots) {
+      showError('Maximum ' + MAX_FILES + ' photos allowed. Only the first ' + slots + ' were added.');
+      imageFiles = imageFiles.slice(0, slots);
+    }
+
+    imageFiles.forEach(function (file) {
+      var id = nextId++;
+      uploadedFiles.push({ id: id, file: file });
+      renderPreview(id, file);
+    });
+
+    syncZoneState();
+  }
+
+  function renderPreview(id, file) {
+    previews.hidden = false;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var item = document.createElement('div');
+      item.className = 'cr-upload__item';
+      item.dataset.id = id;
+      item.innerHTML =
+        '<img src="' + e.target.result + '" alt="' + file.name + '" class="cr-upload__thumb">' +
+        '<span class="cr-upload__item-name">' + file.name + '</span>' +
+        '<button type="button" class="cr-upload__remove" aria-label="Remove ' + file.name + '">' +
+          '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+        '</button>';
+      item.querySelector('.cr-upload__remove').addEventListener('click', function () {
+        uploadedFiles = uploadedFiles.filter(function (f) { return f.id !== id; });
+        item.remove();
+        if (uploadedFiles.length === 0) previews.hidden = true;
+        syncZoneState();
+        showError('');
+      });
+      previews.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function syncZoneState() {
+    zone.classList.toggle('is-full', uploadedFiles.length >= MAX_FILES);
+  }
+
+  /* ── Stone buttons ──────────────────────────────────────────── */
+  var stoneBtns   = document.querySelectorAll('.cr-stone-btn');
+  var stonesHidden = document.getElementById('cr-stones-hidden');
+  var stonesOther  = document.getElementById('cr-stones-other');
+
+  stoneBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var already = btn.classList.contains('is-active');
+      stoneBtns.forEach(function (b) { b.classList.remove('is-active'); });
+      if (already) {
+        stonesHidden.value = '';
+      } else {
+        btn.classList.add('is-active');
+        stonesHidden.value = btn.dataset.value;
+      }
+    });
+  });
+
+  stonesOther.addEventListener('input', function () {
+    if (stonesOther.value.trim()) {
+      stoneBtns.forEach(function (b) { b.classList.remove('is-active'); });
+      stonesHidden.value = stonesOther.value.trim();
+    } else {
+      stonesHidden.value = '';
+    }
+  });
+
+  /* Upload one file to Supabase Storage, return promise with public URL */
+  function uploadToSupabase(fileObj) {
+    return new Promise(function (resolve) {
+      var ext  = fileObj.name.split('.').pop().toLowerCase();
+      var path = 'commissions/' + Date.now() + '-' + Math.random().toString(36).slice(2, 9) + '.' + ext;
+      var url  = SUPABASE_URL.replace(/\/$/, '') + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + path;
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'apikey': SUPABASE_KEY,
+          'Content-Type': fileObj.type || 'application/octet-stream',
+          'x-upsert': 'false'
+        },
+        body: fileObj
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.error) { resolve(null); return; }
+          var publicUrl = SUPABASE_URL.replace(/\/$/, '') +
+            '/storage/v1/object/public/' + SUPABASE_BUCKET + '/' + path;
+          resolve(publicUrl);
+        })
+        .catch(function () { resolve(null); });
+    });
+  }
+
+  /* ── Form submit ────────────────────────────────────────────── */
+  form.addEventListener('submit', function (e) {
+    /* Build combined body first */
     var parts = [];
     var describe = form.querySelector('[name="contact[notes]"]');
-    var reference = form.querySelector('[name="contact[reference_links]"]');
-    var metal = form.querySelector('[name="contact[metal]"]');
-    var stones = form.querySelector('[name="contact[stones]"]');
-    var country = form.querySelector('[name="contact[country]"]');
-    var phone = form.querySelector('[name="contact[phone]"]');
-    var method = form.querySelector('[name="contact[contact_method]"]');
+    var metal    = form.querySelector('[name="contact[metal]"]');
+    var stones   = document.getElementById('cr-stones-hidden');
+    var country  = form.querySelector('[name="contact[country]"]');
+    var phone    = form.querySelector('[name="contact[phone]"]');
+    var method   = form.querySelector('[name="contact[contact_method]"]');
     if (describe && describe.value) parts.push('Project: ' + describe.value);
-    if (reference && reference.value) parts.push('Reference links: ' + reference.value);
-    if (metal && metal.value) parts.push('Metal: ' + metal.value);
-    if (stones && stones.value) parts.push('Stones: ' + stones.value);
-    if (country && country.value) parts.push('Country: ' + country.value);
-    if (phone && phone.value) parts.push('Phone: ' + phone.value);
-    if (method && method.value) parts.push('Contact method: ' + method.value);
-    bodyInput.value = parts.join('\n\n');
+    if (metal    && metal.value)    parts.push('Metal: '   + metal.value);
+    if (stones   && stones.value)   parts.push('Stones: '  + stones.value);
+    if (country  && country.value)  parts.push('Country: ' + country.value);
+    if (phone    && phone.value)    parts.push('Phone: '   + phone.value);
+    if (method   && method.value)   parts.push('Contact method: ' + method.value);
+
+    /* No files → submit immediately */
+    if (uploadedFiles.length === 0) {
+      bodyInput.value = parts.join('\n\n');
+      return;
+    }
+
+    /* No Supabase config → include file names only */
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      var names = uploadedFiles.map(function (f) { return f.file.name; }).join(', ');
+      parts.push('Reference photos (names only – Supabase not configured): ' + names);
+      hiddenRef.value = names;
+      bodyInput.value = parts.join('\n\n');
+      return;
+    }
+
+    /* Supabase configured → upload files, then submit */
+    e.preventDefault();
+    var submitBtn = form.querySelector('.commission-rings-form__submit');
+    var origLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading photos\u2026';
+    showError('');
+
+    Promise.all(uploadedFiles.map(function (f) { return uploadToSupabase(f.file); }))
+      .then(function (urls) {
+        var valid   = urls.filter(Boolean);
+        var failed  = urls.length - valid.length;
+        if (valid.length) {
+          hiddenRef.value = valid.join(', ');
+          parts.push('Reference photos: ' + valid.join(', '));
+        }
+        if (failed) {
+          showError(failed + ' photo(s) could not be uploaded. Your form was still submitted.');
+        }
+        bodyInput.value = parts.join('\n\n');
+        submitBtn.disabled = false;
+        submitBtn.textContent = origLabel;
+        form.submit();
+      });
   });
 })();
 </script>
@@ -178,8 +396,11 @@
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Share your concept — the symbols, proportions, mood, references, or even just a rough direction. We carefully study everything you provide to translate it into a clear creative direction." },
     { "type": "text", "id": "label_describe", "label": "Describe label", "default": "Describe your vision" },
     { "type": "text", "id": "placeholder_describe", "label": "Describe placeholder", "default": "I want a ring with..." },
-    { "type": "text", "id": "label_reference", "label": "Reference label", "default": "Paste image links or we'll contact you for photos" },
-    { "type": "textarea", "id": "upload_note", "label": "Upload note", "default": "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." },
+    { "type": "header", "content": "Supabase Storage (photo uploads)" },
+    { "type": "text", "id": "supabase_url", "label": "Supabase project URL", "info": "Found in Supabase → Settings → API. e.g. https://xxxx.supabase.co" },
+    { "type": "text", "id": "supabase_anon_key", "label": "Supabase anon (public) key", "info": "Found in Supabase → Settings → API → Project API keys → anon public." },
+    { "type": "text", "id": "supabase_bucket", "label": "Storage bucket name", "default": "commission-uploads", "info": "Create this bucket in Supabase → Storage. Set it to Public and allow anon INSERT via a policy." },
+    { "type": "textarea", "id": "upload_note", "label": "Upload note", "default": "Your photos are uploaded securely when you submit the form. We use them only to understand your vision." },
     { "type": "text", "id": "price_total", "label": "Estimated total", "default": "$570" },
     { "type": "text", "id": "price_design", "label": "Design fee low", "default": "$29" },
     { "type": "text", "id": "price_design_alt", "label": "Design fee high", "default": "$89" },

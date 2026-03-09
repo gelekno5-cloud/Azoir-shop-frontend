@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "df_main": {
+      "type": "design-fee",
+      "settings": {
+        "title": "Your Design Fee",
+        "subtitle": "Review your submission and pay the design fee to begin the design process.",
+        "step1_title": "Design Creation",
+        "step1_text": "Our designers create three original design concepts based on your brief.",
+        "step2_title": "Review & Revisions",
+        "step2_text": "Professional jewelry CAD visualization. Up to two revisions.",
+        "step3_title": "Production Quote",
+        "step3_text": "Once approved, we provide final production pricing.",
+        "timeline_note": "Typical timeline: 2–4 business days",
+        "includes_items": "Three custom design concepts,Professional jewelry CAD visualization,Up to two revisions,Production feasibility review,Final manufacturing quote",
+        "fee_default": "$59",
+        "fee_note": "Covers three original design concepts and CAD visualization.",
+        "fee_credit": "Your design fee will be credited toward production if you proceed.",
+        "pay_label": "Pay Design Fee",
+        "pay_note": "Secure payment",
+        "payment_url": "/cart/48059146109153:1",
+        "production_cost": "$900 – $6,000+",
+        "production_cost_note": "Depends on metal, stones, complexity",
+        "ownership_text": "All design concepts remain property of Azoir & Co until production is commissioned.",
+        "refund_text": "Design fees are non-refundable once work has commenced.",
+        "contact_email": "design@azoir.com",
+        "supabase_url": "https://avmcksqllodvspbtcmgf.supabase.co",
+        "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2bWNrc3FsbG9kdnNwYnRjbWdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM2NTEsImV4cCI6MjA4ODU3OTY1MX0.F66t82m3nTle6v6Ok2FpTuGUUArytlHmwweOKEahz34"
+      }
+    }
+  },
+  "order": ["df_main"]
+}

@@ -71,17 +71,8 @@
         <p class="commission-form__subheading commission-rings-form__timeline">Timeline: {{ section.settings.timeline | default: '1–2 days' | escape }}</p>
         <p class="commission-form__subheading">{{ section.settings.subheading | default: 'Share your concept — the symbols, proportions, mood, references, or even just a rough direction.' | escape }}</p>
 
-        {% form 'contact', class: 'commission-form__form commission-rings-form__form' %}
-          {% if form.posted_successfully? %}
-            <div class="commission-form__message commission-form__message--success" role="status">
-              {{ section.settings.success_message | default: "Thank you. We'll be in touch within 1–2 business days." }}
-            </div>
-          {% endif %}
-          {% if form.errors %}
-            <div class="commission-form__message commission-form__message--error" role="alert">
-              {{ form.errors | default_errors }}
-            </div>
-          {% endif %}
+        <form class="commission-form__form commission-rings-form__form" id="cr2c-form" novalidate>
+          <div class="commission-form__message commission-form__message--error" id="cr2c-form-error" role="alert" hidden></div>
 
           <div class="commission-rings-form__section">
             <h3 class="commission-rings-form__section-title">Describe Your Project</h3>
@@ -89,27 +80,36 @@
               <label for="cr2c-describe" class="commission-form__label">{{ section.settings.label_describe | default: 'Describe your vision' | escape }}</label>
               <textarea
                 id="cr2c-describe"
-                name="contact[notes]"
+                name="notes"
                 class="commission-form__textarea"
                 rows="4"
-                placeholder="{{ section.settings.placeholder_describe | default: 'I want a ring with...' }}"
-              >{{ form.notes }}</textarea>
+              ></textarea>
             </div>
           </div>
 
           <div class="commission-rings-form__section">
             <h3 class="commission-rings-form__section-title">Upload Reference Photos</h3>
             <div class="commission-form__row">
-              <label for="cr2c-reference" class="commission-form__label">{{ section.settings.label_reference | default: "Paste image links or we'll contact you for photos" | escape }}</label>
-              <input
-                type="text"
-                id="cr2c-reference"
-                name="contact[reference_links]"
-                class="commission-form__input"
-                placeholder="Google Drive, Dropbox, or image URLs"
-                value="{{ form.reference_links }}"
-              >
-              <p class="commission-form__upload-note">{{ section.settings.upload_note | default: "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." }}</p>
+              <div class="cr-upload" id="cr2c-upload">
+                <div class="cr-upload__zone" id="cr2c-upload-zone" tabindex="0" role="button" aria-label="Upload reference photos">
+                  <input type="file" id="cr2c-file-input" accept="image/*" multiple class="cr-upload__input" tabindex="-1">
+                  <div class="cr-upload__icon-wrap">
+                    <svg class="cr-upload__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M12 3V15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                  <p class="cr-upload__label">Drop your photos here</p>
+                  <p class="cr-upload__sublabel">Share inspiration images, sketches, or references</p>
+                  <span class="cr-upload__browse-btn">Browse files</span>
+                  <p class="cr-upload__hint">JPG &middot; PNG &middot; WEBP &nbsp;&bull;&nbsp; Up to 5 photos &nbsp;&bull;&nbsp; 10 MB each</p>
+                </div>
+                <div class="cr-upload__previews" id="cr2c-upload-previews" hidden></div>
+              </div>
+              <input type="hidden" name="reference_links" id="cr2c-reference-links" value="">
+              <p class="commission-form__upload-note">{{ section.settings.upload_note | default: "Your photos are uploaded securely when you submit the form. We use them only to understand your vision." }}</p>
+              <p class="commission-form__upload-note cr-upload__error" id="cr2c-upload-error" hidden></p>
             </div>
           </div>
 
@@ -117,7 +117,7 @@
             <h3 class="commission-rings-form__section-title">Metal & Stones</h3>
             <div class="commission-form__row">
               <label for="cr2c-metal" class="commission-form__label commission-form__label--required">Select your preferred metal</label>
-              <select id="cr2c-metal" name="contact[metal]" class="commission-form__select" required>
+              <select id="cr2c-metal" name="metal" class="commission-form__select" required>
                 <option value="">Select metal *</option>
                 <option value="Sterling Silver">Sterling Silver</option>
                 <option value="10K Yellow Gold">10K Yellow Gold</option>
@@ -134,14 +134,22 @@
               </select>
             </div>
             <div class="commission-form__row">
-              <label for="cr2c-stones" class="commission-form__label">Does your design contain any stones?</label>
-              <select id="cr2c-stones" name="contact[stones]" class="commission-form__select">
-                <option value="">Select</option>
-                <option value="No Stones">No Stones</option>
-                <option value="Lab-Grown Diamonds">Lab-Grown Diamonds</option>
-                <option value="Natural Diamonds">Natural Diamonds</option>
-                <option value="Other Stone">Other Stone</option>
-              </select>
+              <label class="commission-form__label">Does your design contain any stones?</label>
+              <div class="cr-stone-btns" id="cr2c-stone-btns" role="group" aria-label="Stone selection">
+                <button type="button" class="cr-stone-btn" data-value="No Stones">No Stones</button>
+                <button type="button" class="cr-stone-btn" data-value="Lab-Grown Diamonds">Lab-Grown Diamonds</button>
+                <button type="button" class="cr-stone-btn" data-value="Natural Diamonds">Natural Diamonds</button>
+              </div>
+              <input type="hidden" name="stones" id="cr2c-stones-hidden" value="">
+              <div class="commission-form__row" id="cr2c-stone-other-row" style="margin-top:0.75rem;margin-bottom:0;">
+                <label for="cr2c-stones-other" class="commission-form__label">Other stone — describe below</label>
+                <input
+                  type="text"
+                  id="cr2c-stones-other"
+                  class="commission-form__input"
+                  placeholder="e.g. Sapphire, Ruby, Emerald…"
+                >
+              </div>
             </div>
           </div>
 
@@ -150,28 +158,417 @@
             <p class="commission-rings-form__section-desc">So we can reach out with your quote and any questions.</p>
             <div class="commission-form__row">
               <label for="cr2c-name" class="commission-form__label commission-form__label--required">Full name</label>
-              <input type="text" id="cr2c-name" name="contact[name]" class="commission-form__input" required autocomplete="name" value="{{ form.name }}">
+              <input type="text" id="cr2c-name" name="name" class="commission-form__input" required autocomplete="name">
             </div>
             <div class="commission-form__row">
               <label for="cr2c-email" class="commission-form__label commission-form__label--required">Email</label>
-              <input type="email" id="cr2c-email" name="contact[email]" class="commission-form__input" required autocomplete="email" value="{{ form.email }}">
+              <input type="email" id="cr2c-email" name="email" class="commission-form__input" required autocomplete="email">
             </div>
             <div class="commission-form__row">
               <label for="cr2c-country" class="commission-form__label">Country</label>
-              <input type="text" id="cr2c-country" name="contact[country]" class="commission-form__input" autocomplete="country-name" placeholder="e.g. United States" value="{{ form.country }}">
-            </div>
-            <div class="commission-form__row">
-              <label for="cr2c-phone" class="commission-form__label">Phone</label>
-              <input type="tel" id="cr2c-phone" name="contact[phone]" class="commission-form__input" autocomplete="tel" value="{{ form.phone }}">
-            </div>
-            <div class="commission-form__row">
-              <label for="cr2c-contact-method" class="commission-form__label">Preferred method of contact</label>
-              <select id="cr2c-contact-method" name="contact[contact_method]" class="commission-form__select">
-                <option value="">Select</option>
-                <option value="By Email">By Email</option>
-                <option value="By Text Message">By Text Message</option>
-                <option value="By WhatsApp">By WhatsApp</option>
+              <select id="cr2c-country" name="country" class="commission-form__select" autocomplete="country-name">
+                <option value="">Select country</option>
+                <option>Afghanistan</option>
+                <option>Albania</option>
+                <option>Algeria</option>
+                <option>Andorra</option>
+                <option>Angola</option>
+                <option>Antigua and Barbuda</option>
+                <option>Argentina</option>
+                <option>Armenia</option>
+                <option>Australia</option>
+                <option>Austria</option>
+                <option>Azerbaijan</option>
+                <option>Bahamas</option>
+                <option>Bahrain</option>
+                <option>Bangladesh</option>
+                <option>Barbados</option>
+                <option>Belarus</option>
+                <option>Belgium</option>
+                <option>Belize</option>
+                <option>Benin</option>
+                <option>Bhutan</option>
+                <option>Bolivia</option>
+                <option>Bosnia and Herzegovina</option>
+                <option>Botswana</option>
+                <option>Brazil</option>
+                <option>Brunei</option>
+                <option>Bulgaria</option>
+                <option>Burkina Faso</option>
+                <option>Burundi</option>
+                <option>Cabo Verde</option>
+                <option>Cambodia</option>
+                <option>Cameroon</option>
+                <option>Canada</option>
+                <option>Central African Republic</option>
+                <option>Chad</option>
+                <option>Chile</option>
+                <option>China</option>
+                <option>Colombia</option>
+                <option>Comoros</option>
+                <option>Congo (Congo-Brazzaville)</option>
+                <option>Costa Rica</option>
+                <option>Croatia</option>
+                <option>Cuba</option>
+                <option>Cyprus</option>
+                <option>Czech Republic</option>
+                <option>Denmark</option>
+                <option>Djibouti</option>
+                <option>Dominica</option>
+                <option>Dominican Republic</option>
+                <option>DR Congo</option>
+                <option>Ecuador</option>
+                <option>Egypt</option>
+                <option>El Salvador</option>
+                <option>Equatorial Guinea</option>
+                <option>Eritrea</option>
+                <option>Estonia</option>
+                <option>Eswatini</option>
+                <option>Ethiopia</option>
+                <option>Fiji</option>
+                <option>Finland</option>
+                <option>France</option>
+                <option>Gabon</option>
+                <option>Gambia</option>
+                <option>Georgia</option>
+                <option>Germany</option>
+                <option>Ghana</option>
+                <option>Greece</option>
+                <option>Grenada</option>
+                <option>Guatemala</option>
+                <option>Guinea</option>
+                <option>Guinea-Bissau</option>
+                <option>Guyana</option>
+                <option>Haiti</option>
+                <option>Honduras</option>
+                <option>Hungary</option>
+                <option>Iceland</option>
+                <option>India</option>
+                <option>Indonesia</option>
+                <option>Iran</option>
+                <option>Iraq</option>
+                <option>Ireland</option>
+                <option>Israel</option>
+                <option>Italy</option>
+                <option>Jamaica</option>
+                <option>Japan</option>
+                <option>Jordan</option>
+                <option>Kazakhstan</option>
+                <option>Kenya</option>
+                <option>Kiribati</option>
+                <option>Kuwait</option>
+                <option>Kyrgyzstan</option>
+                <option>Laos</option>
+                <option>Latvia</option>
+                <option>Lebanon</option>
+                <option>Lesotho</option>
+                <option>Liberia</option>
+                <option>Libya</option>
+                <option>Liechtenstein</option>
+                <option>Lithuania</option>
+                <option>Luxembourg</option>
+                <option>Madagascar</option>
+                <option>Malawi</option>
+                <option>Malaysia</option>
+                <option>Maldives</option>
+                <option>Mali</option>
+                <option>Malta</option>
+                <option>Marshall Islands</option>
+                <option>Mauritania</option>
+                <option>Mauritius</option>
+                <option>Mexico</option>
+                <option>Micronesia</option>
+                <option>Moldova</option>
+                <option>Monaco</option>
+                <option>Mongolia</option>
+                <option>Montenegro</option>
+                <option>Morocco</option>
+                <option>Mozambique</option>
+                <option>Myanmar</option>
+                <option>Namibia</option>
+                <option>Nauru</option>
+                <option>Nepal</option>
+                <option>Netherlands</option>
+                <option>New Zealand</option>
+                <option>Nicaragua</option>
+                <option>Niger</option>
+                <option>Nigeria</option>
+                <option>North Korea</option>
+                <option>North Macedonia</option>
+                <option>Norway</option>
+                <option>Oman</option>
+                <option>Pakistan</option>
+                <option>Palau</option>
+                <option>Palestine</option>
+                <option>Panama</option>
+                <option>Papua New Guinea</option>
+                <option>Paraguay</option>
+                <option>Peru</option>
+                <option>Philippines</option>
+                <option>Poland</option>
+                <option>Portugal</option>
+                <option>Qatar</option>
+                <option>Romania</option>
+                <option>Russia</option>
+                <option>Rwanda</option>
+                <option>Saint Kitts and Nevis</option>
+                <option>Saint Lucia</option>
+                <option>Saint Vincent and the Grenadines</option>
+                <option>Samoa</option>
+                <option>San Marino</option>
+                <option>Sao Tome and Principe</option>
+                <option>Saudi Arabia</option>
+                <option>Senegal</option>
+                <option>Serbia</option>
+                <option>Seychelles</option>
+                <option>Sierra Leone</option>
+                <option>Singapore</option>
+                <option>Slovakia</option>
+                <option>Slovenia</option>
+                <option>Solomon Islands</option>
+                <option>Somalia</option>
+                <option>South Africa</option>
+                <option>South Korea</option>
+                <option>South Sudan</option>
+                <option>Spain</option>
+                <option>Sri Lanka</option>
+                <option>Sudan</option>
+                <option>Suriname</option>
+                <option>Sweden</option>
+                <option>Switzerland</option>
+                <option>Syria</option>
+                <option>Taiwan</option>
+                <option>Tajikistan</option>
+                <option>Tanzania</option>
+                <option>Thailand</option>
+                <option>Timor-Leste</option>
+                <option>Togo</option>
+                <option>Tonga</option>
+                <option>Trinidad and Tobago</option>
+                <option>Tunisia</option>
+                <option>Turkey</option>
+                <option>Turkmenistan</option>
+                <option>Tuvalu</option>
+                <option>Uganda</option>
+                <option>Ukraine</option>
+                <option>United Arab Emirates</option>
+                <option>United Kingdom</option>
+                <option>United States</option>
+                <option>Uruguay</option>
+                <option>Uzbekistan</option>
+                <option>Vanuatu</option>
+                <option>Vatican City</option>
+                <option>Venezuela</option>
+                <option>Vietnam</option>
+                <option>Yemen</option>
+                <option>Zambia</option>
+                <option>Zimbabwe</option>
               </select>
+            </div>
+            <div class="commission-form__row">
+              <label for="cr2c-phone-number" class="commission-form__label">Phone</label>
+              <div class="cr-phone" id="cr2c-phone-wrap">
+                <select id="cr2c-phone-code" class="cr-phone__code" autocomplete="tel-country-code">
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+61">🇦🇺 +61</option>
+                  <option value="+64">🇳🇿 +64</option>
+                  <option value="+93">🇦🇫 +93</option>
+                  <option value="+355">🇦🇱 +355</option>
+                  <option value="+213">🇩🇿 +213</option>
+                  <option value="+376">🇦🇩 +376</option>
+                  <option value="+244">🇦🇴 +244</option>
+                  <option value="+54">🇦🇷 +54</option>
+                  <option value="+374">🇦🇲 +374</option>
+                  <option value="+43">🇦🇹 +43</option>
+                  <option value="+994">🇦🇿 +994</option>
+                  <option value="+973">🇧🇭 +973</option>
+                  <option value="+880">🇧🇩 +880</option>
+                  <option value="+375">🇧🇾 +375</option>
+                  <option value="+32">🇧🇪 +32</option>
+                  <option value="+501">🇧🇿 +501</option>
+                  <option value="+229">🇧🇯 +229</option>
+                  <option value="+975">🇧🇹 +975</option>
+                  <option value="+591">🇧🇴 +591</option>
+                  <option value="+387">🇧🇦 +387</option>
+                  <option value="+267">🇧🇼 +267</option>
+                  <option value="+55">🇧🇷 +55</option>
+                  <option value="+673">🇧🇳 +673</option>
+                  <option value="+359">🇧🇬 +359</option>
+                  <option value="+226">🇧🇫 +226</option>
+                  <option value="+257">🇧🇮 +257</option>
+                  <option value="+238">🇨🇻 +238</option>
+                  <option value="+855">🇰🇭 +855</option>
+                  <option value="+237">🇨🇲 +237</option>
+                  <option value="+1">🇨🇦 +1</option>
+                  <option value="+236">🇨🇫 +236</option>
+                  <option value="+235">🇹🇩 +235</option>
+                  <option value="+56">🇨🇱 +56</option>
+                  <option value="+86">🇨🇳 +86</option>
+                  <option value="+57">🇨🇴 +57</option>
+                  <option value="+269">🇰🇲 +269</option>
+                  <option value="+506">🇨🇷 +506</option>
+                  <option value="+385">🇭🇷 +385</option>
+                  <option value="+53">🇨🇺 +53</option>
+                  <option value="+357">🇨🇾 +357</option>
+                  <option value="+420">🇨🇿 +420</option>
+                  <option value="+243">🇨🇩 +243</option>
+                  <option value="+45">🇩🇰 +45</option>
+                  <option value="+253">🇩🇯 +253</option>
+                  <option value="+1">🇩🇴 +1</option>
+                  <option value="+593">🇪🇨 +593</option>
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+503">🇸🇻 +503</option>
+                  <option value="+240">🇬🇶 +240</option>
+                  <option value="+291">🇪🇷 +291</option>
+                  <option value="+372">🇪🇪 +372</option>
+                  <option value="+268">🇸🇿 +268</option>
+                  <option value="+251">🇪🇹 +251</option>
+                  <option value="+679">🇫🇯 +679</option>
+                  <option value="+358">🇫🇮 +358</option>
+                  <option value="+33">🇫🇷 +33</option>
+                  <option value="+241">🇬🇦 +241</option>
+                  <option value="+220">🇬🇲 +220</option>
+                  <option value="+995">🇬🇪 +995</option>
+                  <option value="+49">🇩🇪 +49</option>
+                  <option value="+233">🇬🇭 +233</option>
+                  <option value="+30">🇬🇷 +30</option>
+                  <option value="+502">🇬🇹 +502</option>
+                  <option value="+224">🇬🇳 +224</option>
+                  <option value="+245">🇬🇼 +245</option>
+                  <option value="+592">🇬🇾 +592</option>
+                  <option value="+509">🇭🇹 +509</option>
+                  <option value="+504">🇭🇳 +504</option>
+                  <option value="+36">🇭🇺 +36</option>
+                  <option value="+354">🇮🇸 +354</option>
+                  <option value="+91">🇮🇳 +91</option>
+                  <option value="+62">🇮🇩 +62</option>
+                  <option value="+98">🇮🇷 +98</option>
+                  <option value="+964">🇮🇶 +964</option>
+                  <option value="+353">🇮🇪 +353</option>
+                  <option value="+972">🇮🇱 +972</option>
+                  <option value="+39">🇮🇹 +39</option>
+                  <option value="+1">🇯🇲 +1</option>
+                  <option value="+81">🇯🇵 +81</option>
+                  <option value="+962">🇯🇴 +962</option>
+                  <option value="+7">🇰🇿 +7</option>
+                  <option value="+254">🇰🇪 +254</option>
+                  <option value="+686">🇰🇮 +686</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+996">🇰🇬 +996</option>
+                  <option value="+856">🇱🇦 +856</option>
+                  <option value="+371">🇱🇻 +371</option>
+                  <option value="+961">🇱🇧 +961</option>
+                  <option value="+266">🇱🇸 +266</option>
+                  <option value="+231">🇱🇷 +231</option>
+                  <option value="+218">🇱🇾 +218</option>
+                  <option value="+423">🇱🇮 +423</option>
+                  <option value="+370">🇱🇹 +370</option>
+                  <option value="+352">🇱🇺 +352</option>
+                  <option value="+261">🇲🇬 +261</option>
+                  <option value="+265">🇲🇼 +265</option>
+                  <option value="+60">🇲🇾 +60</option>
+                  <option value="+960">🇲🇻 +960</option>
+                  <option value="+223">🇲🇱 +223</option>
+                  <option value="+356">🇲🇹 +356</option>
+                  <option value="+222">🇲🇷 +222</option>
+                  <option value="+230">🇲🇺 +230</option>
+                  <option value="+52">🇲🇽 +52</option>
+                  <option value="+373">🇲🇩 +373</option>
+                  <option value="+377">🇲🇨 +377</option>
+                  <option value="+976">🇲🇳 +976</option>
+                  <option value="+382">🇲🇪 +382</option>
+                  <option value="+212">🇲🇦 +212</option>
+                  <option value="+258">🇲🇿 +258</option>
+                  <option value="+95">🇲🇲 +95</option>
+                  <option value="+264">🇳🇦 +264</option>
+                  <option value="+977">🇳🇵 +977</option>
+                  <option value="+31">🇳🇱 +31</option>
+                  <option value="+505">🇳🇮 +505</option>
+                  <option value="+227">🇳🇪 +227</option>
+                  <option value="+234">🇳🇬 +234</option>
+                  <option value="+850">🇰🇵 +850</option>
+                  <option value="+389">🇲🇰 +389</option>
+                  <option value="+47">🇳🇴 +47</option>
+                  <option value="+968">🇴🇲 +968</option>
+                  <option value="+92">🇵🇰 +92</option>
+                  <option value="+507">🇵🇦 +507</option>
+                  <option value="+675">🇵🇬 +675</option>
+                  <option value="+595">🇵🇾 +595</option>
+                  <option value="+51">🇵🇪 +51</option>
+                  <option value="+63">🇵🇭 +63</option>
+                  <option value="+48">🇵🇱 +48</option>
+                  <option value="+351">🇵🇹 +351</option>
+                  <option value="+974">🇶🇦 +974</option>
+                  <option value="+242">🇨🇬 +242</option>
+                  <option value="+40">🇷🇴 +40</option>
+                  <option value="+7">🇷🇺 +7</option>
+                  <option value="+250">🇷🇼 +250</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+221">🇸🇳 +221</option>
+                  <option value="+381">🇷🇸 +381</option>
+                  <option value="+248">🇸🇨 +248</option>
+                  <option value="+232">🇸🇱 +232</option>
+                  <option value="+65">🇸🇬 +65</option>
+                  <option value="+421">🇸🇰 +421</option>
+                  <option value="+386">🇸🇮 +386</option>
+                  <option value="+677">🇸🇧 +677</option>
+                  <option value="+252">🇸🇴 +252</option>
+                  <option value="+27">🇿🇦 +27</option>
+                  <option value="+82">🇰🇷 +82</option>
+                  <option value="+211">🇸🇸 +211</option>
+                  <option value="+34">🇪🇸 +34</option>
+                  <option value="+94">🇱🇰 +94</option>
+                  <option value="+249">🇸🇩 +249</option>
+                  <option value="+597">🇸🇷 +597</option>
+                  <option value="+46">🇸🇪 +46</option>
+                  <option value="+41">🇨🇭 +41</option>
+                  <option value="+963">🇸🇾 +963</option>
+                  <option value="+886">🇹🇼 +886</option>
+                  <option value="+992">🇹🇯 +992</option>
+                  <option value="+255">🇹🇿 +255</option>
+                  <option value="+66">🇹🇭 +66</option>
+                  <option value="+670">🇹🇱 +670</option>
+                  <option value="+228">🇹🇬 +228</option>
+                  <option value="+676">🇹🇴 +676</option>
+                  <option value="+1">🇹🇹 +1</option>
+                  <option value="+216">🇹🇳 +216</option>
+                  <option value="+90">🇹🇷 +90</option>
+                  <option value="+993">🇹🇲 +993</option>
+                  <option value="+256">🇺🇬 +256</option>
+                  <option value="+380">🇺🇦 +380</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+598">🇺🇾 +598</option>
+                  <option value="+998">🇺🇿 +998</option>
+                  <option value="+678">🇻🇺 +678</option>
+                  <option value="+379">🇻🇦 +379</option>
+                  <option value="+58">🇻🇪 +58</option>
+                  <option value="+84">🇻🇳 +84</option>
+                  <option value="+967">🇾🇪 +967</option>
+                  <option value="+260">🇿🇲 +260</option>
+                  <option value="+263">🇿🇼 +263</option>
+                </select>
+                <input type="tel" id="cr2c-phone-number" class="cr-phone__number" placeholder="Phone number" autocomplete="tel-national">
+              </div>
+              <input type="hidden" name="phone" id="cr2c-phone">
+            </div>
+            <div class="commission-form__row">
+              <label class="commission-form__label">Preferred method of contact</label>
+              <div class="cr-contact-btns" id="cr2c-contact-btns" role="group" aria-label="Preferred contact method">
+                <button type="button" class="cr-contact-btn" data-value="By Email">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+                  <span>Email</span>
+                </button>
+                <button type="button" class="cr-contact-btn" data-value="By Text Message">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>Text</span>
+                </button>
+                <button type="button" class="cr-contact-btn" data-value="By WhatsApp">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  <span>WhatsApp</span>
+                </button>
+              </div>
+              <input type="hidden" name="contact_method" id="cr2c-contact-method">
             </div>
           </div>
 
@@ -183,7 +580,7 @@
             <p class="commission-rings-form__pricing-note">Actual cost may vary based on materials and complexity</p>
             <div class="commission-rings-form__pricing-row">
               <span class="commission-rings-form__pricing-label">Design fee</span>
-              <span class="commission-rings-form__pricing-value">{{ section.settings.price_design | default: '$29' }} – {{ section.settings.price_design_alt | default: '$89' }}</span>
+              <span class="commission-rings-form__pricing-value">{{ section.settings.price_design | default: '$59' }}</span>
             </div>
             <div class="commission-rings-form__pricing-row">
               <span class="commission-rings-form__pricing-label">3D Modeling + Production</span>
@@ -196,12 +593,10 @@
             <p class="commission-rings-form__pricing-footer">{{ section.settings.pricing_footer | default: "You only pay the design fee to begin. Production costs are quoted individually and split into two payments. Shipping is always free." }}</p>
           </div>
 
-          <input type="hidden" name="contact[form_type]" value="commission_rings">
-          <input type="hidden" name="contact[body]" id="cr2c-body-combined" value="">
           <button type="submit" class="commission-btn commission-btn--primary commission-form__submit commission-rings-form__submit">
             {{ section.settings.submit_label | default: 'Submit for Review' }}
           </button>
-        {% endform %}
+        </form>
       </div>
     </div>
   </div>
@@ -209,55 +604,605 @@
 
 <script>
 (function () {
-  var form = document.querySelector('.commission-two-col .commission-rings-form__form');
-  var bodyInput = document.getElementById('cr2c-body-combined');
-  if (form && bodyInput) {
-    form.addEventListener('submit', function () {
-      var parts = [];
-      var describe = form.querySelector('[name="contact[notes]"]');
-      var reference = form.querySelector('[name="contact[reference_links]"]');
-      var metal = form.querySelector('[name="contact[metal]"]');
-      var stones = form.querySelector('[name="contact[stones]"]');
-      var country = form.querySelector('[name="contact[country]"]');
-      var phone = form.querySelector('[name="contact[phone]"]');
-      var method = form.querySelector('[name="contact[contact_method]"]');
-      if (describe && describe.value) parts.push('Project: ' + describe.value);
-      if (reference && reference.value) parts.push('Reference links: ' + reference.value);
-      if (metal && metal.value) parts.push('Metal: ' + metal.value);
-      if (stones && stones.value) parts.push('Stones: ' + stones.value);
-      if (country && country.value) parts.push('Country: ' + country.value);
-      if (phone && phone.value) parts.push('Phone: ' + phone.value);
-      if (method && method.value) parts.push('Contact method: ' + method.value);
-      bodyInput.value = parts.join('\n\n');
+  /* ── Supabase config (anon/public key only — safe to expose in browser) ── */
+  var SUPABASE_URL        = {{ section.settings.supabase_url        | default: '' | json }};
+  var SUPABASE_KEY        = {{ section.settings.supabase_anon_key   | default: '' | json }};
+  var SUPABASE_BUCKET     = {{ section.settings.supabase_bucket     | default: 'commission-uploads' | json }};
+  var EDGE_FUNCTION_URL   = {{ section.settings.edge_function_url   | default: '' | json }};
+  var DESIGN_FEE_REDIRECT = {{ section.settings.design_fee_redirect | default: '/pages/design-fee' | json }};
+
+  var MAX_FILES = 5;
+  var MAX_SIZE  = 10 * 1024 * 1024; // 10 MB per file
+
+  /* ── Element refs ─────────────────────────────────────────────────────── */
+  var form         = document.getElementById('cr2c-form');
+  var formError    = document.getElementById('cr2c-form-error');
+  var zone         = document.getElementById('cr2c-upload-zone');
+  var fileInput    = document.getElementById('cr2c-file-input');
+  var previews     = document.getElementById('cr2c-upload-previews');
+  var hiddenRef    = document.getElementById('cr2c-reference-links');
+  var errorEl      = document.getElementById('cr2c-upload-error');
+  var stoneBtns    = document.querySelectorAll('#cr2c-stone-btns .cr-stone-btn');
+  var stonesHidden = document.getElementById('cr2c-stones-hidden');
+  var stonesOther  = document.getElementById('cr2c-stones-other');
+
+  var uploadedFiles = []; // { id, file }
+  var nextId = 0;
+
+  /* ── Edit mode: pre-fill form from Supabase if edit_request_id in URL ─── */
+  (function () {
+    var editId = new URLSearchParams(window.location.search).get('edit_request_id');
+    if (!editId || !SUPABASE_URL || !SUPABASE_KEY) return;
+
+    var apiUrl = SUPABASE_URL.replace(/\/$/, '') +
+      '/rest/v1/quote_requests?id=eq.' + encodeURIComponent(editId) +
+      '&select=customer_name,email,phone,country,contact_method,notes,metal,stones&limit=1';
+
+    fetch(apiUrl, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (rows) {
+        if (!rows || !rows.length) return;
+        var r = rows[0];
+
+        function setVal(id, val) {
+          var el = document.getElementById(id);
+          if (el && val) el.value = val;
+        }
+
+        setVal('cr2c-name',    r.customer_name);
+        setVal('cr2c-email',   r.email);
+        setVal('cr2c-country', r.country);
+        /* Pre-fill phone: try to strip known country code */
+        if (r.phone) {
+          var phoneCodeEl   = document.getElementById('cr2c-phone-code');
+          var phoneNumberEl = document.getElementById('cr2c-phone-number');
+          var phoneHidden   = document.getElementById('cr2c-phone');
+          var stored = r.phone.trim();
+          var codeMatched = false;
+          if (phoneCodeEl && phoneNumberEl) {
+            Array.from(phoneCodeEl.options).forEach(function (opt) {
+              if (!codeMatched && opt.value && stored.startsWith(opt.value + ' ')) {
+                phoneCodeEl.value   = opt.value;
+                phoneNumberEl.value = stored.slice(opt.value.length + 1);
+                codeMatched = true;
+              }
+            });
+            if (!codeMatched) phoneNumberEl.value = stored;
+          }
+          if (phoneHidden) phoneHidden.value = stored;
+        }
+        setVal('cr2c-describe',       r.notes);
+        setVal('cr2c-metal',          r.metal);
+        /* Pre-fill contact method buttons */
+        if (r.contact_method) {
+          var contactBtns = document.querySelectorAll('#cr2c-contact-btns .cr-contact-btn');
+          contactBtns.forEach(function (btn) {
+            if (btn.dataset.value === r.contact_method) {
+              btn.classList.add('is-active');
+              document.getElementById('cr2c-contact-method').value = r.contact_method;
+            }
+          });
+        }
+
+        /* Stone buttons */
+        if (r.stones) {
+          var btns = document.querySelectorAll('#cr2c-stone-btns .cr-stone-btn');
+          var matched = false;
+          btns.forEach(function (btn) {
+            if (btn.dataset.value === r.stones) {
+              btn.classList.add('is-active');
+              document.getElementById('cr2c-stones-hidden').value = r.stones;
+              matched = true;
+            }
+          });
+          if (!matched) {
+            /* Custom stone value */
+            setVal('cr2c-stones-other', r.stones);
+            document.getElementById('cr2c-stones-hidden').value = r.stones;
+          }
+        }
+      })
+      .catch(function (err) { console.warn('Edit pre-fill failed:', err); });
+  })();
+
+  /* ── Error display helpers ────────────────────────────────────────────── */
+  function showUploadError(msg) {
+    if (!errorEl) return;
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+  }
+  function showFormError(msg) {
+    if (!formError) return;
+    formError.textContent = msg;
+    formError.hidden = !msg;
+    if (msg) formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ── Inline field validation helpers ─────────────────────────────────── */
+  function setFieldError(el, msg) {
+    if (!el) return;
+    el.classList.add('is-invalid');
+    /* Shake */
+    el.classList.remove('is-shaking');
+    void el.offsetWidth; /* reflow to restart animation */
+    el.classList.add('is-shaking');
+    el.addEventListener('animationend', function () { el.classList.remove('is-shaking'); }, { once: true });
+    /* Error message */
+    var errEl = el.parentElement.querySelector('.commission-form__field-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.className = 'commission-form__field-error';
+      el.parentElement.appendChild(errEl);
+    }
+    errEl.textContent = msg;
+    requestAnimationFrame(function () { errEl.classList.add('is-visible'); });
+  }
+
+  function clearFieldError(el) {
+    if (!el) return;
+    el.classList.remove('is-invalid', 'is-shaking');
+    var errEl = el.parentElement && el.parentElement.querySelector('.commission-form__field-error');
+    if (errEl) {
+      errEl.classList.remove('is-visible');
+      setTimeout(function () { if (errEl.parentElement) errEl.parentElement.removeChild(errEl); }, 200);
+    }
+  }
+
+  function attachClearOnInput(el) {
+    if (!el) return;
+    var ev = (el.tagName === 'SELECT') ? 'change' : 'input';
+    el.addEventListener(ev, function () { clearFieldError(el); }, { once: true });
+  }
+
+  function validateFields() {
+    var nameEl    = form.querySelector('[name="name"]');
+    var emailEl   = form.querySelector('[name="email"]');
+    var metalEl   = form.querySelector('[name="metal"]');
+    var errors    = [];
+
+    if (!nameEl.value.trim()) {
+      setFieldError(nameEl, 'Please enter your full name.');
+      attachClearOnInput(nameEl);
+      errors.push(nameEl);
+    }
+    if (!emailEl.value.trim()) {
+      setFieldError(emailEl, 'Please enter your email address.');
+      attachClearOnInput(emailEl);
+      errors.push(emailEl);
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())) {
+      setFieldError(emailEl, 'Please enter a valid email address.');
+      attachClearOnInput(emailEl);
+      errors.push(emailEl);
+    }
+    if (!metalEl.value) {
+      setFieldError(metalEl, 'Please select a metal.');
+      attachClearOnInput(metalEl);
+      errors.push(metalEl);
+    }
+
+    if (errors.length > 0) {
+      errors[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      errors[0].focus();
+    }
+
+    return errors.length === 0;
+  }
+
+  /* ── Zone: click / keyboard open file picker ──────────────────────────── */
+  if (zone && fileInput) {
+    zone.addEventListener('click', function () { fileInput.click(); });
+    zone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+
+    /* Drag & drop */
+    zone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      zone.classList.add('is-dragover');
+    });
+    ['dragleave', 'dragend'].forEach(function (ev) {
+      zone.addEventListener(ev, function () { zone.classList.remove('is-dragover'); });
+    });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      zone.classList.remove('is-dragover');
+      addFiles(Array.from(e.dataTransfer.files));
+    });
+
+    /* File picker change */
+    fileInput.addEventListener('change', function () {
+      addFiles(Array.from(fileInput.files));
+      fileInput.value = ''; // reset so same file can be re-added after removal
     });
   }
 
+  /* ── Add files to the queue ───────────────────────────────────────────── */
+  function addFiles(newFiles) {
+    showUploadError('');
+    var imageFiles = newFiles.filter(function (f) {
+      if (!f.type.startsWith('image/')) {
+        showUploadError('Only image files are accepted (JPG, PNG, WEBP).');
+        return false;
+      }
+      if (f.size > MAX_SIZE) {
+        showUploadError('"' + f.name + '" exceeds the 10 MB limit.');
+        return false;
+      }
+      return true;
+    });
+
+    var slots = MAX_FILES - uploadedFiles.length;
+    if (imageFiles.length > slots) {
+      showUploadError('Maximum ' + MAX_FILES + ' photos allowed. Only the first ' + slots + ' were added.');
+      imageFiles = imageFiles.slice(0, slots);
+    }
+
+    imageFiles.forEach(function (file) {
+      var id = nextId++;
+      uploadedFiles.push({ id: id, file: file });
+      renderPreview(id, file);
+    });
+
+    syncZoneState();
+  }
+
+  /* ── Render a thumbnail preview card ─────────────────────────────────── */
+  function renderPreview(id, file) {
+    if (!previews) return;
+    previews.hidden = false;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var item = document.createElement('div');
+      item.className = 'cr-upload__item';
+      item.dataset.id = id;
+      item.innerHTML =
+        '<img src="' + e.target.result + '" alt="' + file.name + '" class="cr-upload__thumb">' +
+        '<div class="cr-upload__item-overlay"></div>' +
+        '<button type="button" class="cr-upload__remove" aria-label="Remove ' + file.name + '">' +
+          '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+        '</button>';
+      item.querySelector('.cr-upload__remove').addEventListener('click', function () {
+        uploadedFiles = uploadedFiles.filter(function (f) { return f.id !== id; });
+        item.remove();
+        if (uploadedFiles.length === 0 && previews) previews.hidden = true;
+        syncZoneState();
+        showUploadError('');
+      });
+      previews.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Toggle zone "full" state when limit is reached ──────────────────── */
+  function syncZoneState() {
+    if (zone) zone.classList.toggle('is-full', uploadedFiles.length >= MAX_FILES);
+  }
+
+  /* ── Upload one file to Supabase Storage, returns promise<publicUrl|null> */
+  function uploadToSupabase(file) {
+    var ext  = file.name.split('.').pop().toLowerCase();
+    var path = 'commissions/' + Date.now() + '-' + Math.random().toString(36).slice(2, 9) + '.' + ext;
+    var url  = SUPABASE_URL.replace(/\/$/, '') + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + path;
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'apikey': SUPABASE_KEY,
+        'Content-Type': file.type || 'application/octet-stream',
+        'x-upsert': 'false'
+      },
+      body: file
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) return null;
+        return SUPABASE_URL.replace(/\/$/, '') + '/storage/v1/object/public/' + SUPABASE_BUCKET + '/' + path;
+      })
+      .catch(function () { return null; });
+  }
+
+  /* ── Phone: combine country code + number into hidden field ─────────── */
+  (function () {
+    var codeEl    = document.getElementById('cr2c-phone-code');
+    var numberEl  = document.getElementById('cr2c-phone-number');
+    var hiddenEl  = document.getElementById('cr2c-phone');
+    var countryEl = document.getElementById('cr2c-country');
+    if (!codeEl || !numberEl || !hiddenEl) return;
+
+    /* Country name → dial code map */
+    var dialMap = {
+      'Afghanistan': '+93', 'Albania': '+355', 'Algeria': '+213', 'Andorra': '+376',
+      'Angola': '+244', 'Antigua and Barbuda': '+1', 'Argentina': '+54', 'Armenia': '+374',
+      'Australia': '+61', 'Austria': '+43', 'Azerbaijan': '+994', 'Bahamas': '+1',
+      'Bahrain': '+973', 'Bangladesh': '+880', 'Barbados': '+1', 'Belarus': '+375',
+      'Belgium': '+32', 'Belize': '+501', 'Benin': '+229', 'Bhutan': '+975',
+      'Bolivia': '+591', 'Bosnia and Herzegovina': '+387', 'Botswana': '+267', 'Brazil': '+55',
+      'Brunei': '+673', 'Bulgaria': '+359', 'Burkina Faso': '+226', 'Burundi': '+257',
+      'Cabo Verde': '+238', 'Cambodia': '+855', 'Cameroon': '+237', 'Canada': '+1',
+      'Central African Republic': '+236', 'Chad': '+235', 'Chile': '+56', 'China': '+86',
+      'Colombia': '+57', 'Comoros': '+269', 'Congo (Congo-Brazzaville)': '+242',
+      'Costa Rica': '+506', 'Croatia': '+385', 'Cuba': '+53', 'Cyprus': '+357',
+      'Czech Republic': '+420', 'DR Congo': '+243', 'Denmark': '+45', 'Djibouti': '+253',
+      'Dominica': '+1', 'Dominican Republic': '+1', 'Ecuador': '+593', 'Egypt': '+20',
+      'El Salvador': '+503', 'Equatorial Guinea': '+240', 'Eritrea': '+291', 'Estonia': '+372',
+      'Eswatini': '+268', 'Ethiopia': '+251', 'Fiji': '+679', 'Finland': '+358',
+      'France': '+33', 'Gabon': '+241', 'Gambia': '+220', 'Georgia': '+995',
+      'Germany': '+49', 'Ghana': '+233', 'Greece': '+30', 'Grenada': '+1',
+      'Guatemala': '+502', 'Guinea': '+224', 'Guinea-Bissau': '+245', 'Guyana': '+592',
+      'Haiti': '+509', 'Honduras': '+504', 'Hungary': '+36', 'Iceland': '+354',
+      'India': '+91', 'Indonesia': '+62', 'Iran': '+98', 'Iraq': '+964',
+      'Ireland': '+353', 'Israel': '+972', 'Italy': '+39', 'Jamaica': '+1',
+      'Japan': '+81', 'Jordan': '+962', 'Kazakhstan': '+7', 'Kenya': '+254',
+      'Kiribati': '+686', 'Kuwait': '+965', 'Kyrgyzstan': '+996', 'Laos': '+856',
+      'Latvia': '+371', 'Lebanon': '+961', 'Lesotho': '+266', 'Liberia': '+231',
+      'Libya': '+218', 'Liechtenstein': '+423', 'Lithuania': '+370', 'Luxembourg': '+352',
+      'Madagascar': '+261', 'Malawi': '+265', 'Malaysia': '+60', 'Maldives': '+960',
+      'Mali': '+223', 'Malta': '+356', 'Marshall Islands': '+692', 'Mauritania': '+222',
+      'Mauritius': '+230', 'Mexico': '+52', 'Micronesia': '+691', 'Moldova': '+373',
+      'Monaco': '+377', 'Mongolia': '+976', 'Montenegro': '+382', 'Morocco': '+212',
+      'Mozambique': '+258', 'Myanmar': '+95', 'Namibia': '+264', 'Nauru': '+674',
+      'Nepal': '+977', 'Netherlands': '+31', 'New Zealand': '+64', 'Nicaragua': '+505',
+      'Niger': '+227', 'Nigeria': '+234', 'North Korea': '+850', 'North Macedonia': '+389',
+      'Norway': '+47', 'Oman': '+968', 'Pakistan': '+92', 'Palau': '+680',
+      'Palestine': '+970', 'Panama': '+507', 'Papua New Guinea': '+675', 'Paraguay': '+595',
+      'Peru': '+51', 'Philippines': '+63', 'Poland': '+48', 'Portugal': '+351',
+      'Qatar': '+974', 'Romania': '+40', 'Russia': '+7', 'Rwanda': '+250',
+      'Saint Kitts and Nevis': '+1', 'Saint Lucia': '+1',
+      'Saint Vincent and the Grenadines': '+1', 'Samoa': '+685', 'San Marino': '+378',
+      'Sao Tome and Principe': '+239', 'Saudi Arabia': '+966', 'Senegal': '+221',
+      'Serbia': '+381', 'Seychelles': '+248', 'Sierra Leone': '+232', 'Singapore': '+65',
+      'Slovakia': '+421', 'Slovenia': '+386', 'Solomon Islands': '+677', 'Somalia': '+252',
+      'South Africa': '+27', 'South Korea': '+82', 'South Sudan': '+211', 'Spain': '+34',
+      'Sri Lanka': '+94', 'Sudan': '+249', 'Suriname': '+597', 'Sweden': '+46',
+      'Switzerland': '+41', 'Syria': '+963', 'Taiwan': '+886', 'Tajikistan': '+992',
+      'Tanzania': '+255', 'Thailand': '+66', 'Timor-Leste': '+670', 'Togo': '+228',
+      'Tonga': '+676', 'Trinidad and Tobago': '+1', 'Tunisia': '+216', 'Turkey': '+90',
+      'Turkmenistan': '+993', 'Tuvalu': '+688', 'Uganda': '+256', 'Ukraine': '+380',
+      'United Arab Emirates': '+971', 'United Kingdom': '+44', 'United States': '+1',
+      'Uruguay': '+598', 'Uzbekistan': '+998', 'Vanuatu': '+678', 'Vatican City': '+379',
+      'Venezuela': '+58', 'Vietnam': '+84', 'Yemen': '+967', 'Zambia': '+260',
+      'Zimbabwe': '+263'
+    };
+
+    /* Auto-fill phone code when country changes */
+    if (countryEl) {
+      countryEl.addEventListener('change', function () {
+        var dial = dialMap[countryEl.value];
+        if (dial) {
+          /* Find matching option in phone code select */
+          var matched = Array.from(codeEl.options).find(function (opt) {
+            return opt.value === dial;
+          });
+          if (matched) codeEl.value = dial;
+          sync();
+        }
+      });
+    }
+
+    function sync() {
+      var num = numberEl.value.trim();
+      hiddenEl.value = num ? (codeEl.value + ' ' + num) : '';
+    }
+    codeEl.addEventListener('change', sync);
+    numberEl.addEventListener('input', sync);
+  })();
+
+  /* ── Contact method buttons ──────────────────────────────────────────── */
+  var contactBtns   = document.querySelectorAll('#cr2c-contact-btns .cr-contact-btn');
+  var contactHidden = document.getElementById('cr2c-contact-method');
+  contactBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      contactBtns.forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      contactHidden.value = btn.dataset.value;
+    });
+  });
+
+  /* ── Stone buttons ────────────────────────────────────────────────────── */
+  stoneBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var already = btn.classList.contains('is-active');
+      stoneBtns.forEach(function (b) { b.classList.remove('is-active'); });
+      /* Clicking the active button again deselects it */
+      if (already) {
+        stonesHidden.value = '';
+      } else {
+        btn.classList.add('is-active');
+        stonesHidden.value = btn.dataset.value;
+        /* Clear the "other" text field when a preset button is picked */
+        if (stonesOther) stonesOther.value = '';
+      }
+    });
+  });
+
+  /* Typing in "other" clears the button selection */
+  if (stonesOther) {
+    stonesOther.addEventListener('input', function () {
+      if (stonesOther.value.trim()) {
+        stoneBtns.forEach(function (b) { b.classList.remove('is-active'); });
+        stonesHidden.value = stonesOther.value.trim();
+      } else {
+        stonesHidden.value = '';
+      }
+    });
+  }
+
+  /* ── Form submit → Edge Function → redirect to design-fee page ───────── */
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      showFormError('');
+      showUploadError('');
+
+      var nameEl    = form.querySelector('[name="name"]');
+      var emailEl   = form.querySelector('[name="email"]');
+      var notesEl   = form.querySelector('[name="notes"]');
+      var metalEl   = form.querySelector('[name="metal"]');
+      var stonesEl  = form.querySelector('[name="stones"]');
+      var countryEl = form.querySelector('[name="country"]');
+      var phoneEl   = form.querySelector('[name="phone"]');
+      var methodEl  = form.querySelector('[name="contact_method"]');
+
+      /* Client-side validation */
+      if (!validateFields()) return;
+      if (!EDGE_FUNCTION_URL) { showFormError('Submission is not configured yet. Please contact us directly.'); return; }
+
+      var submitBtn = form.querySelector('.commission-rings-form__submit');
+      var origLabel = submitBtn ? submitBtn.textContent : '';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Uploading\u2026'; }
+
+      /* Upload photos first (if any), then POST to Edge Function */
+      var uploadPromise = (uploadedFiles.length && SUPABASE_URL && SUPABASE_KEY)
+        ? Promise.all(uploadedFiles.map(function (f) { return uploadToSupabase(f.file); }))
+        : Promise.resolve([]);
+
+      uploadPromise
+        .then(function (urls) {
+          var photoUrls = urls.filter(Boolean);
+          if (submitBtn) submitBtn.textContent = 'Submitting\u2026';
+
+          var payload = {
+            customer_name:   nameEl.value.trim(),
+            email:           emailEl.value.trim(),
+            phone:           phoneEl   ? phoneEl.value.trim()   : '',
+            country:         countryEl ? countryEl.value.trim() : '',
+            contact_method:  methodEl  ? methodEl.value         : '',
+            notes:           notesEl   ? notesEl.value.trim()   : '',
+            metal:           metalEl   ? metalEl.value          : '',
+            stones:          stonesEl  ? stonesEl.value         : '',
+            reference_links: photoUrls.join(', ')
+          };
+
+          /* If editing an existing request, include its ID so the edge function updates instead of inserts */
+          var editRequestId = new URLSearchParams(window.location.search).get('edit_request_id');
+          if (editRequestId) payload.request_id = editRequestId;
+
+          return fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data.success) throw new Error(data.error || 'Submission failed.');
+          window.location.href = DESIGN_FEE_REDIRECT + '?request_id=' + encodeURIComponent(data.request_id) + '&from=' + encodeURIComponent(window.location.href);
+        })
+        .catch(function (err) {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origLabel; }
+          showFormError(err.message || 'Something went wrong. Please try again.');
+        });
+    });
+  }
+
+  /* ── Rotating terminal-style placeholder ─────────────────────────────── */
+  (function () {
+    var ta = document.getElementById('cr2c-describe');
+    if (!ta) return;
+
+    var phrases = [
+      'Something elegant for my wedding day, maybe a gold ring with a diamond\u2026',
+      'A simple but beautiful engagement ring with a classic look\u2026',
+      'A minimalist ring with a small diamond and a clean band\u2026',
+      'A vintage inspired ring with a romantic feel\u2026',
+      'A modern ring with a unique center stone\u2026',
+      'A delicate ring with a thin band and a sparkling diamond\u2026'
+    ];
+
+    var TYPE_SPEED   = 28;  // ms per character when typing
+    var DELETE_SPEED = 12;  // ms per character when deleting
+    var HOLD_PAUSE   = 1400; // ms to hold the full phrase before deleting
+    var NEXT_PAUSE   = 250;  // ms pause between phrases
+
+    var phraseIndex = 0;
+    var charIndex   = 0;
+    var isDeleting  = false;
+    var timer       = null;
+
+    function tick() {
+      /* Stop animating if the user has focused or typed in the field */
+      if (document.activeElement === ta || ta.value !== '') return;
+
+      var current = phrases[phraseIndex];
+
+      if (!isDeleting) {
+        /* Typing forward */
+        charIndex++;
+        ta.placeholder = current.slice(0, charIndex);
+
+        if (charIndex === current.length) {
+          /* Full phrase shown — hold, then start deleting */
+          isDeleting = true;
+          timer = setTimeout(tick, HOLD_PAUSE);
+          return;
+        }
+      } else {
+        /* Deleting backward */
+        charIndex--;
+        ta.placeholder = current.slice(0, charIndex);
+
+        if (charIndex === 0) {
+          /* Phrase fully deleted — move to next */
+          isDeleting  = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          timer = setTimeout(tick, NEXT_PAUSE);
+          return;
+        }
+      }
+
+      timer = setTimeout(tick, isDeleting ? DELETE_SPEED : TYPE_SPEED);
+    }
+
+    /* Clear placeholder instantly when field is focused */
+    ta.addEventListener('focus', function () {
+      clearTimeout(timer);
+      ta.placeholder = '';
+    });
+
+    /* Resume animation when user blurs the field (if they left it empty) */
+    ta.addEventListener('blur', function () {
+      if (ta.value === '') {
+        charIndex   = 0;
+        isDeleting  = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        clearTimeout(timer);
+        timer = setTimeout(tick, NEXT_PAUSE);
+      }
+    });
+
+    /* Kick off */
+    timer = setTimeout(tick, 800);
+  })();
+
+  /* ── Slideshow ────────────────────────────────────────────────────────── */
   var slideshow = document.querySelector('[data-slideshow]');
   if (!slideshow) return;
   var slides = slideshow.querySelectorAll('.commission-two-col__slide');
-  var dots = slideshow.querySelectorAll('.commission-two-col__dot');
+  var dots   = slideshow.querySelectorAll('.commission-two-col__dot');
   if (slides.length < 2) return;
 
+  var current = 0;
+
   function goTo(index) {
-    var i = ((index % slides.length) + slides.length) % slides.length;
-    slides.forEach(function (s, n) { s.classList.toggle('is-active', n === i); });
-    dots.forEach(function (d, n) { d.classList.toggle('is-active', n === i); });
+    current = ((index % slides.length) + slides.length) % slides.length;
+    slides.forEach(function (s, n) { s.classList.toggle('is-active', n === current); });
+    dots.forEach(function (d, n)   { d.classList.toggle('is-active', n === current); });
   }
 
-  dots.forEach(function (dot, i) {
-    dot.addEventListener('click', function () { goTo(i); });
-  });
+  dots.forEach(function (dot, i) { dot.addEventListener('click', function () { goTo(i); }); });
 
   var prevBtn = slideshow.querySelector('[data-slide-prev]');
   var nextBtn = slideshow.querySelector('[data-slide-next]');
-  if (prevBtn) prevBtn.addEventListener('click', function () { current = (current - 1 + slides.length) % slides.length; goTo(current); });
-  if (nextBtn) nextBtn.addEventListener('click', function () { current = (current + 1) % slides.length; goTo(current); });
+  if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
 
-  var current = 0;
-  var autoplay = setInterval(function () { current = (current + 1) % slides.length; goTo(current); }, 5000);
+  var autoplay = setInterval(function () { goTo(current + 1); }, 5000);
   slideshow.addEventListener('mouseenter', function () { clearInterval(autoplay); });
 
-  // Keep native videos playing (no pause), no controls
+  /* Keep native videos playing silently */
   slideshow.querySelectorAll('.commission-two-col__video-native').forEach(function (video) {
     video.controls = false;
     video.muted = true;
@@ -283,8 +1228,13 @@
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Share your concept — the symbols, proportions, mood, references, or even just a rough direction. We carefully study everything you provide to translate it into a clear creative direction." },
     { "type": "text", "id": "label_describe", "label": "Describe label", "default": "Describe your vision" },
     { "type": "text", "id": "placeholder_describe", "label": "Describe placeholder", "default": "I want a ring with..." },
-    { "type": "text", "id": "label_reference", "label": "Reference label", "default": "Paste image links or we'll contact you for photos" },
-    { "type": "textarea", "id": "upload_note", "label": "Upload note", "default": "Shopify doesn't support file uploads in contact forms. Paste links to your images above, or we'll reach out for reference photos." },
+    { "type": "header", "content": "Photo uploads (Supabase Storage)" },
+    { "type": "text", "id": "supabase_url", "label": "Supabase project URL", "info": "Supabase → Settings → API. e.g. https://xxxx.supabase.co" },
+    { "type": "text", "id": "supabase_anon_key", "label": "Supabase anon (public) key", "info": "Supabase → Settings → API → anon public. This key is safe to expose in the browser." },
+    { "type": "text", "id": "supabase_bucket", "label": "Storage bucket name", "default": "commission-uploads", "info": "Create in Supabase → Storage. Set to Public and allow anon INSERT via a policy." },
+    { "type": "text", "id": "edge_function_url", "label": "Edge Function URL", "info": "Supabase → Edge Functions → quote-submit → copy the Invoke URL." },
+    { "type": "text", "id": "design_fee_redirect", "label": "Design fee page path", "default": "/pages/design-fee", "info": "Shopify page handle for the design-fee step. e.g. /pages/design-fee" },
+    { "type": "textarea", "id": "upload_note", "label": "Upload note", "default": "Your photos are uploaded securely when you submit the form. We use them only to understand your vision." },
     { "type": "text", "id": "price_total", "label": "Estimated total", "default": "$570" },
     { "type": "text", "id": "price_design", "label": "Design fee low", "default": "$29" },
     { "type": "text", "id": "price_design_alt", "label": "Design fee high", "default": "$89" },

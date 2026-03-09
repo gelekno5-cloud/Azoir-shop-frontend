@@ -2,7 +2,32 @@
   "permissions": {
     "allow": [
       "Bash(gh repo:*)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(shopify theme:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd:*)",
+      "Bash(echo:*)",
+      "Bash(npm list:*)",
+      "Read(//c/Users/gelek/Documents/Azoir theme/$APPDATA/supabase/**)",
+      "Read(//c/Users/gelek/Documents/Azoir theme/$HOME/.supabase/**)",
+      "Bash(npx supabase:*)",
+      "Bash(shopify:*)",
+      "Bash(node:*)",
+      "Bash(xargs grep:*)",
+      "Bash(powershell:*)",
+      "Read(//usr/bin/**)",
+      "Read(//c/Program Files/Git/usr/bin/**)",
+      "Bash(winpty:*)",
+      "Bash(grep:*)",
+      "Bash(supabase:*)",
+      "Bash(where supabase:*)",
+      "Bash(ls:*)",
+      "Bash(for f in templates/page.commission-bracelet.json templates/page.commission-necklace.json templates/page.commission-pendant.json templates/page.commission-ring.json)",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//c/Users/gelek/Documents/Azoir theme/**)",
+      "Bash(done)",
+      "Bash(npx:*)"
     ]
   }
 }

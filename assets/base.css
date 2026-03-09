@@ -5019,10 +5019,12 @@ product-recommendations:has([data-has-recommendations='false']) {
   color: inherit;
   background: #fff;
   box-sizing: border-box;
+  position: relative;
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out, border-color 0.2s, background 0.2s;
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
+
 
 .syp-js .syp__reveal {
   opacity: 1;
@@ -5037,8 +5039,13 @@ product-recommendations:has([data-has-recommendations='false']) {
   opacity: 0.75;
 }
 
+/* Lift + shadow */
 .syp__card:hover {
-  border-color: rgba(0,0,0,0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
+  border-color: rgba(0, 0, 0, 0.22);
+  transition-duration: 0.12s;
+  transition-timing-function: ease;
 }
 
 .syp__card--dark {
@@ -5047,9 +5054,11 @@ product-recommendations:has([data-has-recommendations='false']) {
   color: #fff;
 }
 
+
 .syp__card--dark:hover {
   background: #1a1a1a;
   border-color: #1a1a1a;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 .syp__cardLeft {
@@ -5069,12 +5078,19 @@ product-recommendations:has([data-has-recommendations='false']) {
   opacity: 0.85;
 }
 
+/* CTA shifts right on hover */
 .syp__cardCta {
   font-weight: 400;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.syp__card:hover .syp__cardCta {
+  transform: translateX(8px);
 }
 
 .syp__cardRight,

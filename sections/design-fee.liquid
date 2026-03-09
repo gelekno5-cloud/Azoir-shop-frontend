@@ -1,0 +1,337 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+
+<section class="commission-page design-fee-page" id="design-fee">
+
+  <!-- Loading -->
+  <div class="design-fee__loading" id="df-loading"><p>Loading your request&hellip;</p></div>
+
+  <!-- Error -->
+  <div class="design-fee__error" id="df-error" hidden>
+    <h2>Something went wrong</h2>
+    <p id="df-error-msg">We couldn&rsquo;t load your request. Please contact us directly.</p>
+  </div>
+
+  <!-- Main layout -->
+  <div class="design-fee__wrap" id="df-card" hidden>
+
+    <!-- Full-width header -->
+    <header class="design-fee__header">
+      <h1 class="design-fee__title">{{ section.settings.title | default: 'Your Design Fee' }}</h1>
+      <p class="design-fee__subtitle">{{ section.settings.subtitle | default: 'Review your submission and pay the design fee to begin the design process.' }}</p>
+      <div class="design-fee__meta">
+        <span class="design-fee__pid" id="df-project-id"></span>
+        <a href="#" class="design-fee__edit" id="df-edit-link">Edit Project Details &rsaquo;</a>
+      </div>
+    </header>
+
+    <!-- Two-column body -->
+    <div class="design-fee__body">
+
+      <!-- LEFT -->
+      <div class="design-fee__left">
+
+        <!-- Submission Summary -->
+        <div class="design-fee__section">
+          <h2 class="design-fee__section-title">Submission Summary</h2>
+          <dl class="design-fee__dl" id="df-summary-dl"></dl>
+        </div>
+
+        <!-- What Happens Next -->
+        <div class="design-fee__section">
+          <h2 class="design-fee__section-title">What Happens Next</h2>
+          <ol class="design-fee__steps">
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">1</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step1_title | default: 'Design Creation' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step1_text | default: 'Our designers create three original design concepts based on your brief.' }}</p>
+              </div>
+            </li>
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">2</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step2_title | default: 'Review & Revisions' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step2_text | default: 'Professional jewelry CAD visualization. Up to two revisions.' }}</p>
+              </div>
+            </li>
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">3</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step3_title | default: 'Production Quote' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step3_text | default: 'Once approved, we provide final production pricing.' }}</p>
+              </div>
+            </li>
+          </ol>
+          <p class="design-fee__timeline-note">{{ section.settings.timeline_note | default: 'Typical timeline: 2–4 business days' }}</p>
+        </div>
+
+        <!-- Your Design Fee Includes -->
+        <div class="design-fee__section design-fee__includes-section">
+          {% if section.settings.includes_image %}
+            <div class="design-fee__includes-img">
+              {{ section.settings.includes_image | image_url: width: 320 | image_tag: loading: 'lazy', alt: 'Design example' }}
+            </div>
+          {% endif %}
+          <div class="design-fee__includes-content">
+            <h2 class="design-fee__section-title">Your Design Fee Includes</h2>
+            <ul class="design-fee__includes-list">
+              {% assign items = section.settings.includes_items | default: 'Three custom design concepts,Professional jewelry CAD visualization,Up to two revisions,Production feasibility review,Final manufacturing quote' | split: ',' %}
+              {% for item in items %}
+                <li>{{ item | strip }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+      </div><!-- /LEFT -->
+
+      <!-- RIGHT -->
+      <div class="design-fee__right">
+
+        <!-- Fee card -->
+        <div class="design-fee__fee-card">
+          <div class="design-fee__fee-row">
+            <span class="design-fee__fee-label">Design Fee</span>
+            <span class="design-fee__fee-amount" id="df-fee-amount">{{ section.settings.fee_default | default: '$59' }}</span>
+          </div>
+          <p class="design-fee__fee-note">{{ section.settings.fee_note | default: 'Covers three original design concepts and CAD visualization.' }}</p>
+          <p class="design-fee__fee-credit">{{ section.settings.fee_credit | default: 'Your design fee will be credited toward production if you proceed.' }}</p>
+
+          <a href="#" id="df-pay-btn" class="commission-btn commission-btn--primary design-fee__pay-btn">
+            {{ section.settings.pay_label | default: 'Pay Design Fee' }}
+          </a>
+          <p class="design-fee__pay-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            {{ section.settings.pay_note | default: 'Secure payment' }}
+          </p>
+          <div class="design-fee__badges">
+            <span class="design-fee__badge">stripe</span>
+            <span class="design-fee__badge">shopify payments</span>
+            <span class="design-fee__badge design-fee__badge--ssl">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+              SSL secured
+            </span>
+          </div>
+        </div>
+
+        <!-- Typical production cost -->
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Typical production cost</p>
+          <p class="design-fee__info-value">{{ section.settings.production_cost | default: '$900 – $6,000+' }}</p>
+          <p class="design-fee__info-sub">{{ section.settings.production_cost_note | default: 'Depends on metal, stones, complexity' }}</p>
+        </div>
+
+        <!-- Design Ownership -->
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Design Ownership</p>
+          <p class="design-fee__info-sub">{{ section.settings.ownership_text | default: 'All design concepts remain property of Azoir & Co until production is commissioned.' }}</p>
+        </div>
+
+        <!-- Refund Policy -->
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Refund Policy</p>
+          <p class="design-fee__info-sub">{{ section.settings.refund_text | default: 'Design fees are non-refundable once work has commenced.' }}</p>
+        </div>
+
+        <!-- Questions -->
+        {% if section.settings.contact_email != blank %}
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Questions before paying?</p>
+          <p class="design-fee__info-sub"><a href="mailto:{{ section.settings.contact_email }}">{{ section.settings.contact_email }}</a></p>
+        </div>
+        {% endif %}
+
+      </div><!-- /RIGHT -->
+
+    </div><!-- /body -->
+  </div><!-- /wrap -->
+
+</section>
+
+<script>
+(function () {
+  var SUPABASE_URL  = {{ section.settings.supabase_url  | default: '' | json }};
+  var SUPABASE_KEY  = {{ section.settings.supabase_anon_key | default: '' | json }};
+  var PAYMENT_BASE  = {{ section.settings.payment_url   | default: '' | json }};
+
+  var loadingEl  = document.getElementById('df-loading');
+  var errorEl    = document.getElementById('df-error');
+  var errorMsg   = document.getElementById('df-error-msg');
+  var wrapEl     = document.getElementById('df-card');
+  var dlEl       = document.getElementById('df-summary-dl');
+  var feeEl      = document.getElementById('df-fee-amount');
+  var payBtn     = document.getElementById('df-pay-btn');
+  var pidEl      = document.getElementById('df-project-id');
+  var editLinkEl = document.getElementById('df-edit-link');
+
+  function showError(msg) {
+    if (loadingEl) loadingEl.hidden = true;
+    if (errorMsg)  errorMsg.textContent = msg;
+    if (errorEl)   errorEl.hidden = false;
+  }
+
+  var params    = new URLSearchParams(window.location.search);
+  var requestId = params.get('request_id');
+  var fromUrl   = params.get('from');
+
+  if (!requestId) { showError('No request ID found. Please re-submit your commission form.'); return; }
+  if (!SUPABASE_URL || !SUPABASE_KEY) { showError('Page is not configured. Please contact us directly.'); return; }
+
+  /* Show short project ID */
+  if (pidEl) pidEl.textContent = 'Project ID: AZR-' + requestId.slice(0, 5).toUpperCase();
+
+  /* Edit link — go back to form with edit_request_id so form can pre-fill */
+  if (editLinkEl) {
+    var editBase = fromUrl ? decodeURIComponent(fromUrl) : (document.referrer || '/');
+    editLinkEl.href = editBase + (editBase.indexOf('?') >= 0 ? '&' : '?') + 'edit_request_id=' + encodeURIComponent(requestId);
+  }
+
+  var apiUrl = SUPABASE_URL.replace(/\/$/, '') +
+    '/rest/v1/quote_requests?id=eq.' + encodeURIComponent(requestId) +
+    '&select=customer_name,email,phone,country,contact_method,notes,metal,stones,reference_links,design_fee_amount,design_fee_status,created_at' +
+    '&limit=1';
+
+  fetch(apiUrl, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+    .then(function (res) { return res.json(); })
+    .then(function (rows) {
+      if (!rows || rows.length === 0) {
+        showError('We could not find your request. It may have expired or the link is incorrect.');
+        return;
+      }
+
+      var r = rows[0];
+      if (loadingEl) loadingEl.hidden = true;
+      if (wrapEl)    wrapEl.hidden    = false;
+
+      /* Build summary */
+      var fields = [
+        ['Name',              r.customer_name],
+        ['Email',             r.email],
+        ['Phone',             r.phone],
+        ['Country',           r.country],
+        ['Preferred contact', r.contact_method],
+        ['Metal',             r.metal],
+        ['Stones',            r.stones],
+        ['Vision',            r.notes],
+        ['Reference photos',  r.reference_links]
+      ];
+
+      fields.forEach(function (pair) {
+        if (!pair[1]) return;
+        var dt = document.createElement('dt');
+        dt.className = 'design-fee__dt';
+        dt.textContent = pair[0];
+        var dd = document.createElement('dd');
+        dd.className = 'design-fee__dd';
+        if (/^https?:\/\//.test(pair[1])) {
+          pair[1].split(',').forEach(function (url, i) {
+            url = url.trim();
+            if (!url) return;
+            if (i > 0) dd.appendChild(document.createTextNode(', '));
+            var a = document.createElement('a');
+            a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            a.textContent = 'Photo ' + (i + 1);
+            dd.appendChild(a);
+          });
+        } else {
+          dd.textContent = pair[1];
+        }
+        dlEl.appendChild(dt);
+        dlEl.appendChild(dd);
+      });
+
+      /* Fee amount */
+      if (r.design_fee_amount && feeEl) {
+        feeEl.textContent = '$' + parseFloat(r.design_fee_amount).toFixed(0);
+      }
+
+      /* Pay button — use Cart API to embed request_id as a line item property */
+      if (payBtn && PAYMENT_BASE) {
+        /* Extract variant ID from /cart/VARIANT_ID:1 */
+        var variantMatch = PAYMENT_BASE.match(/\/cart\/(\d+)/);
+        var variantId = variantMatch ? parseInt(variantMatch[1], 10) : null;
+
+        payBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (!variantId) {
+            /* Fallback: direct nav */
+            window.location.href = PAYMENT_BASE;
+            return;
+          }
+          payBtn.textContent = 'Redirecting\u2026';
+          payBtn.style.pointerEvents = 'none';
+          payBtn.style.opacity = '0.7';
+
+          /* Add to cart with request_id as line item property */
+          fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: variantId,
+              quantity: 1,
+              properties: { request_id: requestId }
+            })
+          })
+            .then(function (res) {
+              if (!res.ok) throw new Error('Cart add failed');
+              window.location.href = '/checkout';
+            })
+            .catch(function () {
+              /* Fallback to direct URL on error */
+              var payUrl = PAYMENT_BASE + (PAYMENT_BASE.indexOf('?') >= 0 ? '&' : '?') + 'request_id=' + encodeURIComponent(requestId);
+              window.location.href = payUrl;
+            });
+        });
+      } else if (payBtn) {
+        payBtn.style.display = 'none';
+      }
+    })
+    .catch(function (err) {
+      showError('Failed to load your request. Please try again or contact us directly.');
+      console.error(err);
+    });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Design Fee",
+  "tag": "section",
+  "class": "section-design-fee",
+  "settings": [
+    { "type": "header", "content": "Page header" },
+    { "type": "text",     "id": "title",    "label": "Title",    "default": "Your Design Fee" },
+    { "type": "textarea", "id": "subtitle", "label": "Subtitle", "default": "Review your submission and pay the design fee to begin the design process." },
+    { "type": "header", "content": "What Happens Next steps" },
+    { "type": "text", "id": "step1_title", "label": "Step 1 title", "default": "Design Creation" },
+    { "type": "text", "id": "step1_text",  "label": "Step 1 text",  "default": "Our designers create three original design concepts based on your brief." },
+    { "type": "text", "id": "step2_title", "label": "Step 2 title", "default": "Review & Revisions" },
+    { "type": "text", "id": "step2_text",  "label": "Step 2 text",  "default": "Professional jewelry CAD visualization. Up to two revisions." },
+    { "type": "text", "id": "step3_title", "label": "Step 3 title", "default": "Production Quote" },
+    { "type": "text", "id": "step3_text",  "label": "Step 3 text",  "default": "Once approved, we provide final production pricing." },
+    { "type": "text", "id": "timeline_note", "label": "Timeline note", "default": "Typical timeline: 2–4 business days" },
+    { "type": "header", "content": "Design Fee Includes" },
+    { "type": "image_picker", "id": "includes_image", "label": "Includes image" },
+    { "type": "textarea", "id": "includes_items", "label": "Bullet points (comma-separated)", "default": "Three custom design concepts,Professional jewelry CAD visualization,Up to two revisions,Production feasibility review,Final manufacturing quote" },
+    { "type": "header", "content": "Fee & payment" },
+    { "type": "text",     "id": "fee_default",  "label": "Default fee",   "default": "$59" },
+    { "type": "textarea", "id": "fee_note",      "label": "Fee note",      "default": "Covers three original design concepts and CAD visualization." },
+    { "type": "textarea", "id": "fee_credit",    "label": "Credit note",   "default": "Your design fee will be credited toward production if you proceed." },
+    { "type": "text",     "id": "payment_url",   "label": "Payment URL",   "info": "Shopify cart URL or Stripe link. request_id will be appended." },
+    { "type": "text",     "id": "pay_label",     "label": "Button label",  "default": "Pay Design Fee" },
+    { "type": "text",     "id": "pay_note",      "label": "Below button",  "default": "Secure payment" },
+    { "type": "header", "content": "Info cards" },
+    { "type": "text",     "id": "production_cost",      "label": "Production cost range",  "default": "$900 – $6,000+" },
+    { "type": "text",     "id": "production_cost_note", "label": "Production cost note",   "default": "Depends on metal, stones, complexity" },
+    { "type": "textarea", "id": "ownership_text", "label": "Design ownership text", "default": "All design concepts remain property of Azoir & Co until production is commissioned." },
+    { "type": "textarea", "id": "refund_text",    "label": "Refund policy text",    "default": "Design fees are non-refundable once work has commenced." },
+    { "type": "text",     "id": "contact_email",  "label": "Contact email" },
+    { "type": "header", "content": "Supabase" },
+    { "type": "text", "id": "supabase_url",      "label": "Supabase project URL",    "info": "e.g. https://xxxx.supabase.co" },
+    { "type": "text", "id": "supabase_anon_key", "label": "Supabase anon public key" }
+  ],
+  "presets": [{ "name": "Design Fee" }]
+}
+{% endschema %}

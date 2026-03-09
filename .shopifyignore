@@ -1,0 +1,6 @@
+# Ignore editor temp files so the dev watcher doesn't try to upload them
+*.tmp.*
+*.tmp
+*~
+.DS_Store
+Thumbs.db

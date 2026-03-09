@@ -15,10 +15,15 @@
         "timeline": "1–2 days",
         "subheading": "Share your concept — the symbols, proportions, mood, references, or even just a rough direction. We carefully study everything you provide to translate it into a clear creative direction.",
         "price_total": "$750",
-        "price_design": "$29",
-        "price_design_alt": "$89",
+        "price_design": "$59",
+        "price_design_alt": "$59",
         "price_production": "$721",
-        "submit_label": "Submit for Review"
+        "submit_label": "Submit for Review",
+        "supabase_url": "https://avmcksqllodvspbtcmgf.supabase.co",
+        "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2bWNrc3FsbG9kdnNwYnRjbWdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM2NTEsImV4cCI6MjA4ODU3OTY1MX0.F66t82m3nTle6v6Ok2FpTuGUUArytlHmwweOKEahz34",
+        "supabase_bucket": "commission-uploads",
+        "edge_function_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/quote-submit",
+        "design_fee_redirect": "/pages/design-fee"
       }
     },
     "cb_intro": {
@@ -36,7 +41,7 @@
           "type": "step",
           "settings": {
             "title": "Design Concept Development",
-            "text": "2–4 days. Design fee $29–$89. Our master jeweler creates three original design concepts based on your vision. You'll receive a refined digital visualization. Revisions included."
+            "text": "2–4 days. Design fee $59. Our master jeweler creates three original design concepts based on your vision. You'll receive a refined digital visualization. Revisions included."
           }
         },
         "step_2": {

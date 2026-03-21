@@ -126,7 +126,7 @@ serve(async (req: Request) => {
 
   const paymentId = payment.id as string;
 
-  // ── 8. Update quote_requests status ──────────────────────────────────────
+  // ── 8. Update quote_requests status (general commission orders) ──────────
   await supabase
     .from("quote_requests")
     .update({
@@ -136,6 +136,30 @@ serve(async (req: Request) => {
       status:                 "paid",
     })
     .eq("id", requestId);
+
+  // ── 8b. If this was a B2B order, update b2b_orders → pending_review ──────
+  // b2b-submit-order creates a b2b_orders row whose id IS the request_id.
+  // Updating it here makes the order appear in the Azoir OS notification bell.
+  const { data: b2bOrder } = await supabase
+    .from("b2b_orders")
+    .select("id")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (b2bOrder) {
+    await supabase
+      .from("b2b_orders")
+      .update({
+        status:            "pending_review",
+        design_fee_status: "paid",
+        shopify_order_id:  shopifyOrderId,
+        shopify_total:     parseFloat(order.total_price) || null,
+        shopify_currency:  order.currency ?? null,
+      })
+      .eq("id", requestId);
+
+    console.log(`B2B order ${requestId} → pending_review (Shopify order ${shopifyOrderId})`);
+  }
 
   // ── 9. Create job record ──────────────────────────────────────────────────
   const { data: job, error: jobErr } = await supabase

@@ -1,0 +1,105 @@
+{%- comment -%} Cookie Consent Banner — Azoir {%- endcomment -%}
+
+<div id="azoir-cookie-banner" class="cookie-banner" role="dialog" aria-label="Cookie consent" aria-live="polite" style="display:none">
+  <div class="cookie-banner__inner">
+    <p class="cookie-banner__text">
+      We use cookies to improve your experience and analyse site traffic.
+      <a href="/pages/privacy-policy" class="cookie-banner__link">Privacy Policy</a>
+    </p>
+    <div class="cookie-banner__actions">
+      <button id="azoir-cookie-decline" class="cookie-banner__btn cookie-banner__btn--ghost">Decline</button>
+      <button id="azoir-cookie-accept"  class="cookie-banner__btn cookie-banner__btn--primary">Accept</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #0a0a0a;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 24px;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+.cookie-banner.cookie-banner--visible {
+  transform: translateY(0);
+}
+.cookie-banner__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.cookie-banner__text {
+  font-size: 0.82rem;
+  color: rgba(250,250,248,0.65);
+  margin: 0;
+  line-height: 1.5;
+}
+.cookie-banner__link {
+  color: rgba(250,250,248,0.85);
+  text-underline-offset: 2px;
+}
+.cookie-banner__actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.cookie-banner__btn {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.cookie-banner__btn--ghost {
+  background: transparent;
+  color: rgba(250,250,248,0.45);
+  border: 1px solid rgba(250,250,248,0.15);
+}
+.cookie-banner__btn--ghost:hover { color: rgba(250,250,248,0.8); }
+.cookie-banner__btn--primary {
+  background: #fafaf8;
+  color: #0a0a0a;
+}
+.cookie-banner__btn--primary:hover { background: #08CB00; }
+@media (max-width: 600px) {
+  .cookie-banner__inner { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<script>
+(function () {
+  var KEY = 'azoir_cookie_consent';
+  var banner = document.getElementById('azoir-cookie-banner');
+  if (!banner) return;
+  if (localStorage.getItem(KEY)) return;
+
+  setTimeout(function () {
+    banner.style.display = '';
+    requestAnimationFrame(function () {
+      banner.classList.add('cookie-banner--visible');
+    });
+  }, 1200);
+
+  function dismiss(value) {
+    localStorage.setItem(KEY, value);
+    banner.classList.remove('cookie-banner--visible');
+    setTimeout(function () { banner.style.display = 'none'; }, 300);
+  }
+
+  document.getElementById('azoir-cookie-accept').addEventListener('click', function () { dismiss('accepted'); });
+  document.getElementById('azoir-cookie-decline').addEventListener('click', function () { dismiss('declined'); });
+})();
+</script>

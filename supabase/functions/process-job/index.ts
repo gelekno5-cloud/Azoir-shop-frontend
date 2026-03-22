@@ -9,8 +9,8 @@
 //   PROCESS_JOB_SECRET          — shared secret, must match webhook handler
 //   ANTHROPIC_API_KEY
 //   RESEND_API_KEY
-//   EMAIL_FROM                  — e.g. "Azoir & Co <design@azoir.com>"
-//   INTERNAL_EMAIL              — e.g. "design@azoir.com"
+//   EMAIL_FROM                  — e.g. "Azoir & Co <info@azoir.com>"
+//   INTERNAL_EMAIL              — e.g. "info@azoir.com"
 //   TWILIO_ACCOUNT_SID          (optional, for SMS/WhatsApp)
 //   TWILIO_AUTH_TOKEN           (optional)
 //   TWILIO_PHONE_FROM           (optional, for SMS)

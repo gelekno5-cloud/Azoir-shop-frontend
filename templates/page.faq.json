@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "faq_page_azoir": {
+      "type": "faq-page",
+      "settings": {}
+    }
+  },
+  "order": ["faq_page_azoir"]
+}

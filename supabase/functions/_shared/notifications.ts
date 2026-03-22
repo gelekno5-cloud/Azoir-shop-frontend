@@ -35,7 +35,7 @@ export async function notifyAll(
 
   const [customerResult, internalResult] = await Promise.all([
     notifyCustomer(quote, jobRef, channel, customerMessage),
-    notifyInternal(jobRef, jobId, jobSheetContent, quote.id),
+    notifyInternal(jobRef, jobId, jobSheetContent, quote.id, quote.reference_links),
   ]);
 
   return { customer: customerResult, internal: internalResult };
@@ -118,9 +118,10 @@ async function notifyInternal(
   jobId: string,
   jobSheetContent: string,
   quoteId: string,
+  referenceLinks: string | null,
 ): Promise<NotifyResult> {
-  const internalEmail = Deno.env.get("INTERNAL_EMAIL") ?? "design@azoir.com";
-  const result = await sendInternalJobSheet(jobRef, jobSheetContent, quoteId);
+  const internalEmail = Deno.env.get("INTERNAL_EMAIL") ?? "info@azoir.com";
+  const result = await sendInternalJobSheet(jobRef, jobSheetContent, quoteId, referenceLinks);
   return {
     channel: "email",
     recipient: internalEmail,

@@ -1,0 +1,110 @@
+{%- comment -%} About Page — Azoir {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'pages.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'pages.css' | asset_url }}"></noscript>
+
+<section class="ap-hero">
+  <div class="ap-container">
+    <span class="ap-eyebrow">About Azoir &amp; Co.</span>
+    <h1 class="ap-hero__title">Built on the belief that jewellery should mean something.</h1>
+  </div>
+</section>
+
+<section class="ap-story">
+  <div class="ap-container ap-story__grid">
+    <div class="ap-story__text">
+      <h2 class="ap-section-title">How it started</h2>
+      <p>Azoir &amp; Co. was founded in New York with a premise that felt almost radical: that bespoke jewellery shouldn't be a privilege reserved for those who already know what they want, or who already know the right people.</p>
+      <p>We built a process that starts with a conversation, not a catalogue. Every commission begins with the person who will wear it — their story, their aesthetic, their moment — and we design backward from there.</p>
+      <p>The result is jewellery made to last a lifetime and carry meaning well beyond it.</p>
+    </div>
+    <div class="ap-story__visual" aria-hidden="true">
+      <div class="ap-story__frame">
+        <svg viewBox="0 0 360 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="180" cy="210" r="110" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.10"/>
+          <circle cx="180" cy="210" r="78"  stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.07"/>
+          <path d="M100 210 Q180 120 260 210" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.16"/>
+          <circle cx="180" cy="106" r="6" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.20"/>
+          <circle cx="144" cy="118" r="4" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.14"/>
+          <circle cx="216" cy="118" r="4" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.14"/>
+          <text x="180" y="370" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="4" opacity="0.16" font-family="sans-serif">AZOIR &amp; CO. / EST. NEW YORK</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ap-values">
+  <div class="ap-container">
+    <h2 class="ap-section-title">What we stand for</h2>
+    <div class="ap-values__grid">
+      <div class="ap-value">
+        <span class="ap-value__num">01</span>
+        <h3 class="ap-value__title">Intentional design</h3>
+        <p class="ap-value__body">Every proportion, every detail, every finish is a deliberate decision. We don't add elements for decoration — we add them because they're right.</p>
+      </div>
+      <div class="ap-value">
+        <span class="ap-value__num">02</span>
+        <h3 class="ap-value__title">Responsible sourcing</h3>
+        <p class="ap-value__body">We work exclusively with conflict-free stones and recycled precious metals. Our supply chain is fully traceable and we'll share the details on request.</p>
+      </div>
+      <div class="ap-value">
+        <span class="ap-value__num">03</span>
+        <h3 class="ap-value__title">Made to last</h3>
+        <p class="ap-value__body">We build pieces to be worn every day for decades. Structural integrity and wearability are as important to us as aesthetics.</p>
+      </div>
+      <div class="ap-value">
+        <span class="ap-value__num">04</span>
+        <h3 class="ap-value__title">Full transparency</h3>
+        <p class="ap-value__body">You'll know exactly what you're getting, at every stage. Pricing is itemised, timelines are honest, and nothing moves forward without your approval.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ap-materials">
+  <div class="ap-container">
+    <h2 class="ap-section-title">What we work with</h2>
+    <div class="ap-materials__grid">
+      <div class="ap-material">
+        <h3 class="ap-material__name">18k Yellow Gold</h3>
+        <p class="ap-material__desc">Warm, classic, and the most timeless choice for bespoke commissions.</p>
+      </div>
+      <div class="ap-material">
+        <h3 class="ap-material__name">18k White Gold</h3>
+        <p class="ap-material__desc">Clean and contemporary. Often paired with diamond or coloured stone settings.</p>
+      </div>
+      <div class="ap-material">
+        <h3 class="ap-material__name">18k Rose Gold</h3>
+        <p class="ap-material__desc">Soft and distinctive. Works exceptionally well for engagement and anniversary pieces.</p>
+      </div>
+      <div class="ap-material">
+        <h3 class="ap-material__name">Platinum</h3>
+        <p class="ap-material__desc">The densest and most durable option. The standard choice for heirloom-grade pieces.</p>
+      </div>
+      <div class="ap-material">
+        <h3 class="ap-material__name">Sterling Silver</h3>
+        <p class="ap-material__desc">A refined entry point for everyday-wear commissions and statement pieces.</p>
+      </div>
+      <div class="ap-material">
+        <h3 class="ap-material__name">Conflict-free Stones</h3>
+        <p class="ap-material__desc">Diamonds, sapphires, rubies, emeralds, and a full range of semi-precious stones — all ethically sourced.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ap-cta-band">
+  <div class="ap-container">
+    <h2 class="ap-cta-band__title">Ready to begin?</h2>
+    <p class="ap-cta-band__sub">Tell us what you have in mind. The first conversation is always free.</p>
+    <a href="/pages/commission-a-ring" class="ap-cta-band__btn">Start your commission</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About Page",
+  "settings": [],
+  "presets": [{ "name": "About Page" }]
+}
+{% endschema %}

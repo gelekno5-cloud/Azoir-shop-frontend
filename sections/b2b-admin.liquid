@@ -1,0 +1,235 @@
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-admin' %}
+
+<div class="b2b-page" id="b2b-admin-page">
+
+  <div class="b2b-page__header">
+    <p class="b2b-page__eyebrow">Admin</p>
+    <h1 class="b2b-page__title">Trade Partner Applications</h1>
+    <div style="margin-top:12px">
+      <a href="/pages/b2b-admin-orders" style="font-size:14px;font-family:sans-serif;color:#666;text-decoration:underline">
+        View Orders &rarr;
+      </a>
+    </div>
+  </div>
+
+  <div class="b2b-admin__tabs">
+    <button class="b2b-admin__tab is-active" data-filter="all">All</button>
+    <button class="b2b-admin__tab" data-filter="pending">Pending</button>
+    <button class="b2b-admin__tab" data-filter="approved">Approved</button>
+    <button class="b2b-admin__tab" data-filter="rejected">Rejected</button>
+  </div>
+
+  <div id="b2b-admin-table-wrap">
+    <p class="b2b-admin__loading">Loading&hellip;</p>
+  </div>
+
+</div>
+
+<div class="b2b-modal-backdrop" id="b2b-modal-backdrop" style="display:none" aria-hidden="true">
+  <div class="b2b-modal" role="dialog" aria-modal="true" aria-labelledby="b2b-modal-title">
+    <div class="b2b-modal__header">
+      <h2 class="b2b-modal__title" id="b2b-modal-title">Review Application</h2>
+      <button class="b2b-modal__close" id="b2b-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="b2b-modal__body">
+      <div id="b2b-modal-info"></div>
+      <div id="b2b-reject-reason-wrap" style="display:none">
+        <label class="cr-label" for="b2b-rejection-reason">Rejection reason <span class="cr-required">*</span></label>
+        <textarea class="cr-input" id="b2b-rejection-reason" rows="3" placeholder="Explain why the application was rejected (sent to applicant)&hellip;"></textarea>
+      </div>
+      <div class="cr-field">
+        <label class="cr-label" for="b2b-internal-notes">Internal notes (optional, not sent)</label>
+        <textarea class="cr-input" id="b2b-internal-notes" rows="2"></textarea>
+      </div>
+      <div id="b2b-modal-error" class="b2b-form-error" style="display:none"></div>
+    </div>
+    <div class="b2b-modal__footer">
+      <button class="commission-btn commission-btn--outline" id="b2b-modal-reject-btn">Reject</button>
+      <button class="commission-btn commission-btn--primary" id="b2b-modal-approve-btn">Approve</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.b2b-admin__tabs { display:flex; gap:8px; margin-bottom:24px; }
+.b2b-admin__tab { background:none; border:1px solid #d0cdc6; border-radius:20px; padding:6px 18px; font-size:13px; font-family:sans-serif; cursor:pointer; color:#555; transition:background 0.12s,color 0.12s,border-color 0.12s; }
+.b2b-admin__tab.is-active,.b2b-admin__tab:hover { background:#0a0a0a; color:#fff; border-color:#0a0a0a; }
+.b2b-admin__loading { color:#aaa; font-family:sans-serif; font-size:14px; }
+.b2b-admin__empty { color:#aaa; font-family:sans-serif; font-size:14px; padding:32px 0; text-align:center; }
+.b2b-admin__review-btn { background:none; border:1px solid #d0cdc6; border-radius:4px; padding:6px 14px; font-size:12px; font-family:sans-serif; cursor:pointer; color:#333; transition:background 0.12s,border-color 0.12s; }
+.b2b-admin__review-btn:hover { background:#0a0a0a; color:#fff; border-color:#0a0a0a; }
+.b2b-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:24px; }
+.b2b-modal { background:#fff; border-radius:8px; width:100%; max-width:500px; box-shadow:0 24px 80px rgba(0,0,0,0.2); overflow:hidden; }
+.b2b-modal__header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid #f0ede8; }
+.b2b-modal__title { margin:0; font-size:18px; font-family:Georgia,serif; }
+.b2b-modal__close { background:none; border:none; font-size:24px; cursor:pointer; color:#999; line-height:1; padding:0; }
+.b2b-modal__close:hover { color:#0a0a0a; }
+.b2b-modal__body { padding:24px; display:flex; flex-direction:column; gap:16px; }
+.b2b-modal__footer { display:flex; gap:12px; justify-content:flex-end; padding:16px 24px; border-top:1px solid #f0ede8; }
+.b2b-modal-info-grid { display:grid; grid-template-columns:120px 1fr; gap:6px 12px; font-size:14px; font-family:sans-serif; }
+.b2b-modal-info-grid dt { color:#aaa; }
+.b2b-modal-info-grid dd { margin:0; color:#333; font-weight:500; }
+</style>
+
+<script>
+(function () {
+  const EDGE_DASHBOARD_URL  = {{ section.settings.edge_dashboard_url | json }};
+  const EDGE_ACTION_URL     = {{ section.settings.edge_action_url | json }};
+  const ADMIN_SECRET        = {{ section.settings.admin_secret | json }};
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const tableWrap  = document.getElementById('b2b-admin-table-wrap');
+  const backdrop   = document.getElementById('b2b-modal-backdrop');
+  const modalClose = document.getElementById('b2b-modal-close');
+  const approveBtn = document.getElementById('b2b-modal-approve-btn');
+  const rejectBtn  = document.getElementById('b2b-modal-reject-btn');
+  const rejectWrap = document.getElementById('b2b-reject-reason-wrap');
+  const modalError = document.getElementById('b2b-modal-error');
+
+  let currentFilter = 'all';
+  let currentReg    = null;
+  let pendingAction = null;
+
+  async function loadRegistrations(filter) {
+    tableWrap.innerHTML = '<p class="b2b-admin__loading">Loading&hellip;</p>';
+    const params = new URLSearchParams({ limit: '100' });
+    if (filter !== 'all') params.set('status', filter);
+    try {
+      const res  = await fetch(`${EDGE_DASHBOARD_URL}?${params}`, { headers: { 'x-admin-secret': ADMIN_SECRET } });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? 'Failed to load');
+      renderTable(data.registrations);
+    } catch (err) {
+      tableWrap.innerHTML = `<p class="b2b-admin__loading" style="color:#c0392b">${err.message}</p>`;
+    }
+  }
+
+  function renderTable(rows) {
+    if (!rows.length) { tableWrap.innerHTML = '<p class="b2b-admin__empty">No applications found.</p>'; return; }
+    const regMap = Object.fromEntries(rows.map(r => [r.id, r]));
+    tableWrap.innerHTML = `<div style="overflow-x:auto"><table class="b2b-table">
+      <thead><tr><th>Company</th><th>Contact</th><th>Email</th><th>Type</th><th>Applied</th><th>Status</th><th>Orders</th><th></th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><strong>${esc(r.company_name)}</strong></td>
+        <td>${esc(r.contact_name)}</td>
+        <td>${esc(r.email)}</td>
+        <td>${esc(r.business_type ?? '—')}</td>
+        <td style="white-space:nowrap;color:#999;font-size:12px">${fmtDate(r.created_at)}</td>
+        <td><span class="b2b-badge b2b-badge--${r.status}">${r.status}</span></td>
+        <td style="text-align:center">${r.order_count ?? 0}</td>
+        <td><button class="b2b-admin__review-btn" data-id="${r.id}">Review</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+    tableWrap.querySelectorAll('.b2b-admin__review-btn').forEach(btn => {
+      btn.addEventListener('click', () => openModal(regMap[btn.dataset.id]));
+    });
+  }
+
+  document.querySelectorAll('.b2b-admin__tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.b2b-admin__tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      currentFilter = tab.dataset.filter;
+      loadRegistrations(currentFilter);
+    });
+  });
+
+  function openModal(reg) {
+    currentReg = reg; pendingAction = null;
+    modalError.style.display = 'none';
+    rejectWrap.style.display = 'none';
+    document.getElementById('b2b-rejection-reason').value = '';
+    document.getElementById('b2b-internal-notes').value   = reg.internal_notes ?? '';
+    approveBtn.disabled = false; rejectBtn.disabled = false;
+    approveBtn.style.display = '';
+    rejectBtn.textContent = 'Reject';
+    document.getElementById('b2b-modal-info').innerHTML = `<dl class="b2b-modal-info-grid">
+      <dt>Company</dt><dd>${esc(reg.company_name)}</dd>
+      <dt>Contact</dt><dd>${esc(reg.contact_name)}</dd>
+      <dt>Email</dt><dd>${esc(reg.email)}</dd>
+      <dt>Phone</dt><dd>${esc(reg.phone ?? '—')}</dd>
+      <dt>Website</dt><dd>${reg.website ? `<a href="${esc(reg.website)}" target="_blank" rel="noopener">${esc(reg.website)}</a>` : '—'}</dd>
+      <dt>Type</dt><dd>${esc(reg.business_type ?? '—')}</dd>
+      <dt>Country</dt><dd>${esc(reg.country ?? '—')}</dd>
+      <dt>Tax ID</dt><dd>${esc(reg.tax_id ?? '—')}</dd>
+      <dt>Status</dt><dd><span class="b2b-badge b2b-badge--${reg.status}">${reg.status}</span></dd>
+      ${reg.rejection_reason ? `<dt>Prev. rejection</dt><dd style="color:#c0392b">${esc(reg.rejection_reason)}</dd>` : ''}
+    </dl>`;
+    backdrop.style.display = 'flex';
+    backdrop.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    backdrop.style.display = 'none';
+    backdrop.setAttribute('aria-hidden', 'true');
+    currentReg = null; pendingAction = null;
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  rejectBtn.addEventListener('click', () => {
+    if (pendingAction === 'reject') { submitAction('reject'); return; }
+    pendingAction = 'reject';
+    rejectWrap.style.display = '';
+    rejectBtn.textContent    = 'Confirm rejection';
+    approveBtn.style.display = 'none';
+  });
+
+  approveBtn.addEventListener('click', () => submitAction('approve'));
+
+  async function submitAction(action) {
+    if (!currentReg) return;
+    const rejectionReason = document.getElementById('b2b-rejection-reason').value.trim();
+    const internalNotes   = document.getElementById('b2b-internal-notes').value.trim();
+    if (action === 'reject' && !rejectionReason) { modalError.textContent = 'Please enter a rejection reason.'; modalError.style.display = ''; return; }
+    approveBtn.disabled = true; rejectBtn.disabled = true;
+    modalError.style.display = 'none';
+    try {
+      const res  = await fetch(EDGE_ACTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+        body: JSON.stringify({ registration_id: currentReg.id, action, reviewed_by: String(SHOPIFY_CUSTOMER_ID), rejection_reason: rejectionReason || undefined, internal_notes: internalNotes || undefined }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? 'Action failed');
+      closeModal();
+      loadRegistrations(currentFilter);
+    } catch (err) {
+      modalError.textContent = err.message; modalError.style.display = '';
+      approveBtn.disabled = false; rejectBtn.disabled = false;
+    }
+  }
+
+  function esc(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtDate(iso) { return new Date(iso).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }); }
+
+  loadRegistrations('all');
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    <h1 class="b2b-gate__title">Access restricted</h1>
+    <p class="b2b-gate__body">This page is for Azoir staff only.</p>
+    <a href="/" class="commission-btn commission-btn--primary">Go home</a>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Admin",
+  "tag": "section",
+  "settings": [
+    { "type": "url",  "id": "edge_dashboard_url", "label": "Edge Function URL — b2b-admin-dashboard" },
+    { "type": "url",  "id": "edge_action_url",    "label": "Edge Function URL — b2b-admin-action" },
+    { "type": "text", "id": "admin_secret",        "label": "Admin action secret" }
+  ],
+  "presets": [{ "name": "B2B Admin" }]
+}
+{% endschema %}

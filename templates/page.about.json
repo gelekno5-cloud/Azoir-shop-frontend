@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "about_page_azoir": {
+      "type": "about-page",
+      "settings": {}
+    }
+  },
+  "order": ["about_page_azoir"]
+}

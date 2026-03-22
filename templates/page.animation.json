@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "animation_hero": {
+      "type": "animation-page",
+      "settings": {
+        "frames_base_url": "https://avmcksqllodvspbtcmgf.supabase.co/storage/v1/object/public/hero-frames/0315",
+        "frame_count": 70,
+        "cta_url": "/pages/commission-a-ring",
+        "cta_text": "Commission yours"
+      }
+    }
+  },
+  "order": ["animation_hero"]
+}

@@ -1,0 +1,28 @@
+{%- comment -%} Press Bar — Azoir {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}"></noscript>
+
+<section class="pr-section">
+  <div class="pr-container">
+    <span class="pr-eyebrow">AS SEEN IN</span>
+    <div class="pr-logos">
+      <span class="pr-logo">Vogue</span>
+      <span class="pr-divider" aria-hidden="true"></span>
+      <span class="pr-logo">Harper's Bazaar</span>
+      <span class="pr-divider" aria-hidden="true"></span>
+      <span class="pr-logo">The New York Times</span>
+      <span class="pr-divider" aria-hidden="true"></span>
+      <span class="pr-logo">Elle</span>
+      <span class="pr-divider" aria-hidden="true"></span>
+      <span class="pr-logo">Town &amp; Country</span>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Press Bar",
+  "settings": [],
+  "presets": [{ "name": "Press Bar" }]
+}
+{% endschema %}

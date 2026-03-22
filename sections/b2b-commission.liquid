@@ -1,0 +1,405 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-approved' %}
+
+<section class="commission-page commission-two-col" id="b2b-commission">
+  <div class="commission-two-col__grid">
+
+    <aside class="commission-two-col__media">
+      <div class="commission-two-col__media-sticky">
+        <div class="commission-two-col__slideshow">
+          <div class="commission-two-col__slide is-active">
+            {% if section.settings.image != blank %}
+              {{ section.settings.image | image_url: width: 1200 | image_tag: loading: 'eager', alt: 'B2B Commission' }}
+            {% else %}
+              <div class="commission-two-col__slide-placeholder"></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="commission-two-col__form">
+      <div class="commission-form__inner commission-rings-form__inner">
+
+        <div class="commission-two-col__heading-block">
+          <p class="commission-two-col__eyebrow">{{ section.settings.eyebrow | default: 'Trade Partner' }}</p>
+          <h1 class="commission-two-col__page-title">{{ section.settings.title | default: 'B2B Commission' }}</h1>
+          <p class="commission-two-col__page-subtitle">{{ section.settings.subtitle | default: 'Submit your commission brief and pay the $90 design fee to begin.' }}</p>
+        </div>
+
+        <form id="b2b-commission-form" novalidate>
+          <div class="commission-form__message commission-form__message--error" id="b2b-cf-error" role="alert" hidden></div>
+
+          {%- comment -%} ── Project description ── {%- endcomment -%}
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Describe Your Project</h3>
+            <div class="commission-form__row">
+              <label for="b2b-cf-notes" class="commission-form__label">Vision & brief</label>
+              <textarea id="b2b-cf-notes" name="notes" class="commission-form__textarea" rows="4"
+                placeholder="Describe the piece — symbols, style, proportions, mood, references…"></textarea>
+            </div>
+          </div>
+
+          {%- comment -%} ── Reference photos ── {%- endcomment -%}
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Reference Photos</h3>
+            <div class="commission-form__row">
+              <div class="cr-upload" id="b2b-cf-upload">
+                <div class="cr-upload__zone" id="b2b-cf-upload-zone" tabindex="0" role="button" aria-label="Upload reference photos">
+                  <input type="file" id="b2b-cf-file-input" accept="image/*" multiple class="cr-upload__input" tabindex="-1">
+                  <div class="cr-upload__icon-wrap">
+                    <svg class="cr-upload__icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M12 3V15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                  <p class="cr-upload__label">Drop reference photos here</p>
+                  <span class="cr-upload__browse-btn">Browse files</span>
+                  <p class="cr-upload__hint">JPG &middot; PNG &middot; WEBP &nbsp;&bull;&nbsp; Up to 5 &nbsp;&bull;&nbsp; 10 MB each</p>
+                </div>
+                <div class="cr-upload__previews" id="b2b-cf-previews" hidden></div>
+              </div>
+              <input type="hidden" name="reference_image_urls" id="b2b-cf-image-urls" value="">
+            </div>
+          </div>
+
+          {%- comment -%} ── Metal & stones ── {%- endcomment -%}
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Metal & Stones</h3>
+            <div class="commission-form__row">
+              <label for="b2b-cf-metal" class="commission-form__label commission-form__label--required">Metal</label>
+              <select id="b2b-cf-metal" name="metal" class="commission-form__select" required>
+                <option value="">Select metal *</option>
+                <option>Sterling Silver</option>
+                <option>10K Yellow Gold</option>
+                <option>10K White Gold</option>
+                <option>10K Rose Gold</option>
+                <option>14K Yellow Gold</option>
+                <option>14K White Gold</option>
+                <option>14K Rose Gold</option>
+                <option>18K Yellow Gold</option>
+                <option>18K White Gold</option>
+                <option>18K Rose Gold</option>
+                <option>Platinum</option>
+                <option>24K Yellow Gold</option>
+              </select>
+            </div>
+            <div class="commission-form__row">
+              <label class="commission-form__label">Stones</label>
+              <div class="cr-stone-btns" id="b2b-cf-stone-btns" role="group">
+                <button type="button" class="cr-stone-btn" data-value="No Stones">No Stones</button>
+                <button type="button" class="cr-stone-btn" data-value="Lab-Grown Diamonds">Lab-Grown Diamonds</button>
+                <button type="button" class="cr-stone-btn" data-value="Natural Diamonds">Natural Diamonds</button>
+              </div>
+              <input type="hidden" name="stones" id="b2b-cf-stones-hidden" value="">
+              <div style="margin-top:0.75rem">
+                <input type="text" id="b2b-cf-stones-other" class="commission-form__input"
+                  placeholder="Other stones — e.g. Sapphire, Ruby…">
+              </div>
+            </div>
+          </div>
+
+          {%- comment -%} ── B2B-specific fields ── {%- endcomment -%}
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Order Details</h3>
+            <div class="cr-row">
+              <div class="cr-field">
+                <label class="cr-label" for="b2b-cf-quantity">Quantity</label>
+                <input class="cr-input" type="number" id="b2b-cf-quantity" name="quantity" min="1" value="1">
+              </div>
+              <div class="cr-field">
+                <label class="cr-label" for="b2b-cf-po">PO Number</label>
+                <input class="cr-input" type="text" id="b2b-cf-po" name="po_number" placeholder="Optional">
+              </div>
+            </div>
+            <div class="cr-field cr-field--full" style="margin-top:12px">
+              <label class="cr-label" for="b2b-cf-deadline">Delivery deadline</label>
+              <input class="cr-input cr-input--half" type="date" id="b2b-cf-deadline" name="deadline_at">
+            </div>
+          </div>
+
+          {%- comment -%} ── Contact ── {%- endcomment -%}
+          <div class="commission-rings-form__section">
+            <h3 class="commission-rings-form__section-title">Contact Info</h3>
+            <div class="commission-form__row">
+              <label for="b2b-cf-name" class="commission-form__label commission-form__label--required">Full name</label>
+              <input type="text" id="b2b-cf-name" name="contact_name" class="commission-form__input"
+                value="{{ customer.name | escape }}" required autocomplete="name">
+            </div>
+            <div class="commission-form__row">
+              <label for="b2b-cf-company" class="commission-form__label commission-form__label--required">Company name</label>
+              <input type="text" id="b2b-cf-company" name="company_name" class="commission-form__input" required>
+            </div>
+            <div class="commission-form__row">
+              <label for="b2b-cf-email" class="commission-form__label commission-form__label--required">Email</label>
+              <input type="email" id="b2b-cf-email" name="email" class="commission-form__input"
+                value="{{ customer.email | escape }}" required autocomplete="email">
+            </div>
+
+            {%- comment -%} Contact method buttons {%- endcomment -%}
+            <div class="commission-form__row">
+              <label class="commission-form__label">Preferred contact method</label>
+              <div class="cr-contact-row" id="b2b-cf-contact-btns" role="group">
+                <button type="button" class="cr-contact-btn" data-value="email" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+                  Email
+                </button>
+                <button type="button" class="cr-contact-btn" data-value="sms" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Text
+                </button>
+                <button type="button" class="cr-contact-btn" data-value="whatsapp" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  WhatsApp
+                </button>
+              </div>
+              <input type="hidden" name="contact_method" id="b2b-cf-contact-method" value="">
+            </div>
+          </div>
+
+          {%- comment -%} ── Submit ── {%- endcomment -%}
+          <div class="commission-form__actions">
+            <button type="submit" class="commission-btn commission-btn--primary" id="b2b-cf-submit">
+              <span class="btn-label">Continue to Design Fee</span>
+              <span class="btn-spinner" style="display:none">Submitting…</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const EDGE_SUBMIT_URL    = {{ section.settings.edge_submit_url | json }};
+  const SUPABASE_URL       = {{ section.settings.supabase_url | json }};
+  const SUPABASE_BUCKET    = {{ section.settings.supabase_bucket | default: 'commission-images' | json }};
+  const SUPABASE_ANON_KEY  = {{ section.settings.supabase_anon_key | json }};
+  const DESIGN_FEE_REDIRECT = {{ section.settings.design_fee_redirect | default: '/pages/b2b-design-fee' | json }};
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const form       = document.getElementById('b2b-commission-form');
+  const submitBtn  = document.getElementById('b2b-cf-submit');
+  const errorEl    = document.getElementById('b2b-cf-error');
+  const imageUrlsInput = document.getElementById('b2b-cf-image-urls');
+
+  // ── Stone buttons ─────────────────────────────────────────────────────────
+  const stoneBtns  = document.querySelectorAll('#b2b-cf-stone-btns .cr-stone-btn');
+  const stonesHidden = document.getElementById('b2b-cf-stones-hidden');
+  const stonesOther  = document.getElementById('b2b-cf-stones-other');
+
+  stoneBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      stoneBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      stonesHidden.value = btn.dataset.value;
+    });
+  });
+
+  stonesOther.addEventListener('input', () => {
+    if (stonesOther.value.trim()) {
+      stoneBtns.forEach(b => b.classList.remove('is-active'));
+      stonesHidden.value = stonesOther.value.trim();
+    }
+  });
+
+  // ── Contact method buttons ────────────────────────────────────────────────
+  const contactBtns   = document.querySelectorAll('#b2b-cf-contact-btns .cr-contact-btn');
+  const contactMethod = document.getElementById('b2b-cf-contact-method');
+
+  contactBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const wasActive = btn.classList.contains('is-active');
+      contactBtns.forEach(b => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
+      if (!wasActive) {
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-pressed', 'true');
+        contactMethod.value = btn.dataset.value;
+      } else {
+        contactMethod.value = '';
+      }
+    });
+  });
+
+  // ── Upload zone ───────────────────────────────────────────────────────────
+  const uploadZone  = document.getElementById('b2b-cf-upload-zone');
+  const fileInput   = document.getElementById('b2b-cf-file-input');
+  const previewsEl  = document.getElementById('b2b-cf-previews');
+  const MAX_FILES   = 5;
+  let uploadedFiles = []; // { file, url }
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('cr-upload__zone--dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('cr-upload__zone--dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('cr-upload__zone--dragover');
+    addFiles([...e.dataTransfer.files]);
+  });
+  fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
+
+  function addFiles(files) {
+    const slots = MAX_FILES - uploadedFiles.length;
+    files.slice(0, slots).forEach(f => {
+      if (!f.type.startsWith('image/')) return;
+      const entry = { file: f, url: null };
+      uploadedFiles.push(entry);
+      renderPreview(entry);
+    });
+  }
+
+  function renderPreview(entry) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrap = document.createElement('div');
+      wrap.className = 'cr-upload__preview-item';
+      wrap.innerHTML = `<img src="${e.target.result}" alt="">
+        <button type="button" class="cr-upload__preview-remove" aria-label="Remove">&times;</button>`;
+      wrap.querySelector('button').addEventListener('click', () => {
+        uploadedFiles = uploadedFiles.filter(u => u !== entry);
+        wrap.remove();
+        renderPreviews();
+      });
+      previewsEl.appendChild(wrap);
+      previewsEl.hidden = false;
+    };
+    reader.readAsDataURL(entry.file);
+  }
+
+  function renderPreviews() {
+    if (!uploadedFiles.length) previewsEl.hidden = true;
+  }
+
+  // ── Upload files to Supabase storage ─────────────────────────────────────
+  async function uploadImages() {
+    const toUpload = uploadedFiles.filter(e => !e.url);
+    await Promise.all(toUpload.map(async entry => {
+      const ext  = entry.file.name.split('.').pop() || 'jpg';
+      const path = `b2b/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const res  = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${path}`, {
+        method:  'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': entry.file.type },
+        body: entry.file,
+      });
+      if (res.ok) {
+        entry.url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`;
+      }
+    }));
+    imageUrlsInput.value = uploadedFiles.filter(e => e.url).map(e => e.url).join(',');
+  }
+
+  // ── Form submit ───────────────────────────────────────────────────────────
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    errorEl.hidden = true;
+
+    try {
+      await uploadImages();
+
+      const metal  = document.getElementById('b2b-cf-metal').value;
+      const stones = stonesHidden.value || stonesOther.value.trim() || null;
+
+      const payload = {
+        shopify_customer_id: String(SHOPIFY_CUSTOMER_ID),
+        contact_name:        document.getElementById('b2b-cf-name').value.trim(),
+        company_name:        document.getElementById('b2b-cf-company').value.trim(),
+        email:               document.getElementById('b2b-cf-email').value.trim(),
+        contact_method:      contactMethod.value || null,
+        metal:               metal || null,
+        stones:              stones,
+        notes:               document.getElementById('b2b-cf-notes').value.trim() || null,
+        reference_image_urls: imageUrlsInput.value || null,
+        po_number:           document.getElementById('b2b-cf-po').value.trim() || null,
+        quantity:            parseInt(document.getElementById('b2b-cf-quantity').value, 10) || 1,
+        deadline_at:         document.getElementById('b2b-cf-deadline').value || null,
+      };
+
+      const res  = await fetch(EDGE_SUBMIT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.error ?? 'Submission failed.');
+
+      // Redirect to design fee page
+      const redirect = `${DESIGN_FEE_REDIRECT}?b2b_order_id=${encodeURIComponent(data.order_id)}&from=${encodeURIComponent(window.location.href)}`;
+      window.location.href = redirect;
+
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+      errorEl.hidden = false;
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function validateForm() {
+    let valid = true;
+    const required = [
+      { id: 'b2b-cf-name',    msg: 'Name is required.' },
+      { id: 'b2b-cf-company', msg: 'Company name is required.' },
+      { id: 'b2b-cf-email',   msg: 'Email is required.' },
+    ];
+    required.forEach(({ id, msg }) => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.classList.add('commission-form__input--error');
+        if (valid) el.focus();
+        valid = false;
+      } else {
+        el.classList.remove('commission-form__input--error');
+      }
+    });
+    if (!document.getElementById('b2b-cf-metal').value) {
+      document.getElementById('b2b-cf-metal').classList.add('commission-form__input--error');
+      valid = false;
+    }
+    return valid;
+  }
+
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.querySelector('.btn-label').style.display  = loading ? 'none' : '';
+    submitBtn.querySelector('.btn-spinner').style.display = loading ? '' : 'none';
+  }
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    <h1 class="b2b-gate__title">Trade Partners Only</h1>
+    <p class="b2b-gate__body">{% if customer %}Your account is pending approval. You'll receive an email once approved.{% else %}<a href="/account/login">Log in</a> or <a href="/pages/b2b-apply">apply for trade access</a>.{% endif %}</p>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Commission",
+  "tag": "section",
+  "settings": [
+    { "type": "text",  "id": "eyebrow",  "label": "Eyebrow",  "default": "Trade Partner" },
+    { "type": "text",  "id": "title",    "label": "Title",    "default": "B2B Commission" },
+    { "type": "text",  "id": "subtitle", "label": "Subtitle", "default": "Submit your commission brief and pay the $90 design fee to begin." },
+    { "type": "image_picker", "id": "image", "label": "Left panel image" },
+    { "type": "url",  "id": "edge_submit_url",    "label": "Edge Function URL — b2b-submit-order" },
+    { "type": "text", "id": "supabase_url",        "label": "Supabase URL" },
+    { "type": "text", "id": "supabase_anon_key",   "label": "Supabase anon key" },
+    { "type": "text", "id": "supabase_bucket",     "label": "Storage bucket", "default": "commission-images" },
+    { "type": "text", "id": "design_fee_redirect", "label": "Design fee page URL", "default": "/pages/b2b-design-fee" }
+  ],
+  "presets": [{ "name": "B2B Commission" }]
+}
+{% endschema %}

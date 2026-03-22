@@ -1,0 +1,26 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "b2b-apply",
+      "settings": {
+        "eyebrow": "Trade Partner Programme",
+        "title": "Apply for a Trade Account",
+        "subtitle": "Exclusive pricing and priority service for approved trade partners.",
+        "edge_register_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-register",
+        "edge_upload_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-upload-cert"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

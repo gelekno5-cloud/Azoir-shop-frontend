@@ -1,0 +1,276 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+<section class="commission-page commission-two-col" id="b2b-apply">
+  <div class="commission-two-col__grid">
+
+    <aside class="commission-two-col__media">
+      <div class="commission-two-col__media-sticky">
+        <div class="commission-two-col__slideshow">
+          <div class="commission-two-col__slide is-active">
+            {% if section.settings.image != blank %}
+              {{ section.settings.image | image_url: width: 1200 | image_tag: loading: 'eager', alt: 'Azoir & Co Trade Partner' }}
+            {% else %}
+              <div class="commission-two-col__slide-placeholder"></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="commission-two-col__form-col">
+      <div class="commission-two-col__form-wrap">
+
+        <div class="commission-two-col__heading-block">
+          <p class="commission-two-col__eyebrow">{{ section.settings.eyebrow | default: 'Trade Partner Programme' }}</p>
+          <h1 class="commission-two-col__title">{{ section.settings.title | default: 'Apply for a Trade Account' }}</h1>
+          <p class="commission-two-col__subtitle">{{ section.settings.subtitle | default: 'Exclusive pricing and priority service for approved trade partners.' }}</p>
+        </div>
+
+        {% if customer %}
+
+          {% if customer.tags contains 'b2b-approved' %}
+            <div class="b2b-status-message b2b-status-message--success">
+              <p>Your trade account is active. <a href="/pages/b2b-commission">Start a commission &rarr;</a></p>
+            </div>
+
+          {% elsif customer.tags contains 'b2b-pending' %}
+            <div class="b2b-status-message b2b-status-message--pending">
+              <p>Your application is under review. We'll email you once it's been processed.</p>
+            </div>
+
+          {% else %}
+
+            <form id="b2b-apply-form" novalidate>
+
+              <div class="cr-section-label">Contact details</div>
+              <div class="cr-row">
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-contact-name">Full name <span class="cr-required">*</span></label>
+                  <input class="cr-input" type="text" id="b2b-contact-name" name="contact_name" value="{{ customer.name | escape }}" autocomplete="name" required>
+                  <span class="cr-error" id="err-contact-name"></span>
+                </div>
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-email">Email <span class="cr-required">*</span></label>
+                  <input class="cr-input" type="email" id="b2b-email" name="email" value="{{ customer.email | escape }}" autocomplete="email" required>
+                  <span class="cr-error" id="err-email"></span>
+                </div>
+              </div>
+              <div class="cr-row">
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-phone">Phone</label>
+                  <input class="cr-input" type="tel" id="b2b-phone" name="phone" autocomplete="tel">
+                </div>
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-country">Country</label>
+                  <select class="cr-input cr-select" id="b2b-country" name="country">
+                    <option value="">— Select country —</option>
+                    <option>Australia</option><option>New Zealand</option><option>United States</option>
+                    <option>United Kingdom</option><option>Canada</option><option>Singapore</option>
+                    <option>Japan</option><option>Hong Kong</option><option>UAE</option><option>Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="cr-section-label">Business details</div>
+              <div class="cr-row">
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-company-name">Company name <span class="cr-required">*</span></label>
+                  <input class="cr-input" type="text" id="b2b-company-name" name="company_name" required>
+                  <span class="cr-error" id="err-company-name"></span>
+                </div>
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-business-type">Business type</label>
+                  <select class="cr-input cr-select" id="b2b-business-type" name="business_type">
+                    <option value="">— Select type —</option>
+                    <option value="retailer">Retailer</option>
+                    <option value="wholesaler">Wholesaler</option>
+                    <option value="designer">Designer / Maker</option>
+                    <option value="stylist">Stylist / Creative</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="cr-row">
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-website">Website</label>
+                  <input class="cr-input" type="url" id="b2b-website" name="website" placeholder="https://yourcompany.com">
+                </div>
+                <div class="cr-field">
+                  <label class="cr-label" for="b2b-tax-id">ABN / Tax ID</label>
+                  <input class="cr-input" type="text" id="b2b-tax-id" name="tax_id">
+                </div>
+              </div>
+
+              <div class="cr-section-label">Resale certificate <span class="cr-section-label__note">(optional)</span></div>
+              <div class="cr-field cr-field--full">
+                <div class="b2b-upload-zone" id="b2b-cert-zone">
+                  <input type="file" id="b2b-cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp" class="b2b-upload-zone__input">
+                  <div class="b2b-upload-zone__inner">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="12" y1="18" x2="12" y2="12"/>
+                      <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    <p class="b2b-upload-zone__label">Click to upload or drag &amp; drop</p>
+                    <p class="b2b-upload-zone__hint">PDF, JPG, PNG &mdash; max 10 MB</p>
+                  </div>
+                  <div class="b2b-upload-zone__preview" id="b2b-cert-preview" style="display:none">
+                    <span class="b2b-upload-zone__filename" id="b2b-cert-filename"></span>
+                    <button type="button" class="b2b-upload-zone__remove" id="b2b-cert-remove" aria-label="Remove file">&times;</button>
+                  </div>
+                </div>
+              </div>
+              <div class="cr-field cr-field--full">
+                <label class="cr-label" for="b2b-cert-expires">Certificate expiry date</label>
+                <input class="cr-input cr-input--half" type="date" id="b2b-cert-expires" name="resale_cert_expires_at">
+              </div>
+
+              <div class="cr-submit-row">
+                <button type="submit" class="commission-btn commission-btn--primary" id="b2b-submit-btn">
+                  <span class="btn-label">Submit Application</span>
+                  <span class="btn-spinner" style="display:none">Submitting&hellip;</span>
+                </button>
+              </div>
+              <div id="b2b-form-error" class="b2b-form-error" style="display:none"></div>
+
+            </form>
+
+          {% endif %}
+
+        {% else %}
+          <div class="b2b-status-message b2b-status-message--login">
+            <p>Please <a href="/account/login?return_url=/pages/b2b-apply">log in</a> or <a href="/account/register?return_url=/pages/b2b-apply">create an account</a> to apply.</p>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const EDGE_REGISTER_URL   = {{ section.settings.edge_register_url | json }};
+  const EDGE_UPLOAD_URL     = {{ section.settings.edge_upload_url | json }};
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const form      = document.getElementById('b2b-apply-form');
+  if (!form) return;
+
+  const submitBtn  = document.getElementById('b2b-submit-btn');
+  const formError  = document.getElementById('b2b-form-error');
+  const certFile   = document.getElementById('b2b-cert-file');
+  const certZone   = document.getElementById('b2b-cert-zone');
+  const certPreview = document.getElementById('b2b-cert-preview');
+  const certName   = document.getElementById('b2b-cert-filename');
+  const certRemove = document.getElementById('b2b-cert-remove');
+
+  let selectedFile = null;
+  let uploadedPath = null;
+
+  certZone.addEventListener('click', e => { if (e.target === certRemove) return; certFile.click(); });
+  certZone.addEventListener('dragover', e => { e.preventDefault(); certZone.classList.add('is-dragover'); });
+  certZone.addEventListener('dragleave', () => certZone.classList.remove('is-dragover'));
+  certZone.addEventListener('drop', e => { e.preventDefault(); certZone.classList.remove('is-dragover'); const f = e.dataTransfer.files[0]; if (f) setFile(f); });
+  certFile.addEventListener('change', () => { if (certFile.files[0]) setFile(certFile.files[0]); });
+  certRemove.addEventListener('click', () => { selectedFile = null; uploadedPath = null; certFile.value = ''; certPreview.style.display = 'none'; certZone.querySelector('.b2b-upload-zone__inner').style.display = ''; });
+
+  function setFile(f) {
+    selectedFile = f; uploadedPath = null;
+    certName.textContent = f.name;
+    certZone.querySelector('.b2b-upload-zone__inner').style.display = 'none';
+    certPreview.style.display = 'flex';
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    setLoading(true);
+    formError.style.display = 'none';
+    try {
+      if (selectedFile && !uploadedPath) {
+        const fd = new FormData();
+        fd.append('shopify_customer_id', String(SHOPIFY_CUSTOMER_ID));
+        fd.append('file', selectedFile);
+        const uploadRes  = await fetch(EDGE_UPLOAD_URL, { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.success) throw new Error(uploadData.error ?? 'Upload failed');
+        uploadedPath = uploadData.path;
+      }
+      const payload = {
+        shopify_customer_id:    String(SHOPIFY_CUSTOMER_ID),
+        contact_name:           val('b2b-contact-name'),
+        company_name:           val('b2b-company-name'),
+        email:                  val('b2b-email'),
+        phone:                  val('b2b-phone') || null,
+        website:                val('b2b-website') || null,
+        business_type:          val('b2b-business-type') || null,
+        country:                val('b2b-country') || null,
+        tax_id:                 val('b2b-tax-id') || null,
+        resale_cert_url:        uploadedPath,
+        resale_cert_expires_at: val('b2b-cert-expires') || null,
+      };
+      const res  = await fetch(EDGE_REGISTER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!data.success) {
+        if (data.error === 'already_approved') { showError('Your account is already approved. <a href="/pages/b2b-commission">Go to commission form</a>.'); }
+        else if (data.error === 'already_pending') { showError('You already have a pending application. We\'ll be in touch soon.'); }
+        else { showError(data.error ?? 'Something went wrong. Please try again.'); }
+        return;
+      }
+      window.location.href = '/pages/b2b-apply-submitted';
+    } catch (err) {
+      console.error(err);
+      showError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function val(id) { return document.getElementById(id)?.value?.trim() ?? ''; }
+
+  function validateForm() {
+    let valid = true;
+    const checks = [
+      { id: 'b2b-contact-name', errId: 'err-contact-name', msg: 'Please enter your name.' },
+      { id: 'b2b-email',        errId: 'err-email',        msg: 'Please enter a valid email.', isEmail: true },
+      { id: 'b2b-company-name', errId: 'err-company-name', msg: 'Please enter your company name.' },
+    ];
+    checks.forEach(({ id, errId, msg, isEmail }) => {
+      const el = document.getElementById(id);
+      const err = document.getElementById(errId);
+      const v   = el?.value?.trim() ?? '';
+      const fail = !v || (isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+      if (fail) { el?.classList.add('cr-input--error'); if (err) err.textContent = msg; if (valid) el?.focus(); valid = false; }
+      else { el?.classList.remove('cr-input--error'); if (err) err.textContent = ''; }
+    });
+    return valid;
+  }
+
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.querySelector('.btn-label').style.display  = loading ? 'none' : '';
+    submitBtn.querySelector('.btn-spinner').style.display = loading ? '' : 'none';
+  }
+
+  function showError(msg) { formError.innerHTML = msg; formError.style.display = 'block'; }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "B2B Apply",
+  "tag": "section",
+  "settings": [
+    { "type": "text",  "id": "eyebrow",  "label": "Eyebrow",  "default": "Trade Partner Programme" },
+    { "type": "text",  "id": "title",    "label": "Heading",  "default": "Apply for a Trade Account" },
+    { "type": "text",  "id": "subtitle", "label": "Subtitle", "default": "Exclusive pricing and priority service for approved trade partners." },
+    { "type": "image_picker", "id": "image", "label": "Left panel image" },
+    { "type": "url",  "id": "edge_register_url", "label": "Edge Function URL — b2b-register" },
+    { "type": "url",  "id": "edge_upload_url",   "label": "Edge Function URL — b2b-upload-cert" }
+  ],
+  "presets": [{ "name": "B2B Apply" }]
+}
+{% endschema %}

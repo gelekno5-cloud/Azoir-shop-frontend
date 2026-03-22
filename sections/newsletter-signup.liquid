@@ -1,0 +1,95 @@
+{%- comment -%} Newsletter Signup — Azoir {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}"></noscript>
+
+<section class="nl-section">
+  <div class="nl-container">
+
+    <div class="nl-content">
+      <span class="nl-eyebrow">STAY CLOSE</span>
+      <h2 class="nl-title">Be first to see new commissions.</h2>
+      <p class="nl-sub">Occasional updates. No catalogue. No noise.</p>
+    </div>
+
+    <form class="nl-form" id="nl-form-{{ section.id }}" novalidate>
+      <div class="nl-field">
+        <input
+          type="email"
+          name="email"
+          id="nl-email-{{ section.id }}"
+          class="nl-input"
+          placeholder="your@email.com"
+          autocomplete="email"
+          required
+          aria-label="Email address"
+        >
+        <button type="submit" class="nl-btn" aria-label="Subscribe">
+          <span class="nl-btn__text">Subscribe</span>
+          <svg class="nl-btn__arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <p class="nl-msg" id="nl-msg-{{ section.id }}" aria-live="polite"></p>
+    </form>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  var form = document.getElementById('nl-form-{{ section.id }}');
+  var input = document.getElementById('nl-email-{{ section.id }}');
+  var msg   = document.getElementById('nl-msg-{{ section.id }}');
+  if (!form) return;
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = (input.value || '').trim();
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!re.test(email)) {
+      msg.textContent = 'Please enter a valid email address.';
+      msg.className = 'nl-msg nl-msg--error';
+      input.focus();
+      return;
+    }
+
+    var btn = form.querySelector('.nl-btn');
+    btn.disabled = true;
+    msg.textContent = '';
+
+    // Shopify newsletter subscription via Customer API
+    fetch('/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        form_type: 'customer',
+        utf8: '\u2713',
+        'contact[email]': email,
+        'contact[tags]': 'newsletter'
+      })
+    })
+    .then(function (res) {
+      if (res.ok || res.redirected) {
+        form.innerHTML = '<p class="nl-success">You\'re on the list. We\'ll be in touch.</p>';
+      } else {
+        throw new Error('failed');
+      }
+    })
+    .catch(function () {
+      msg.textContent = 'Something went wrong. Please try again.';
+      msg.className = 'nl-msg nl-msg--error';
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Newsletter Signup",
+  "settings": [],
+  "presets": [{ "name": "Newsletter Signup" }]
+}
+{% endschema %}

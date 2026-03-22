@@ -1,0 +1,150 @@
+{% comment %} sections/animation-page.liquid — Azoir ring showcase page {% endcomment %}
+
+<div
+  id="azh-root"
+  class="azh-root"
+  data-frames-base="{{ section.settings.frames_base_url | escape }}"
+  data-frame-count="{{ section.settings.frame_count }}"
+>
+  <div class="azh-sticky" id="azh-sticky">
+
+    <div class="azh-logo" id="azh-logo">
+      <span>Azoir & Co.</span>
+    </div>
+
+    <div class="azh-scroll-hint" id="azh-scroll-hint" aria-hidden="true">
+      <svg width="1" height="32" viewBox="0 0 1 32">
+        <line x1="0.5" y1="0" x2="0.5" y2="32" stroke="#0a0a0a" stroke-width="1" opacity="0.3"/>
+      </svg>
+      <span>Scroll</span>
+    </div>
+
+    <canvas id="azh-canvas" aria-hidden="true"></canvas>
+
+    <div class="azh-marquee-wrap" id="azh-marquee" aria-hidden="true">
+      <div class="azh-marquee-text">
+        THE AZOIR RING &nbsp;&mdash;&nbsp;
+        STERLING SILVER &nbsp;&mdash;&nbsp;
+        MADE TO ORDER &nbsp;&mdash;&nbsp;
+        THE AZOIR RING &nbsp;&mdash;&nbsp;
+        STERLING SILVER &nbsp;&mdash;&nbsp;
+        MADE TO ORDER &nbsp;&mdash;&nbsp;
+      </div>
+    </div>
+
+    <div class="azh-sections">
+
+      <section class="azh-section pos-top-left" data-enter="5" data-leave="40" data-animation="rise">
+        <h1 class="azh-headline">
+          <div class="azh-line-wrap"><span class="azh-line">The Azoir Ring.</span></div>
+          <div class="azh-line-wrap"><span class="azh-line">Built for you.</span></div>
+        </h1>
+      </section>
+
+      <section class="azh-section pos-bottom-left" data-enter="10" data-leave="38" data-animation="fade-up">
+        <p class="azh-subheadline">Sterling silver.<br>Cuban chain. Bespoke letters.</p>
+      </section>
+
+      <section class="azh-section pos-center azh-stats" data-enter="60" data-leave="76" data-animation="stagger-up">
+        <div class="azh-stats-grid">
+          <div class="azh-stat">
+            <div class="azh-stat-row">
+              <span class="azh-stat-number" data-value="12" data-decimals="0">0</span>
+              <span class="azh-stat-suffix">days</span>
+            </div>
+            <span class="azh-stat-label">to first design</span>
+          </div>
+          <div class="azh-stat">
+            <div class="azh-stat-row">
+              <span class="azh-stat-number" data-value="100" data-decimals="0">0</span>
+              <span class="azh-stat-suffix">%</span>
+            </div>
+            <span class="azh-stat-label">custom made</span>
+          </div>
+          <div class="azh-stat">
+            <div class="azh-stat-row">
+              <span class="azh-stat-prefix">$</span>
+              <span class="azh-stat-number" data-value="59" data-decimals="0">0</span>
+            </div>
+            <span class="azh-stat-label">design fee</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="azh-section pos-top-right azh-cta-section" data-enter="86" data-leave="100" data-animation="fade-up" data-persist="true">
+        <span class="azh-cta-label">Commission</span>
+        <a href="{{ section.settings.cta_url }}" class="azh-cta-btn">
+          {{ section.settings.cta_text | escape }}
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <p class="azh-cta-meta">$59 design fee &middot; Ships in 3&ndash;4 weeks</p>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+{{ 'homepage-hero.css' | asset_url | stylesheet_tag }}
+
+<script>
+(function () {
+  var deps = [
+    'https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js',
+    'https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js',
+    'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js',
+    {{ 'homepage-hero.js' | asset_url | json }}
+  ];
+  function loadNext(i) {
+    if (i >= deps.length) return;
+    if (document.querySelector('script[src="' + deps[i] + '"]')) { loadNext(i + 1); return; }
+    var s = document.createElement('script');
+    s.src = deps[i];
+    s.onload = function () { loadNext(i + 1); };
+    document.head.appendChild(s);
+  }
+  loadNext(0);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Animation Page",
+  "tag": "section",
+  "class": "azh-section-wrapper",
+  "settings": [
+    {
+      "type": "text",
+      "id": "frames_base_url",
+      "label": "Frames Base URL",
+      "info": "Supabase public storage URL to the frames folder. No trailing slash."
+    },
+    {
+      "type": "range",
+      "id": "frame_count",
+      "label": "Frame Count",
+      "min": 10,
+      "max": 310,
+      "step": 3,
+      "default": 70
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "CTA URL"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA Button Text",
+      "default": "Commission yours"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Animation Page"
+    }
+  ]
+}
+{% endschema %}

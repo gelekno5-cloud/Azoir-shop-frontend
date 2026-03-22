@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "legal_page_azoir": {
+      "type": "legal-page",
+      "settings": {}
+    }
+  },
+  "order": ["legal_page_azoir"]
+}

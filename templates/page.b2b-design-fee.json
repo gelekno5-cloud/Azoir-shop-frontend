@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "main": {
+      "type": "b2b-design-fee",
+      "settings": {
+        "title": "B2B Design Fee",
+        "subtitle": "Review your brief and pay the $90 design fee to begin.",
+        "step1_title": "Design Creation",
+        "step1_text": "Our designers create concepts based on your B2B brief.",
+        "step2_title": "CAD & Revisions",
+        "step2_text": "Professional CAD visualization. Up to two revisions.",
+        "step3_title": "Production Quote",
+        "step3_text": "Final pricing for your quantity and specifications.",
+        "fee_note": "Covers design concepts, CAD, and production feasibility for trade orders.",
+        "fee_credit": "Credited toward production when you proceed.",
+        "pay_label": "Pay $90 Design Fee",
+        "payment_url": "/cart/48063198232801:1",
+        "refund_text": "Design fees are non-refundable once work has commenced.",
+        "contact_email": "gelek@azoir.co",
+        "supabase_url": "https://avmcksqllodvspbtcmgf.supabase.co",
+        "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2bWNrc3FsbG9kdnNwYnRjbWdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM2NTEsImV4cCI6MjA4ODU3OTY1MX0.F66t82m3nTle6v6Ok2FpTuGUUArytlHmwweOKEahz34"
+      }
+    }
+  },
+  "order": ["main"]
+}

@@ -41,6 +41,13 @@
           </div>
           <span class="syp__cardCta">SUBMIT INQUIRY -</span>
         </a>
+        <a class="syp__card syp__card--b2b syp__reveal" href="{{ pages['b2b-commission'].url | default: '/pages/b2b-commission' }}">
+          <div class="syp__cardLeft">
+            <span class="syp__cardTitle">Wholesale &amp; Trade</span>
+            <span class="syp__cardMeta">B2B commissions for approved partners.</span>
+          </div>
+          <span class="syp__cardCta">PARTNER PORTAL -</span>
+        </a>
       </nav>
     </div>
   </div>
@@ -64,11 +71,7 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', run);
-  } else {
-    run();
-  }
+  run();
 })();
 </script>
 

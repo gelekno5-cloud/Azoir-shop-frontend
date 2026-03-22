@@ -1,0 +1,27 @@
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+<section class="b2b-confirmation">
+  <div class="b2b-confirmation__inner">
+    <div class="b2b-confirmation__icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <h1 class="b2b-confirmation__title">{{ section.settings.title | default: 'Application received' }}</h1>
+    <p class="b2b-confirmation__body">{{ section.settings.body | default: "Thank you for applying. We'll review your application and get back to you within 1–2 business days." }}</p>
+    <a href="/" class="commission-btn commission-btn--primary b2b-confirmation__btn">Back to home</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "B2B Submitted",
+  "tag": "section",
+  "settings": [
+    { "type": "text",     "id": "title", "label": "Heading", "default": "Application received" },
+    { "type": "textarea", "id": "body",  "label": "Body text", "default": "Thank you for applying. We'll review your application and get back to you within 1–2 business days." }
+  ],
+  "presets": [{ "name": "B2B Submitted" }]
+}
+{% endschema %}

@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "main": {
+      "type": "b2b-admin-orders",
+      "settings": {
+        "edge_orders_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-admin-dashboard?type=orders",
+        "edge_update_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-admin-update-order",
+        "admin_secret": "64607a8569231cb70fb62a1eb306a4dfe34dc73af7987711571a6373f2e22018"
+      }
+    }
+  },
+  "order": ["main"]
+}

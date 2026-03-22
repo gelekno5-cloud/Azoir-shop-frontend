@@ -1,0 +1,18 @@
+{
+  "sections": {
+    "main": {
+      "type": "b2b-commission",
+      "settings": {
+        "eyebrow": "Trade Partner",
+        "title": "B2B Commission",
+        "subtitle": "Submit your commission brief and pay the $90 design fee to begin.",
+        "supabase_url": "https://avmcksqllodvspbtcmgf.supabase.co",
+        "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2bWNrc3FsbG9kdnNwYnRjbWdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDM2NTEsImV4cCI6MjA4ODU3OTY1MX0.F66t82m3nTle6v6Ok2FpTuGUUArytlHmwweOKEahz34",
+        "supabase_bucket": "commission-images",
+        "edge_submit_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-submit-order",
+        "design_fee_redirect": "/pages/b2b-design-fee"
+      }
+    }
+  },
+  "order": ["main"]
+}

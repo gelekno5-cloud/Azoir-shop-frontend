@@ -1,0 +1,24 @@
+{%- comment -%} Legal Page — renders Shopify page content (Privacy, Terms, Refund) {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'pages.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'pages.css' | asset_url }}"></noscript>
+
+<section class="legal-section">
+  <div class="legal-container">
+    <div class="legal-header">
+      <span class="legal-eyebrow">Azoir &amp; Co.</span>
+      <h1 class="legal-title">{{ page.title }}</h1>
+      <p class="legal-updated">Last updated: {{ page.updated_at | date: '%B %d, %Y' }}</p>
+    </div>
+    <div class="legal-content rte">
+      {{ page.content }}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Legal Page",
+  "settings": [],
+  "presets": [{ "name": "Legal Page" }]
+}
+{% endschema %}

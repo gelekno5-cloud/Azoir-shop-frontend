@@ -1,0 +1,460 @@
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-approved' %}
+
+<div class="b2b-page" id="b2b-dashboard-page">
+
+  <div class="b2b-page__header">
+    <p class="b2b-page__eyebrow">Trade Partner</p>
+    <h1 class="b2b-page__title">My Orders</h1>
+    <div class="b2b-dashboard__header-actions">
+      <a href="/pages/b2b-commission" class="commission-btn commission-btn--primary b2b-dashboard__new-btn">New Commission</a>
+      <a href="/pages/b2b-profile" class="b2b-dashboard__profile-link">Edit Profile</a>
+    </div>
+  </div>
+
+  <div id="b2b-dashboard-content">
+    <p class="b2b-admin__loading">Loading your orders…</p>
+  </div>
+
+</div>
+
+{%- comment -%} Order detail drawer {%- endcomment -%}
+<div class="b2b-drawer-backdrop" id="b2b-drawer-backdrop" style="display:none" aria-hidden="true">
+  <div class="b2b-drawer" id="b2b-drawer" role="dialog" aria-modal="true" aria-labelledby="b2b-drawer-title">
+    <div class="b2b-drawer__header">
+      <h2 class="b2b-drawer__title" id="b2b-drawer-title">Order Details</h2>
+      <button class="b2b-modal__close" id="b2b-drawer-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="b2b-drawer__body" id="b2b-drawer-body"></div>
+  </div>
+</div>
+
+<style>
+.b2b-dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 16px;
+}
+.b2b-dashboard__new-btn {
+  display: inline-block;
+}
+.b2b-dashboard__profile-link {
+  font-size: 14px;
+  font-family: sans-serif;
+  color: #666;
+  text-decoration: underline;
+}
+.b2b-dashboard__profile-link:hover { color: #0a0a0a; }
+
+.b2b-order-card {
+  border: 1px solid #e8e6e0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow 0.12s;
+}
+.b2b-order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+
+.b2b-order-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  gap: 12px;
+}
+.b2b-order-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+.b2b-order-card__company {
+  font-size: 15px;
+  font-family: Georgia, serif;
+  color: #0a0a0a;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.b2b-order-card__sub {
+  font-size: 12px;
+  color: #aaa;
+  font-family: sans-serif;
+}
+.b2b-order-card__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.b2b-order-card__view {
+  background: none;
+  border: 1px solid #d0cdc6;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: sans-serif;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.12s, border-color 0.12s;
+}
+.b2b-order-card__view:hover {
+  background: #0a0a0a;
+  color: #fff;
+  border-color: #0a0a0a;
+}
+
+/* Status tracker */
+.b2b-status-tracker {
+  padding: 16px 20px;
+  border-top: 1px solid #f0ede8;
+  background: #fafaf8;
+}
+.b2b-status-tracker__steps {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+.b2b-status-tracker__steps::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: #e8e6e0;
+  z-index: 0;
+}
+.b2b-status-tracker__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+.b2b-status-tracker__dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e8e6e0;
+  border: 2px solid #e8e6e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #aaa;
+  transition: background 0.2s, border-color 0.2s;
+}
+.b2b-status-tracker__step.is-done .b2b-status-tracker__dot {
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #fff;
+}
+.b2b-status-tracker__step.is-current .b2b-status-tracker__dot {
+  background: #fff;
+  border-color: #0a0a0a;
+  color: #0a0a0a;
+}
+.b2b-status-tracker__label {
+  font-size: 10px;
+  font-family: sans-serif;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.2;
+}
+.b2b-status-tracker__step.is-done .b2b-status-tracker__label,
+.b2b-status-tracker__step.is-current .b2b-status-tracker__label {
+  color: #0a0a0a;
+}
+
+/* Drawer */
+.b2b-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+.b2b-drawer {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+}
+.b2b-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0ede8;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+.b2b-drawer__title {
+  margin: 0;
+  font-size: 18px;
+  font-family: Georgia, serif;
+}
+.b2b-drawer__body {
+  padding: 24px;
+  flex: 1;
+}
+.b2b-drawer-section {
+  margin-bottom: 24px;
+}
+.b2b-drawer-section__label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #aaa;
+  font-family: sans-serif;
+  margin: 0 0 10px;
+}
+.b2b-drawer-dl {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 12px;
+  font-size: 14px;
+  font-family: sans-serif;
+}
+.b2b-drawer-dl dt { color: #aaa; }
+.b2b-drawer-dl dd { margin: 0; color: #333; }
+
+.b2b-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.b2b-history-item {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  font-family: sans-serif;
+  align-items: flex-start;
+}
+.b2b-history-item__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.b2b-history-item__date { color: #aaa; white-space: nowrap; }
+.b2b-history-item__status { color: #0a0a0a; font-weight: 500; }
+.b2b-history-item__note { color: #666; }
+
+@media (max-width: 640px) {
+  .b2b-drawer { max-width: 100%; }
+}
+</style>
+
+<script>
+(function () {
+  const EDGE_DASHBOARD_URL = {{ section.settings.edge_dashboard_url | json }};
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const contentEl = document.getElementById('b2b-dashboard-content');
+  const backdrop  = document.getElementById('b2b-drawer-backdrop');
+  const drawer    = document.getElementById('b2b-drawer');
+  const drawerBody = document.getElementById('b2b-drawer-body');
+  const drawerClose = document.getElementById('b2b-drawer-close');
+
+  const STATUS_STEPS = ['pending_payment', 'paid', 'in_design', 'in_production', 'shipped', 'complete'];
+  const STATUS_LABELS = {
+    pending_payment: 'Pending',
+    paid:            'Paid',
+    in_design:       'Design',
+    in_production:   'Production',
+    shipped:         'Shipped',
+    complete:        'Complete',
+    cancelled:       'Cancelled',
+  };
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
+  fetch(EDGE_DASHBOARD_URL, {
+    headers: { 'x-customer-id': String(SHOPIFY_CUSTOMER_ID) },
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) throw new Error(data.error ?? 'Failed to load');
+      render(data.orders ?? []);
+    })
+    .catch(err => {
+      contentEl.innerHTML = `<p style="color:#c0392b;font-family:sans-serif;font-size:14px">${err.message}</p>`;
+    });
+
+  // ── Render order cards ────────────────────────────────────────────────────
+
+  function render(orders) {
+    if (!orders.length) {
+      contentEl.innerHTML = `<div style="text-align:center;padding:60px 0">
+        <p style="color:#aaa;font-family:sans-serif;font-size:15px;margin:0 0 20px">No commissions yet.</p>
+        <a href="/pages/b2b-commission" class="commission-btn commission-btn--primary">Start a Commission</a>
+      </div>`;
+      return;
+    }
+
+    contentEl.innerHTML = orders.map(o => orderCardHtml(o)).join('');
+
+    // Bind view buttons
+    contentEl.querySelectorAll('.b2b-order-card__view').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const order = orders.find(o => o.id === btn.dataset.id);
+        if (order) openDrawer(order);
+      });
+    });
+  }
+
+  function orderCardHtml(o) {
+    const isCancelled = o.status === 'cancelled';
+    const stepIdx     = STATUS_STEPS.indexOf(o.status);
+
+    const trackerHtml = isCancelled
+      ? `<div class="b2b-status-tracker">
+           <span class="b2b-badge b2b-badge--cancelled">Cancelled</span>
+         </div>`
+      : `<div class="b2b-status-tracker">
+           <div class="b2b-status-tracker__steps">
+             ${STATUS_STEPS.map((s, i) => {
+               const cls = i < stepIdx ? 'is-done' : (i === stepIdx ? 'is-current' : '');
+               const icon = i < stepIdx ? '✓' : (i + 1);
+               return `<div class="b2b-status-tracker__step ${cls}">
+                 <div class="b2b-status-tracker__dot">${icon}</div>
+                 <span class="b2b-status-tracker__label">${STATUS_LABELS[s]}</span>
+               </div>`;
+             }).join('')}
+           </div>
+         </div>`;
+
+    return `<div class="b2b-order-card">
+      <div class="b2b-order-card__header">
+        <div class="b2b-order-card__meta">
+          <p class="b2b-order-card__company">${esc(o.company_name)}${o.po_number ? ` — PO: ${esc(o.po_number)}` : ''}</p>
+          <p class="b2b-order-card__sub">${esc(o.metal ?? '—')} · Qty ${o.quantity ?? 1} · ${fmtDate(o.created_at)}</p>
+        </div>
+        <div class="b2b-order-card__right">
+          <span class="b2b-badge b2b-badge--${o.status}">${STATUS_LABELS[o.status] ?? o.status}</span>
+          <button class="b2b-order-card__view" data-id="${o.id}">View</button>
+        </div>
+      </div>
+      ${trackerHtml}
+    </div>`;
+  }
+
+  // ── Drawer ────────────────────────────────────────────────────────────────
+
+  function openDrawer(o) {
+    const trackingHtml = o.tracking_number
+      ? `<dt>Tracking</dt><dd>${esc(o.tracking_carrier ?? '')} ${esc(o.tracking_number)}</dd>`
+      : '';
+
+    drawerBody.innerHTML = `
+      <div class="b2b-drawer-section">
+        <p class="b2b-drawer-section__label">Order details</p>
+        <dl class="b2b-drawer-dl">
+          <dt>Status</dt>      <dd><span class="b2b-badge b2b-badge--${o.status}">${STATUS_LABELS[o.status] ?? o.status}</span></dd>
+          <dt>Metal</dt>       <dd>${esc(o.metal ?? '—')}</dd>
+          <dt>Stones</dt>      <dd>${esc(o.stones ?? '—')}</dd>
+          <dt>Quantity</dt>    <dd>${o.quantity ?? 1}</dd>
+          <dt>PO Number</dt>   <dd>${esc(o.po_number ?? '—')}</dd>
+          <dt>Deadline</dt>    <dd>${o.deadline_at ? fmtDate(o.deadline_at) : '—'}</dd>
+          <dt>Design fee</dt>  <dd>$${parseFloat(o.design_fee_amount ?? 90).toFixed(0)} — <span class="b2b-badge b2b-badge--${o.design_fee_status}">${o.design_fee_status}</span></dd>
+          <dt>Shopify order</dt><dd>${esc(o.shopify_order_name ?? '—')}</dd>
+          ${trackingHtml}
+          <dt>Created</dt>     <dd>${fmtDate(o.created_at)}</dd>
+        </dl>
+      </div>
+
+      ${o.status_history?.length ? `
+      <div class="b2b-drawer-section">
+        <p class="b2b-drawer-section__label">Status history</p>
+        <ul class="b2b-history-list">
+          ${o.status_history.map(h => `
+            <li class="b2b-history-item">
+              <div class="b2b-history-item__dot"></div>
+              <div>
+                <span class="b2b-history-item__date">${fmtDate(h.created_at)}</span>
+                <span class="b2b-history-item__status"> → ${STATUS_LABELS[h.to_status] ?? h.to_status}</span>
+                ${h.note ? `<p class="b2b-history-item__note">${esc(h.note)}</p>` : ''}
+              </div>
+            </li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      ${o.design_fee_status === 'pending' ? `
+      <div style="margin-top:8px">
+        <a href="/pages/b2b-design-fee?b2b_order_id=${o.id}"
+          class="commission-btn commission-btn--primary" style="display:block;text-align:center">
+          Pay Design Fee — $${parseFloat(o.design_fee_amount ?? 90).toFixed(0)}
+        </a>
+      </div>` : ''}
+    `;
+
+    document.getElementById('b2b-drawer-title').textContent = o.company_name + (o.po_number ? ` — ${o.po_number}` : '');
+    backdrop.style.display = 'flex';
+    backdrop.setAttribute('aria-hidden', 'false');
+    drawer.focus();
+  }
+
+  function closeDrawer() {
+    backdrop.style.display = 'none';
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+
+  drawerClose.addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeDrawer(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    {% if customer %}
+      <h1 class="b2b-gate__title">Trade account required</h1>
+      <p class="b2b-gate__body">Your account doesn't have trade access. <a href="/pages/b2b-apply">Apply here</a>.</p>
+    {% else %}
+      <h1 class="b2b-gate__title">Log in to continue</h1>
+      <p class="b2b-gate__body"><a href="/account/login?return_url=/pages/b2b-dashboard">Log in</a> to your trade account.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Dashboard",
+  "tag": "section",
+  "settings": [
+    { "type": "url", "id": "edge_dashboard_url", "label": "Edge Function URL — b2b-get-dashboard" }
+  ],
+  "presets": [{ "name": "B2B Dashboard" }]
+}
+{% endschema %}

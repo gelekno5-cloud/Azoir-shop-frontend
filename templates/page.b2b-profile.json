@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "b2b-profile",
+      "settings": {
+        "edge_dashboard_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-get-dashboard",
+        "edge_update_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-update-profile"
+      }
+    }
+  },
+  "order": ["main"]
+}

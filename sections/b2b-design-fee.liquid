@@ -1,0 +1,233 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-approved' %}
+
+<section class="commission-page design-fee-page" id="b2b-design-fee">
+
+  <div class="design-fee__loading" id="bdf-loading"><p>Loading your order&hellip;</p></div>
+
+  <div class="design-fee__error" id="bdf-error" hidden>
+    <h2>Something went wrong</h2>
+    <p id="bdf-error-msg">We couldn't load your order. Please contact us.</p>
+  </div>
+
+  <div class="design-fee__wrap" id="bdf-card" hidden>
+
+    <header class="design-fee__header">
+      <h1 class="design-fee__title">{{ section.settings.title | default: 'B2B Design Fee' }}</h1>
+      <p class="design-fee__subtitle">{{ section.settings.subtitle | default: 'Review your brief and pay the $90 design fee to begin.' }}</p>
+      <div class="design-fee__meta">
+        <a href="/pages/b2b-commission" class="design-fee__edit">Edit Brief &rsaquo;</a>
+      </div>
+    </header>
+
+    <div class="design-fee__body">
+
+      <div class="design-fee__left">
+        <div class="design-fee__section">
+          <h2 class="design-fee__section-title">Order Summary</h2>
+          <dl class="design-fee__dl" id="bdf-summary-dl"></dl>
+        </div>
+
+        <div class="design-fee__section">
+          <h2 class="design-fee__section-title">What Happens Next</h2>
+          <ol class="design-fee__steps">
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">1</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step1_title | default: 'Design Creation' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step1_text | default: 'Our designers create concepts based on your B2B brief.' }}</p>
+              </div>
+            </li>
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">2</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step2_title | default: 'CAD & Revisions' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step2_text | default: 'Professional CAD visualization. Up to two revisions.' }}</p>
+              </div>
+            </li>
+            <li class="design-fee__step">
+              <span class="design-fee__step-num">3</span>
+              <div class="design-fee__step-body">
+                <strong class="design-fee__step-title">{{ section.settings.step3_title | default: 'Production Quote' }}</strong>
+                <p class="design-fee__step-text">{{ section.settings.step3_text | default: 'Final pricing for your quantity and specifications.' }}</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="design-fee__right">
+        <div class="design-fee__fee-card">
+          <div class="design-fee__fee-row">
+            <span class="design-fee__fee-label">B2B Design Fee</span>
+            <span class="design-fee__fee-amount">$90</span>
+          </div>
+          <p class="design-fee__fee-note">{{ section.settings.fee_note | default: 'Covers design concepts, CAD, and production feasibility for trade orders.' }}</p>
+          <p class="design-fee__fee-credit">{{ section.settings.fee_credit | default: 'Credited toward production when you proceed.' }}</p>
+
+          <a href="#" id="bdf-pay-btn" class="commission-btn commission-btn--primary design-fee__pay-btn">
+            {{ section.settings.pay_label | default: 'Pay $90 Design Fee' }}
+          </a>
+          <p class="design-fee__pay-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Secure payment
+          </p>
+        </div>
+
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Refund Policy</p>
+          <p class="design-fee__info-sub">{{ section.settings.refund_text | default: 'Design fees are non-refundable once work has commenced.' }}</p>
+        </div>
+
+        {% if section.settings.contact_email != blank %}
+        <div class="design-fee__info-card">
+          <p class="design-fee__info-label">Questions?</p>
+          <p class="design-fee__info-sub"><a href="mailto:{{ section.settings.contact_email }}">{{ section.settings.contact_email }}</a></p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const SUPABASE_URL     = {{ section.settings.supabase_url | json }};
+  const SUPABASE_KEY     = {{ section.settings.supabase_anon_key | json }};
+  const PAYMENT_URL      = {{ section.settings.payment_url | json }}; // /cart/VARIANT_ID:1
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const loadingEl = document.getElementById('bdf-loading');
+  const errorEl   = document.getElementById('bdf-error');
+  const errorMsg  = document.getElementById('bdf-error-msg');
+  const cardEl    = document.getElementById('bdf-card');
+  const dlEl      = document.getElementById('bdf-summary-dl');
+  const payBtn    = document.getElementById('bdf-pay-btn');
+
+  function showError(msg) {
+    loadingEl.hidden = true;
+    errorMsg.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  const params    = new URLSearchParams(window.location.search);
+  const orderId   = params.get('b2b_order_id');
+
+  if (!orderId) { showError('No order ID found. Please re-submit the commission form.'); return; }
+  if (!SUPABASE_URL || !SUPABASE_KEY) { showError('Page not configured. Please contact us.'); return; }
+
+  // Fetch from b2b_orders — customer can only see their own (checked via shopify_customer_id match in JS)
+  const apiUrl = `${SUPABASE_URL}/rest/v1/b2b_orders?id=eq.${encodeURIComponent(orderId)}&select=*&limit=1`;
+
+  fetch(apiUrl, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } })
+    .then(r => r.json())
+    .then(rows => {
+      if (!rows || !rows.length) { showError('Order not found.'); return; }
+
+      const o = rows[0];
+
+      // Ensure this order belongs to the logged-in customer
+      if (String(o.shopify_customer_id) !== String(SHOPIFY_CUSTOMER_ID)) {
+        showError('Access denied.'); return;
+      }
+
+      if (o.design_fee_status === 'paid') {
+        showError('Design fee already paid for this order. Check your email for confirmation.');
+        return;
+      }
+
+      loadingEl.hidden = true;
+      cardEl.hidden    = false;
+
+      const fields = [
+        ['Company',   o.company_name],
+        ['Contact',   o.contact_name],
+        ['Email',     o.email],
+        ['Metal',     o.metal],
+        ['Stones',    o.stones],
+        ['Quantity',  o.quantity],
+        ['PO Number', o.po_number],
+        ['Deadline',  o.deadline_at],
+        ['Notes',     o.notes],
+      ];
+
+      fields.forEach(([label, val]) => {
+        if (!val) return;
+        const dt = document.createElement('dt');
+        dt.className = 'design-fee__dt';
+        dt.textContent = label;
+        const dd = document.createElement('dd');
+        dd.className = 'design-fee__dd';
+        dd.textContent = val;
+        dlEl.appendChild(dt);
+        dlEl.appendChild(dd);
+      });
+
+      // Pay button — Cart API, embeds b2b_order_id as line item property
+      if (payBtn && PAYMENT_URL) {
+        const variantMatch = PAYMENT_URL.match(/\/cart\/(\d+)/);
+        const variantId    = variantMatch ? parseInt(variantMatch[1], 10) : null;
+
+        payBtn.addEventListener('click', e => {
+          e.preventDefault();
+          if (!variantId) { window.location.href = PAYMENT_URL; return; }
+
+          payBtn.textContent = 'Redirecting…';
+          payBtn.style.pointerEvents = 'none';
+          payBtn.style.opacity = '0.7';
+
+          fetch('/cart/add.js', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+              id: variantId,
+              quantity: 1,
+              properties: { b2b_order_id: orderId },
+            }),
+          })
+            .then(r => { if (!r.ok) throw new Error(); window.location.href = '/checkout'; })
+            .catch(() => { window.location.href = PAYMENT_URL; });
+        });
+      }
+    })
+    .catch(() => showError('Failed to load order. Please try again.'));
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    <h1 class="b2b-gate__title">Trade Partners Only</h1>
+    <p class="b2b-gate__body">{% if customer %}Your account is pending approval. You'll receive an email once approved.{% else %}<a href="/account/login">Log in</a> or <a href="/pages/b2b-apply">apply for trade access</a>.{% endif %}</p>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Design Fee",
+  "tag": "section",
+  "settings": [
+    { "type": "text",     "id": "title",    "label": "Title",    "default": "B2B Design Fee" },
+    { "type": "textarea", "id": "subtitle", "label": "Subtitle", "default": "Review your brief and pay the $90 design fee to begin." },
+    { "type": "text", "id": "step1_title", "label": "Step 1 title", "default": "Design Creation" },
+    { "type": "text", "id": "step1_text",  "label": "Step 1 text",  "default": "Our designers create concepts based on your B2B brief." },
+    { "type": "text", "id": "step2_title", "label": "Step 2 title", "default": "CAD & Revisions" },
+    { "type": "text", "id": "step2_text",  "label": "Step 2 text",  "default": "Professional CAD visualization. Up to two revisions." },
+    { "type": "text", "id": "step3_title", "label": "Step 3 title", "default": "Production Quote" },
+    { "type": "text", "id": "step3_text",  "label": "Step 3 text",  "default": "Final pricing for your quantity and specifications." },
+    { "type": "textarea", "id": "fee_note",    "label": "Fee note",    "default": "Covers design concepts, CAD, and production feasibility for trade orders." },
+    { "type": "textarea", "id": "fee_credit",  "label": "Credit note", "default": "Credited toward production when you proceed." },
+    { "type": "text",     "id": "pay_label",   "label": "Pay button label", "default": "Pay $90 Design Fee" },
+    { "type": "text",     "id": "payment_url", "label": "Payment URL (Shopify cart)", "info": "e.g. /cart/VARIANT_ID:1" },
+    { "type": "textarea", "id": "refund_text", "label": "Refund policy", "default": "Design fees are non-refundable once work has commenced." },
+    { "type": "text",     "id": "contact_email", "label": "Contact email" },
+    { "type": "text", "id": "supabase_url",      "label": "Supabase URL" },
+    { "type": "text", "id": "supabase_anon_key", "label": "Supabase anon key" }
+  ],
+  "presets": [{ "name": "B2B Design Fee" }]
+}
+{% endschema %}

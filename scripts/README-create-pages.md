@@ -33,5 +33,5 @@ The Start Your Piece section links to five pages. Create them once so those link
 
 2. Set the **handle** in the page’s **Search engine listing** (or URL) so it matches the table.
 3. In **Theme template**, choose the template in the last column.
-
+shopify th
 After that, each option on Start Your Piece will forward to its designated page.

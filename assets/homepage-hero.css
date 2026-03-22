@@ -1,0 +1,404 @@
+/* assets/homepage-hero.css — Azoir Homepage Hero v1 */
+/* Prefix: azh- */
+
+/* ── Strip Shopify/Vessel wrapper ─────────────────────────────── */
+
+.azh-section-wrapper,
+.shopify-section-homepage_hero_azoir,
+#shopify-section-homepage_hero_azoir {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* ── Root & Sticky ────────────────────────────────────────────── */
+
+.azh-root {
+  position: relative;
+  height: 900vh;
+  background: #fafaf8;
+}
+
+.azh-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #fafaf8;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Hero Layer ───────────────────────────────────────────────── */
+
+.azh-hero-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #fafaf8;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.azh-hero-inner {
+  padding: 0 8%;
+  max-width: 60%;
+}
+
+.azh-label {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 1.4rem;
+}
+
+.azh-hero-heading {
+  margin: 0 0 1.2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05em;
+}
+
+.azh-word {
+  display: block;
+  font-size: clamp(2rem, 4.2vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #0a0a0a;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.azh-hero-tagline {
+  margin: 0 0 2rem;
+  font-size: clamp(0.78rem, 1vw, 0.9rem);
+  color: #777;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.azh-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.azh-scroll-hint span {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.azh-scroll-hint svg {
+  color: #aaa;
+}
+
+/* ── Canvas ───────────────────────────────────────────────────── */
+
+#azh-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: block;
+  will-change: contents;
+  transform: translateZ(0); /* promote to own compositor layer */
+}
+
+/* ── Dark Overlay ─────────────────────────────────────────────── */
+
+#azh-dark-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #0a0a0a;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────── */
+
+.azh-marquee-wrap {
+  position: absolute;
+  bottom: 8vh;
+  left: 0;
+  width: 200%;
+  z-index: 8;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.azh-marquee-text {
+  display: inline-block;
+  font-size: clamp(2.5rem, 8vw, 10rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fafaf8;
+  text-transform: uppercase;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* ── Sections Container ───────────────────────────────────────── */
+
+.azh-sections {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.azh-section {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.align-left {
+  left: 0;
+  right: 0;
+  padding: 0 52% 0 8%;
+}
+
+.align-right {
+  left: 0;
+  right: 0;
+  padding: 0 8% 0 52%;
+}
+
+.azh-cta-section {
+  pointer-events: auto;
+}
+
+.azh-section-inner {
+  padding: 2.4rem 2.8rem;
+  background: rgba(250, 250, 248, 0.40);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ── Section Typography ───────────────────────────────────────── */
+
+.azh-heading {
+  margin: 0 0 1rem;
+  font-size: clamp(1.8rem, 2.8vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0a0a0a;
+  line-height: 1.12;
+}
+
+.azh-body {
+  margin: 0;
+  font-size: clamp(0.78rem, 1vw, 0.9rem);
+  line-height: 1.75;
+  color: #555;
+  letter-spacing: 0.02em;
+}
+
+/* ── Stats ────────────────────────────────────────────────────── */
+
+.azh-stats {
+  left: 0;
+  right: 0;
+  padding: 0 8%;
+}
+
+.azh-stats-grid {
+  display: flex;
+  gap: 7%;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+
+.azh-stat {
+  text-align: left;
+}
+
+.azh-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.azh-stat-number {
+  font-size: clamp(2.8rem, 5vw, 6.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fafaf8;
+}
+
+.azh-stat-suffix,
+.azh-stat-prefix {
+  font-size: clamp(1rem, 1.6vw, 2rem);
+  font-weight: 300;
+  color: rgba(250, 250, 248, 0.5);
+}
+
+.azh-stat-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 248, 0.5);
+  margin-top: 0.5rem;
+}
+
+/* ── CTA ──────────────────────────────────────────────────────── */
+
+.azh-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.6rem;
+  background: #0a0a0a;
+  color: #fafaf8;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.azh-cta-btn:hover {
+  background: #08CB00;
+  color: #0a0a0a;
+}
+
+.azh-cta-btn svg {
+  transition: transform 0.12s ease;
+  flex-shrink: 0;
+}
+
+.azh-cta-btn:hover svg {
+  transform: translateX(4px);
+}
+
+/* ── Mobile ───────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Shorter scroll — fewer frames, faster experience */
+  .azh-root { height: 550vh; }
+
+  /* Hero: smaller type, wraps naturally */
+  .azh-hero-inner {
+    padding: 0 6vw;
+    max-width: 100%;
+  }
+
+  .azh-word {
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+    white-space: normal;
+  }
+
+  .azh-hero-tagline {
+    font-size: 0.72rem;
+  }
+
+  .azh-scroll-hint {
+    bottom: 3.5vh;
+  }
+
+  /* Sections: move to bottom of viewport so canvas is visible above */
+  .azh-section {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+  }
+
+  /* Padding collapses — full width on mobile */
+  .align-left,
+  .align-right {
+    padding: 0;
+  }
+
+  /* Backdrop so text is readable over canvas frames */
+  .azh-section-inner {
+    padding: 3.5vh 6vw 5.5vh;
+    background: rgba(250, 250, 248, 0.40);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .azh-label {
+    margin-bottom: 0.8rem;
+  }
+
+  .azh-heading {
+    font-size: clamp(1.4rem, 6.5vw, 1.9rem);
+    margin-bottom: 0.6rem;
+  }
+
+  .azh-body {
+    font-size: 0.76rem;
+    color: #444;
+  }
+
+  /* Stats: full-width bottom panel (dark overlay handles bg) */
+  .azh-stats {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    padding: 0;
+  }
+
+  .azh-stats-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3vh 8vw;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 3.5vh 6vw 5vh;
+  }
+
+  .azh-stat-number {
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+
+  .azh-stat-suffix,
+  .azh-stat-prefix {
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+  }
+
+  /* CTA: full-width button */
+  .azh-cta-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 1.4rem;
+  }
+
+  /* Marquee: smaller, repositioned above sections */
+  .azh-marquee-wrap {
+    bottom: 28vh;
+  }
+
+  .azh-marquee-text {
+    font-size: 14vw;
+  }
+}

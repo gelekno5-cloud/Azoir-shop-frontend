@@ -1,0 +1,64 @@
+{%- comment -%} How It Works — Azoir {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}"></noscript>
+
+<section class="hiw-section">
+  <div class="hiw-container">
+
+    <div class="hiw-header">
+      <span class="hiw-eyebrow">THE PROCESS</span>
+      <h2 class="hiw-title">From idea to heirloom.</h2>
+    </div>
+
+    <div class="hiw-steps">
+
+      <div class="hiw-step">
+        <span class="hiw-step__num">01</span>
+        <div class="hiw-step__connector" aria-hidden="true"></div>
+        <h3 class="hiw-step__title">Share your vision</h3>
+        <p class="hiw-step__body">
+          Fill out our commission form. Tell us about the piece — the metal, the stone, the occasion, the person it's for. No detail is too small.
+        </p>
+      </div>
+
+      <div class="hiw-step">
+        <span class="hiw-step__num">02</span>
+        <div class="hiw-step__connector" aria-hidden="true"></div>
+        <h3 class="hiw-step__title">Design together</h3>
+        <p class="hiw-step__body">
+          Our jewellers sketch, iterate, and refine until every proportion feels exactly right. You approve every step before we touch metal.
+        </p>
+      </div>
+
+      <div class="hiw-step hiw-step--last">
+        <span class="hiw-step__num">03</span>
+        <h3 class="hiw-step__title">Handcrafted &amp; delivered</h3>
+        <p class="hiw-step__body">
+          Your piece is made by hand in New York, hallmarked, and delivered in Azoir packaging — ready to be worn or gifted.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="hiw-footer">
+      <a href="{{ section.settings.cta_url | default: '/pages/commission-a-ring' }}" class="hiw-cta">
+        {{ section.settings.cta_text | default: 'Begin your commission' }}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "How It Works",
+  "settings": [
+    { "type": "url",  "id": "cta_url",  "label": "CTA URL" },
+    { "type": "text", "id": "cta_text", "label": "CTA text", "default": "Begin your commission" }
+  ],
+  "presets": [{ "name": "How It Works" }]
+}
+{% endschema %}

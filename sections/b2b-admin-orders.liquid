@@ -1,0 +1,370 @@
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-admin' %}
+
+<div class="b2b-page" id="b2b-admin-orders-page">
+
+  <div class="b2b-page__header">
+    <p class="b2b-page__eyebrow">Admin</p>
+    <h1 class="b2b-page__title">B2B Orders</h1>
+    <div style="margin-top:12px">
+      <a href="/pages/b2b-admin" style="font-size:14px;font-family:sans-serif;color:#666;text-decoration:underline">
+        &larr; Applications
+      </a>
+    </div>
+  </div>
+
+  {%- comment -%} Filter tabs {%- endcomment -%}
+  <div class="b2b-admin__tabs" id="b2b-orders-tabs">
+    <button class="b2b-admin__tab is-active" data-filter="all">All</button>
+    <button class="b2b-admin__tab" data-filter="paid">Paid</button>
+    <button class="b2b-admin__tab" data-filter="in_design">In Design</button>
+    <button class="b2b-admin__tab" data-filter="in_production">In Production</button>
+    <button class="b2b-admin__tab" data-filter="shipped">Shipped</button>
+    <button class="b2b-admin__tab" data-filter="complete">Complete</button>
+    <button class="b2b-admin__tab" data-filter="cancelled">Cancelled</button>
+  </div>
+
+  <div id="b2b-orders-table-wrap">
+    <p class="b2b-admin__loading">Loading…</p>
+  </div>
+
+</div>
+
+{%- comment -%} Update status modal {%- endcomment -%}
+<div class="b2b-modal-backdrop" id="b2b-orders-modal-backdrop" style="display:none" aria-hidden="true">
+  <div class="b2b-modal" role="dialog" aria-modal="true" aria-labelledby="b2b-orders-modal-title">
+    <div class="b2b-modal__header">
+      <h2 class="b2b-modal__title" id="b2b-orders-modal-title">Update Order Status</h2>
+      <button class="b2b-modal__close" id="b2b-orders-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="b2b-modal__body">
+
+      <div id="b2b-orders-modal-info"></div>
+
+      <div class="cr-field">
+        <label class="cr-label" for="b2b-orders-new-status">New status <span class="cr-required">*</span></label>
+        <select class="cr-input cr-select" id="b2b-orders-new-status">
+          <option value="">— Select —</option>
+        </select>
+      </div>
+
+      <div id="b2b-orders-tracking-wrap" style="display:none">
+        <div class="cr-row">
+          <div class="cr-field">
+            <label class="cr-label" for="b2b-orders-tracking-number">Tracking number <span class="cr-required">*</span></label>
+            <input class="cr-input" type="text" id="b2b-orders-tracking-number">
+          </div>
+          <div class="cr-field">
+            <label class="cr-label" for="b2b-orders-tracking-carrier">Carrier</label>
+            <input class="cr-input" type="text" id="b2b-orders-tracking-carrier" placeholder="e.g. AusPost, DHL">
+          </div>
+        </div>
+      </div>
+
+      <div class="cr-field">
+        <label class="cr-label" for="b2b-orders-note">Note <span style="color:#aaa;font-size:11px">(sent to customer if cancelling)</span></label>
+        <textarea class="cr-input" id="b2b-orders-note" rows="2"></textarea>
+      </div>
+
+      <div id="b2b-orders-modal-error" class="b2b-form-error" style="display:none"></div>
+    </div>
+    <div class="b2b-modal__footer">
+      <button class="commission-btn commission-btn--outline" id="b2b-orders-modal-cancel">Cancel</button>
+      <button class="commission-btn commission-btn--primary" id="b2b-orders-modal-save">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.b2b-orders-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.b2b-orders-action-btn {
+  background: none;
+  border: 1px solid #d0cdc6;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: sans-serif;
+  cursor: pointer;
+  color: #333;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.b2b-orders-action-btn:hover {
+  background: #0a0a0a;
+  color: #fff;
+  border-color: #0a0a0a;
+}
+.b2b-orders-action-btn--danger:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+</style>
+
+<script>
+(function () {
+  const EDGE_ORDERS_URL  = {{ section.settings.edge_orders_url | json }};
+  const EDGE_UPDATE_URL  = {{ section.settings.edge_update_url | json }};
+  const ADMIN_SECRET     = {{ section.settings.admin_secret | json }};
+  const SHOPIFY_CUSTOMER_ID = {{ customer.id | json }};
+
+  const tableWrap  = document.getElementById('b2b-orders-table-wrap');
+  const backdrop   = document.getElementById('b2b-orders-modal-backdrop');
+  const modalClose = document.getElementById('b2b-orders-modal-close');
+  const modalCancel = document.getElementById('b2b-orders-modal-cancel');
+  const modalSave  = document.getElementById('b2b-orders-modal-save');
+  const modalError = document.getElementById('b2b-orders-modal-error');
+  const statusSelect = document.getElementById('b2b-orders-new-status');
+  const trackingWrap = document.getElementById('b2b-orders-tracking-wrap');
+
+  const STATUS_LABELS = {
+    pending_payment: 'Pending Payment',
+    paid:            'Paid',
+    in_design:       'In Design',
+    in_production:   'In Production',
+    shipped:         'Shipped',
+    complete:        'Complete',
+    cancelled:       'Cancelled',
+  };
+
+  const VALID_TRANSITIONS = {
+    paid:          ['in_design', 'cancelled'],
+    in_design:     ['in_production', 'cancelled'],
+    in_production: ['shipped', 'cancelled'],
+    shipped:       ['complete', 'cancelled'],
+    complete:      [],
+    cancelled:     [],
+  };
+
+  let currentFilter = 'all';
+  let currentOrder  = null;
+  let allOrders     = [];
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
+  async function loadOrders(filter) {
+    tableWrap.innerHTML = '<p class="b2b-admin__loading">Loading…</p>';
+    const params = new URLSearchParams({ limit: '100' });
+    if (filter !== 'all') params.set('status', filter);
+
+    try {
+      const res  = await fetch(`${EDGE_ORDERS_URL}?${params}`, {
+        headers: { 'x-admin-secret': ADMIN_SECRET },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? 'Failed to load');
+      allOrders = data.orders ?? [];
+      renderTable(allOrders);
+    } catch (err) {
+      tableWrap.innerHTML = `<p class="b2b-admin__loading" style="color:#c0392b">${err.message}</p>`;
+    }
+  }
+
+  function renderTable(orders) {
+    if (!orders.length) {
+      tableWrap.innerHTML = '<p class="b2b-admin__empty">No orders found.</p>';
+      return;
+    }
+
+    tableWrap.innerHTML = `<div style="overflow-x:auto">
+      <table class="b2b-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Metal</th>
+            <th>Qty</th>
+            <th>PO</th>
+            <th>Deadline</th>
+            <th>Fee</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td><strong>${esc(o.company_name)}</strong></td>
+              <td>${esc(o.contact_name)}<br><span style="font-size:11px;color:#aaa">${esc(o.email)}</span></td>
+              <td>${esc(o.metal ?? '—')}</td>
+              <td style="text-align:center">${o.quantity ?? 1}</td>
+              <td>${esc(o.po_number ?? '—')}</td>
+              <td style="white-space:nowrap;font-size:12px">${o.deadline_at ? fmtDate(o.deadline_at) : '—'}</td>
+              <td><span class="b2b-badge b2b-badge--${o.design_fee_status}">${o.design_fee_status}</span></td>
+              <td><span class="b2b-badge b2b-badge--${o.status}">${STATUS_LABELS[o.status] ?? o.status}</span></td>
+              <td style="white-space:nowrap;color:#999;font-size:12px">${fmtDate(o.created_at)}</td>
+              <td>
+                <div class="b2b-orders-actions">
+                  <button class="b2b-orders-action-btn" data-id="${o.id}">Update</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+    const orderMap = Object.fromEntries(orders.map(o => [o.id, o]));
+    tableWrap.querySelectorAll('.b2b-orders-action-btn[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => openModal(orderMap[btn.dataset.id]));
+    });
+  }
+
+  // ── Filter tabs ───────────────────────────────────────────────────────────
+
+  document.querySelectorAll('#b2b-orders-tabs .b2b-admin__tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#b2b-orders-tabs .b2b-admin__tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      currentFilter = tab.dataset.filter;
+      loadOrders(currentFilter);
+    });
+  });
+
+  // ── Modal ─────────────────────────────────────────────────────────────────
+
+  function openModal(order) {
+    currentOrder = order;
+    modalError.style.display = 'none';
+    document.getElementById('b2b-orders-note').value = '';
+    document.getElementById('b2b-orders-tracking-number').value = '';
+    document.getElementById('b2b-orders-tracking-carrier').value = '';
+    trackingWrap.style.display = 'none';
+
+    document.getElementById('b2b-orders-modal-info').innerHTML = `
+      <dl class="b2b-modal-info-grid" style="margin-bottom:16px">
+        <dt>Company</dt>   <dd>${esc(order.company_name)}</dd>
+        <dt>Contact</dt>   <dd>${esc(order.contact_name)}</dd>
+        <dt>Status</dt>    <dd><span class="b2b-badge b2b-badge--${order.status}">${STATUS_LABELS[order.status] ?? order.status}</span></dd>
+        <dt>Metal</dt>     <dd>${esc(order.metal ?? '—')}</dd>
+        <dt>Qty</dt>       <dd>${order.quantity ?? 1}</dd>
+        ${order.po_number ? `<dt>PO</dt><dd>${esc(order.po_number)}</dd>` : ''}
+        ${order.deadline_at ? `<dt>Deadline</dt><dd>${fmtDate(order.deadline_at)}</dd>` : ''}
+      </dl>`;
+
+    // Populate status select
+    const transitions = VALID_TRANSITIONS[order.status] ?? [];
+    statusSelect.innerHTML = '<option value="">— Select new status —</option>' +
+      transitions.map(s => `<option value="${s}">${STATUS_LABELS[s] ?? s}</option>`).join('');
+
+    if (!transitions.length) {
+      statusSelect.innerHTML = '<option value="">No transitions available</option>';
+      modalSave.disabled = true;
+    } else {
+      modalSave.disabled = false;
+    }
+
+    backdrop.style.display = 'flex';
+    backdrop.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    backdrop.style.display = 'none';
+    backdrop.setAttribute('aria-hidden', 'true');
+    currentOrder = null;
+  }
+
+  // Show/hide tracking fields when shipped is selected
+  statusSelect.addEventListener('change', () => {
+    trackingWrap.style.display = statusSelect.value === 'shipped' ? '' : 'none';
+  });
+
+  modalClose.addEventListener('click', closeModal);
+  modalCancel.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  modalSave.addEventListener('click', async () => {
+    if (!currentOrder) return;
+
+    const newStatus      = statusSelect.value;
+    const note           = document.getElementById('b2b-orders-note').value.trim();
+    const trackingNumber = document.getElementById('b2b-orders-tracking-number').value.trim();
+    const trackingCarrier = document.getElementById('b2b-orders-tracking-carrier').value.trim();
+
+    if (!newStatus) {
+      modalError.textContent   = 'Please select a new status.';
+      modalError.style.display = '';
+      return;
+    }
+    if (newStatus === 'shipped' && !trackingNumber) {
+      modalError.textContent   = 'Tracking number is required for shipped status.';
+      modalError.style.display = '';
+      return;
+    }
+    if (newStatus === 'cancelled' && !note) {
+      modalError.textContent   = 'Please add a cancellation note (sent to customer).';
+      modalError.style.display = '';
+      return;
+    }
+
+    modalSave.disabled = true;
+    modalError.style.display = 'none';
+
+    try {
+      const res  = await fetch(EDGE_UPDATE_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET },
+        body:    JSON.stringify({
+          order_id:         currentOrder.id,
+          new_status:       newStatus,
+          changed_by:       String(SHOPIFY_CUSTOMER_ID),
+          note:             note || undefined,
+          tracking_number:  trackingNumber || undefined,
+          tracking_carrier: trackingCarrier || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error ?? 'Update failed');
+
+      closeModal();
+      loadOrders(currentFilter);
+    } catch (err) {
+      modalError.textContent   = err.message;
+      modalError.style.display = '';
+      modalSave.disabled = false;
+    }
+  });
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // Init
+  loadOrders('all');
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    <h1 class="b2b-gate__title">Admin Access Only</h1>
+    <p class="b2b-gate__body">You don't have permission to view this page.</p>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Admin Orders",
+  "tag": "section",
+  "settings": [
+    { "type": "url",  "id": "edge_orders_url", "label": "Edge Function URL — b2b-admin-dashboard (with ?type=orders)" },
+    { "type": "url",  "id": "edge_update_url", "label": "Edge Function URL — b2b-admin-update-order" },
+    { "type": "text", "id": "admin_secret",    "label": "Admin secret" }
+  ],
+  "presets": [{ "name": "B2B Admin Orders" }]
+}
+{% endschema %}

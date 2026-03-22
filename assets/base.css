@@ -5011,6 +5011,7 @@ product-recommendations:has([data-has-recommendations='false']) {
   align-items: center;
   padding: 22px 40px;
   width: 600px;
+  max-width: 100%;
   min-height: 120px;
   height: 120px;
   border: 1px solid rgba(0,0,0,0.12);
@@ -5022,9 +5023,8 @@ product-recommendations:has([data-has-recommendations='false']) {
   position: relative;
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out, border-color 0.2s ease;
 }
-
 
 .syp-js .syp__reveal {
   opacity: 1;
@@ -5039,26 +5039,27 @@ product-recommendations:has([data-has-recommendations='false']) {
   opacity: 0.75;
 }
 
-/* Lift + shadow */
-.syp__card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
-  border-color: rgba(0, 0, 0, 0.22);
-  transition-duration: 0.12s;
-  transition-timing-function: ease;
-}
-
 .syp__card--dark {
   background: #0b0b0b;
   border-color: #0b0b0b;
   color: #fff;
 }
 
+.syp__card--b2b {
+  background: #fafaf8;
+  border: 1px solid rgba(10,10,10,0.12);
+  border-left: 3px solid #0a0a0a;
+  color: #0a0a0a;
+}
 
-.syp__card--dark:hover {
-  background: #1a1a1a;
-  border-color: #1a1a1a;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+.syp__card--b2b .syp__cardMeta {
+  opacity: 0.5;
+}
+
+.syp__card--b2b .syp__cardCta {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
 }
 
 .syp__cardLeft {
@@ -5078,7 +5079,6 @@ product-recommendations:has([data-has-recommendations='false']) {
   opacity: 0.85;
 }
 
-/* CTA shifts right on hover */
 .syp__cardCta {
   font-weight: 400;
   font-size: 0.75rem;
@@ -5086,11 +5086,6 @@ product-recommendations:has([data-has-recommendations='false']) {
   text-transform: uppercase;
   white-space: nowrap;
   display: inline-block;
-  transition: transform 0.25s ease;
-}
-
-.syp__card:hover .syp__cardCta {
-  transform: translateX(8px);
 }
 
 .syp__cardRight,
@@ -5150,9 +5145,22 @@ product-recommendations:has([data-has-recommendations='false']) {
 
 @media (max-width: 749px) {
   .syp__card {
-    min-height: 120px;
-    height: 120px;
-    padding: 16px 40px;
+    width: 100%;
+    min-height: 96px;
+    height: auto;
+    padding: 18px 20px;
+  }
+
+  .syp__cardTitle {
+    font-size: 1rem;
+  }
+
+  .syp__cardMeta {
+    font-size: 0.8rem;
+  }
+
+  .syp__cardCta {
+    font-size: 0.68rem;
   }
 
   .syp__title {

@@ -9,6 +9,15 @@
  */
 {
   "sections": {
+    "homepage_hero_azoir": {
+      "type": "homepage-hero",
+      "settings": {
+        "frames_base_url": "https://avmcksqllodvspbtcmgf.supabase.co/storage/v1/object/public/hero-frames/frames",
+        "frame_count": 190,
+        "cta_url": "/pages/commission-a-ring",
+        "cta_text": "Start your commission"
+      }
+    },
     "hero_irjTFL": {
       "type": "hero",
       "blocks": {
@@ -1361,13 +1370,53 @@
         "padding-block-start": 48,
         "padding-block-end": 48
       }
+    },
+    "how_it_works_azoir": {
+      "type": "how-it-works",
+      "settings": {
+        "cta_url": "/pages/commission-a-ring",
+        "cta_text": "Begin your commission"
+      }
+    },
+    "portfolio_grid_azoir": {
+      "type": "portfolio-grid",
+      "settings": {
+        "cta_url": "/pages/commission-a-ring",
+        "cta_text": "Start your commission"
+      }
+    },
+    "testimonials_azoir": {
+      "type": "testimonials",
+      "settings": {}
+    },
+    "press_bar_azoir": {
+      "type": "press-bar",
+      "settings": {}
+    },
+    "brand_story_azoir": {
+      "type": "brand-story",
+      "settings": {
+        "cta_url": "/pages/about",
+        "cta_text": "About the atelier"
+      }
+    },
+    "newsletter_azoir": {
+      "type": "newsletter-signup",
+      "settings": {}
     }
   },
   "order": [
+    "homepage_hero_azoir",
+    "press_bar_azoir",
     "hero_irjTFL",
     "section_nRncHH",
     "1770777077e4fb7540",
     "section_pCVJhD",
+    "how_it_works_azoir",
+    "portfolio_grid_azoir",
+    "testimonials_azoir",
+    "brand_story_azoir",
+    "newsletter_azoir",
     "slideshow_imUqMU",
     "section_cEVAfy",
     "product_list_HgNGYy"

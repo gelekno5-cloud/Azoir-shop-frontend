@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @shopify/cli theme dev:*)",
+      "Bash(npx @shopify/cli theme push:*)",
+      "Bash(npx @shopify/cli theme pull:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx supabase functions serve:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(npx supabase secrets set:*)",
+      "Bash(gh:*)"
+    ]
+  }
+}

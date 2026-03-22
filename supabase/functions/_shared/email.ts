@@ -16,7 +16,7 @@ export async function sendCustomerEmail(
   jobRef: string,
   body: string,
 ): Promise<EmailResult> {
-  const from = Deno.env.get("EMAIL_FROM") ?? "design@azoir.com";
+  const from = Deno.env.get("EMAIL_FROM") ?? "info@azoir.com";
   const firstName = customerName.split(" ")[0];
 
   return sendEmail({
@@ -31,15 +31,16 @@ export async function sendInternalJobSheet(
   jobRef: string,
   jobSheetContent: string,
   quoteId: string,
+  referenceLinks: string | null,
 ): Promise<EmailResult> {
-  const from = Deno.env.get("EMAIL_FROM") ?? "design@azoir.com";
-  const to   = Deno.env.get("INTERNAL_EMAIL") ?? "design@azoir.com";
+  const from = Deno.env.get("EMAIL_FROM") ?? "info@azoir.com";
+  const to   = Deno.env.get("INTERNAL_EMAIL") ?? "info@azoir.com";
 
   return sendEmail({
     from,
     to,
     subject: `[NEW JOB] ${jobRef} — Design Fee Received`,
-    html: jobSheetHtml(jobRef, jobSheetContent, quoteId),
+    html: jobSheetHtml(jobRef, jobSheetContent, quoteId, referenceLinks),
   });
 }
 
@@ -125,7 +126,7 @@ function emailHtml(firstName: string, body: string, jobRef: string): string {
         </tr>
         <tr>
           <td style="background:#f5f4f0;padding:24px 40px;text-align:center;color:#888;font-size:11px;font-family:sans-serif">
-            <p style="margin:0">© Azoir & Co · <a href="mailto:design@azoir.com" style="color:#888">design@azoir.com</a></p>
+            <p style="margin:0">© Azoir & Co · <a href="mailto:info@azoir.com" style="color:#888">info@azoir.com</a></p>
             <p style="margin:8px 0 0">All design concepts remain property of Azoir & Co until production is commissioned.</p>
           </td>
         </tr>
@@ -136,11 +137,28 @@ function emailHtml(firstName: string, body: string, jobRef: string): string {
 </html>`;
 }
 
-function jobSheetHtml(jobRef: string, content: string, quoteId: string): string {
+function jobSheetHtml(jobRef: string, content: string, quoteId: string, referenceLinks: string | null): string {
   const lines = content
     .split("\n")
     .map((l) => `<p style="margin:0 0 8px;line-height:1.5">${l.replace(/^([A-Z ]+:)/, "<strong>$1</strong>")}</p>`)
     .join("");
+
+  const imageUrls = referenceLinks
+    ? referenceLinks.split(",").map((u) => u.trim()).filter(Boolean)
+    : [];
+
+  const imagesHtml = imageUrls.length > 0
+    ? `<div style="margin-top:24px">
+        <p style="font-size:12px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 12px;color:#555">Reference Images (${imageUrls.length})</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          ${imageUrls.map((url, i) => `
+            <a href="${url}" target="_blank" style="display:inline-block;text-decoration:none">
+              <img src="${url}" alt="Reference ${i + 1}" width="160" height="160"
+                style="width:160px;height:160px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;display:block">
+            </a>`).join("")}
+        </div>
+      </div>`
+    : `<p style="margin-top:16px;font-size:12px;color:#999">No reference images uploaded.</p>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -155,6 +173,7 @@ function jobSheetHtml(jobRef: string, content: string, quoteId: string): string 
   <div style="background:#f9f9f9;padding:20px;border:1px solid #e0e0e0;border-radius:4px;white-space:pre-wrap;line-height:1.6">
     ${lines}
   </div>
+  ${imagesHtml}
   <p style="margin-top:24px;font-size:11px;color:#888">Quote ID: ${quoteId}</p>
 </body>
 </html>`;

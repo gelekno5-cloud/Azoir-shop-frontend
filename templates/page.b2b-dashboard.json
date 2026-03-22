@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "main": {
+      "type": "b2b-dashboard",
+      "settings": {
+        "edge_dashboard_url": "https://avmcksqllodvspbtcmgf.supabase.co/functions/v1/b2b-get-dashboard"
+      }
+    }
+  },
+  "order": ["main"]
+}

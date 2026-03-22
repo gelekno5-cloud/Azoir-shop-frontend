@@ -1,0 +1,186 @@
+{{ 'commission-rings.css' | asset_url | stylesheet_tag }}
+{{ 'b2b-portal.css' | asset_url | stylesheet_tag }}
+
+{% if customer and customer.tags contains 'b2b-approved' %}
+
+<div class="b2b-page" id="b2b-profile-page">
+
+  <div class="b2b-page__header">
+    <p class="b2b-page__eyebrow">Trade Partner</p>
+    <h1 class="b2b-page__title">Account Profile</h1>
+    <a href="/pages/b2b-dashboard" style="font-size:14px;font-family:sans-serif;color:#666;text-decoration:underline;">&larr; Back to orders</a>
+  </div>
+
+  <div id="b2b-profile-loading" style="color:#aaa;font-family:sans-serif;font-size:14px">Loading profile…</div>
+
+  <form id="b2b-profile-form" novalidate style="display:none;max-width:640px">
+
+    <div class="commission-rings-form__section">
+      <h3 class="commission-rings-form__section-title">Contact</h3>
+      <div class="cr-row">
+        <div class="cr-field">
+          <label class="cr-label" for="bp-contact-name">Full name</label>
+          <input class="cr-input" type="text" id="bp-contact-name" name="contact_name" required>
+        </div>
+        <div class="cr-field">
+          <label class="cr-label" for="bp-email">Email</label>
+          <input class="cr-input" type="email" id="bp-email" name="email" required>
+        </div>
+      </div>
+      <div class="cr-row" style="margin-top:12px">
+        <div class="cr-field">
+          <label class="cr-label" for="bp-phone">Phone</label>
+          <input class="cr-input" type="tel" id="bp-phone" name="phone">
+        </div>
+        <div class="cr-field">
+          <label class="cr-label" for="bp-country">Country</label>
+          <input class="cr-input" type="text" id="bp-country" name="country">
+        </div>
+      </div>
+    </div>
+
+    <div class="commission-rings-form__section">
+      <h3 class="commission-rings-form__section-title">Business</h3>
+      <div class="cr-row">
+        <div class="cr-field">
+          <label class="cr-label" for="bp-company">Company name</label>
+          <input class="cr-input" type="text" id="bp-company" name="company_name" required>
+        </div>
+        <div class="cr-field">
+          <label class="cr-label" for="bp-tax-id">ABN / Tax ID</label>
+          <input class="cr-input" type="text" id="bp-tax-id" name="tax_id">
+        </div>
+      </div>
+      <div class="cr-field cr-field--full" style="margin-top:12px">
+        <label class="cr-label" for="bp-website">Website</label>
+        <input class="cr-input" type="url" id="bp-website" name="website" placeholder="https://">
+      </div>
+    </div>
+
+    <div id="b2b-profile-error" class="b2b-form-error" style="display:none"></div>
+    <div id="b2b-profile-success" style="display:none;padding:14px 18px;background:#f0faf0;border:1px solid #b8e6b8;border-radius:6px;color:#1a4d1a;font-family:sans-serif;font-size:14px">
+      Profile updated.
+    </div>
+
+    <div class="cr-submit-row" style="margin-top:24px">
+      <button type="submit" class="commission-btn commission-btn--primary" id="bp-submit">
+        <span class="btn-label">Save Changes</span>
+        <span class="btn-spinner" style="display:none">Saving…</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+(function () {
+  const EDGE_DASHBOARD_URL   = {{ section.settings.edge_dashboard_url | json }};
+  const EDGE_UPDATE_URL      = {{ section.settings.edge_update_url | json }};
+  const SHOPIFY_CUSTOMER_ID  = {{ customer.id | json }};
+
+  const loadingEl = document.getElementById('b2b-profile-loading');
+  const formEl    = document.getElementById('b2b-profile-form');
+  const errorEl   = document.getElementById('b2b-profile-error');
+  const successEl = document.getElementById('b2b-profile-success');
+  const submitBtn = document.getElementById('bp-submit');
+
+  // ── Load existing profile ─────────────────────────────────────────────────
+
+  fetch(EDGE_DASHBOARD_URL, {
+    headers: { 'x-customer-id': String(SHOPIFY_CUSTOMER_ID) },
+  })
+    .then(r => r.json())
+    .then(data => {
+      loadingEl.style.display = 'none';
+      if (!data.success || !data.registration) {
+        loadingEl.textContent = 'No profile found.';
+        loadingEl.style.display = '';
+        return;
+      }
+      const reg = data.registration;
+      document.getElementById('bp-contact-name').value = reg.contact_name ?? '';
+      document.getElementById('bp-email').value        = reg.email ?? '';
+      document.getElementById('bp-phone').value        = reg.phone ?? '';
+      document.getElementById('bp-country').value      = reg.country ?? '';
+      document.getElementById('bp-company').value      = reg.company_name ?? '';
+      document.getElementById('bp-tax-id').value       = reg.tax_id ?? '';
+      document.getElementById('bp-website').value      = reg.website ?? '';
+      formEl.style.display = '';
+    })
+    .catch(() => {
+      loadingEl.textContent = 'Failed to load profile.';
+    });
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  formEl.addEventListener('submit', async e => {
+    e.preventDefault();
+    errorEl.style.display   = 'none';
+    successEl.style.display = 'none';
+
+    const payload = {
+      shopify_customer_id: String(SHOPIFY_CUSTOMER_ID),
+      contact_name:  document.getElementById('bp-contact-name').value.trim(),
+      company_name:  document.getElementById('bp-company').value.trim(),
+      email:         document.getElementById('bp-email').value.trim(),
+      phone:         document.getElementById('bp-phone').value.trim() || null,
+      country:       document.getElementById('bp-country').value.trim() || null,
+      tax_id:        document.getElementById('bp-tax-id').value.trim() || null,
+      website:       document.getElementById('bp-website').value.trim() || null,
+    };
+
+    if (!payload.contact_name || !payload.company_name || !payload.email) {
+      errorEl.textContent   = 'Name, company, and email are required.';
+      errorEl.style.display = '';
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res  = await fetch(EDGE_UPDATE_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.error ?? 'Update failed');
+      successEl.style.display = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      errorEl.textContent   = err.message;
+      errorEl.style.display = '';
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.querySelector('.btn-label').style.display  = loading ? 'none' : '';
+    submitBtn.querySelector('.btn-spinner').style.display = loading ? '' : 'none';
+  }
+})();
+</script>
+
+{% else %}
+<div class="b2b-gate">
+  <div class="b2b-gate__inner">
+    <h1 class="b2b-gate__title">Trade Partners Only</h1>
+    <p class="b2b-gate__body">{% if customer %}Your account is pending approval. You'll receive an email once approved.{% else %}<a href="/account/login">Log in</a> or <a href="/pages/b2b-apply">apply for trade access</a>.{% endif %}</p>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "B2B Profile",
+  "tag": "section",
+  "settings": [
+    { "type": "url", "id": "edge_dashboard_url", "label": "Edge Function URL — b2b-get-dashboard" },
+    { "type": "url", "id": "edge_update_url",    "label": "Edge Function URL — b2b-update-profile" }
+  ],
+  "presets": [{ "name": "B2B Profile" }]
+}
+{% endschema %}

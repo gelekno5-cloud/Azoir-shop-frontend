@@ -26,6 +26,10 @@
 <header-actions
   {{- block.shopify_attributes -}}
 >
+  <a href="/pages/start-your-piece" class="header-actions__cta mobile:hidden">
+    Start your Piece
+  </a>
+
   {% if shop.customer_accounts_enabled %}
     <script
       src="{{ 'dialog.js' | asset_url }}"
@@ -545,8 +549,30 @@
     text-align: center;
   }
 
+  .header-actions__cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid currentColor;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-family: var(--font-paragraph--family);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    color: var(--color-foreground);
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    margin-inline-end: var(--gap-xs);
+
+    &:hover {
+      background-color: var(--color-foreground);
+      color: var(--color-background);
+    }
+  }
+
   header-actions {
     display: flex;
+    align-items: center;
 
     @media screen and (max-width: 749px) {
       justify-self: flex-end;

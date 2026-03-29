@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "lookbook_azoir": {
+      "type": "lookbook",
+      "settings": {}
+    }
+  },
+  "order": ["lookbook_azoir"]
+}

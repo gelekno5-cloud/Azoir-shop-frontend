@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "shipping_policy_azoir": {
+      "type": "shipping-policy",
+      "settings": {}
+    }
+  },
+  "order": ["shipping_policy_azoir"]
+}

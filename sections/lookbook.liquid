@@ -1,0 +1,176 @@
+{%- comment -%} Lookbook / Portfolio — Azoir {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'pages.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="{{ 'pages.css' | asset_url }}"></noscript>
+
+<section class="lb-hero">
+  <div class="lb-hero__inner">
+    <span class="lb-eyebrow">Portfolio</span>
+    <h1 class="lb-hero__title">Finished pieces.</h1>
+    <p class="lb-hero__sub">Every piece below was designed and made for a specific person, for a specific moment. No two are alike.</p>
+  </div>
+</section>
+
+<section class="lb-filter">
+  <div class="ap-container">
+    <div class="lb-filter__bar">
+      <button class="lb-filter__btn lb-filter__btn--active" data-filter="all">All</button>
+      <button class="lb-filter__btn" data-filter="rings">Rings</button>
+      <button class="lb-filter__btn" data-filter="pendants">Pendants</button>
+      <button class="lb-filter__btn" data-filter="necklaces">Necklaces</button>
+      <button class="lb-filter__btn" data-filter="bracelets">Bracelets</button>
+    </div>
+  </div>
+</section>
+
+<section class="lb-grid-section">
+  <div class="ap-container">
+    <div class="lb-grid" id="lb-grid">
+
+      <div class="lb-item" data-category="rings">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="500" fill="#f0ede8"/>
+            <circle cx="200" cy="240" r="90" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.15"/>
+            <circle cx="200" cy="240" r="62" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
+            <circle cx="200" cy="150" r="10" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.25"/>
+            <circle cx="200" cy="150" r="5" fill="#0a0a0a" fill-opacity="0.12"/>
+            <text x="200" y="460" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.25" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">Solitaire Engagement Ring</h3>
+          <p class="lb-item__meta">18k Yellow Gold &middot; 1.2ct Round Brilliant Diamond</p>
+        </div>
+      </div>
+
+      <div class="lb-item lb-item--tall" data-category="pendants">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 660" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="660" fill="#ede9e3"/>
+            <line x1="200" y1="60" x2="200" y2="220" stroke="#0a0a0a" stroke-width="1.2" opacity="0.18"/>
+            <polygon points="200,220 172,285 228,285" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.20"/>
+            <polygon points="200,230 178,278 222,278" fill="#0a0a0a" fill-opacity="0.06"/>
+            <circle cx="200" cy="56" r="8" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.22"/>
+            <text x="200" y="600" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.22" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">Trillion-cut Pendant</h3>
+          <p class="lb-item__meta">Platinum &middot; Emerald-cut Sapphire &middot; 18" chain</p>
+        </div>
+      </div>
+
+      <div class="lb-item" data-category="rings">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="500" fill="#f5f2ed"/>
+            <ellipse cx="200" cy="250" rx="95" ry="88" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.13"/>
+            <ellipse cx="200" cy="250" rx="64" ry="58" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.09"/>
+            <rect x="172" y="160" width="56" height="36" rx="2" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.20"/>
+            <text x="200" y="460" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.22" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">East-West Emerald Band</h3>
+          <p class="lb-item__meta">18k Rose Gold &middot; Emerald-cut Colombian Emerald</p>
+        </div>
+      </div>
+
+      <div class="lb-item" data-category="bracelets">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="500" fill="#eeeae4"/>
+            <ellipse cx="200" cy="260" rx="130" ry="55" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.14"/>
+            <ellipse cx="200" cy="260" rx="110" ry="38" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.09"/>
+            {%- for i in (1..8) -%}
+            <circle cx="{{ 70 | plus: i | times: 33 }}" cy="260" r="4.5" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.18"/>
+            {%- endfor -%}
+            <text x="200" y="460" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.22" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">Diamond Tennis Bracelet</h3>
+          <p class="lb-item__meta">18k White Gold &middot; 3.4ctw Round Brilliant Diamonds</p>
+        </div>
+      </div>
+
+      <div class="lb-item lb-item--tall" data-category="necklaces">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 660" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="660" fill="#f0ede8"/>
+            <path d="M110,80 Q200,340 290,80" stroke="#0a0a0a" stroke-width="1.4" fill="none" opacity="0.18"/>
+            <circle cx="200" cy="340" r="32" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.20"/>
+            <circle cx="200" cy="340" r="18" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.13"/>
+            <text x="200" y="600" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.22" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">Halo Station Necklace</h3>
+          <p class="lb-item__meta">Platinum &middot; 0.85ct Oval Diamond &middot; Pavé Halo &middot; 16"</p>
+        </div>
+      </div>
+
+      <div class="lb-item" data-category="rings">
+        <div class="lb-item__image">
+          <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="500" fill="#ede9e3"/>
+            <circle cx="200" cy="240" r="88" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.13"/>
+            <circle cx="200" cy="240" r="60" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.09"/>
+            <circle cx="200" cy="153" r="14" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.22"/>
+            <circle cx="178" cy="160" r="6" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.15"/>
+            <circle cx="222" cy="160" r="6" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.15"/>
+            <text x="200" y="460" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="3.5" opacity="0.22" font-family="sans-serif">AZOIR &amp; CO.</text>
+          </svg>
+        </div>
+        <div class="lb-item__caption">
+          <h3 class="lb-item__title">Three-stone Anniversary Ring</h3>
+          <p class="lb-item__meta">18k Yellow Gold &middot; Sapphire, Diamond, Ruby</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="lb-note">
+  <div class="ap-container">
+    <p class="lb-note__text">All pieces shown were made for real clients. Photography is of the finished commissioned work. Client identities are kept confidential by default — some clients have shared their stories with permission.</p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.lb-filter__btn');
+  var items = document.querySelectorAll('.lb-item');
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var filter = btn.getAttribute('data-filter');
+      buttons.forEach(function (b) { b.classList.remove('lb-filter__btn--active'); });
+      btn.classList.add('lb-filter__btn--active');
+      items.forEach(function (item) {
+        if (filter === 'all' || item.getAttribute('data-category') === filter) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
+})();
+</script>
+
+<section class="ap-cta-band">
+  <div class="ap-container">
+    <h2 class="ap-cta-band__title">Commission your piece.</h2>
+    <p class="ap-cta-band__sub">Every piece here started with a conversation. Yours can too.</p>
+    <a href="/pages/start-your-piece" class="ap-cta-band__btn">Start your commission</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Lookbook",
+  "settings": [],
+  "presets": [{ "name": "Lookbook" }]
+}
+{% endschema %}

@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "materials_guide_azoir": {
+      "type": "materials-guide",
+      "settings": {}
+    }
+  },
+  "order": ["materials_guide_azoir"]
+}

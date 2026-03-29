@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "ring_size_guide_azoir": {
+      "type": "ring-size-guide",
+      "settings": {}
+    }
+  },
+  "order": ["ring_size_guide_azoir"]
+}

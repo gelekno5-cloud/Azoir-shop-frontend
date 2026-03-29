@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "care_maintenance_azoir": {
+      "type": "care-maintenance",
+      "settings": {}
+    }
+  },
+  "order": ["care_maintenance_azoir"]
+}

@@ -382,6 +382,904 @@
   text-underline-offset: 2px;
 }
 
+/* ── Ring Size Guide ──────────────────────────────────────────── */
+
+.rsg-hero {
+  padding: 100px 0 80px;
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.rsg-hero__title {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  max-width: 640px;
+  margin: 0 0 1.2rem;
+}
+
+.rsg-hero__sub {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 560px;
+  margin: 0;
+}
+
+.rsg-methods {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.rsg-methods__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+}
+
+.rsg-method__num {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: rgba(10,10,10,0.07);
+  letter-spacing: -0.04em;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.rsg-method__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0 0 10px;
+}
+
+.rsg-method__body {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.7;
+  margin: 0 0 14px;
+}
+
+.rsg-method__tip {
+  font-size: 0.78rem;
+  color: #999;
+  border-left: 2px solid rgba(10,10,10,0.10);
+  padding-left: 12px;
+  line-height: 1.6;
+}
+
+.rsg-tips-band {
+  padding: 56px 0;
+  background: #f5f4f0;
+}
+
+.rsg-tips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+
+.rsg-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.rsg-tip__icon {
+  font-size: 10px;
+  color: rgba(10,10,10,0.25);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.rsg-tip p {
+  font-size: 0.82rem;
+  color: #666;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.rsg-chart-section {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.rsg-chart-intro {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 640px;
+  margin: 0 0 40px;
+}
+
+.rsg-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(10,10,10,0.08);
+}
+
+.rsg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.rsg-table thead {
+  background: #f5f4f0;
+}
+
+.rsg-table th {
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(10,10,10,0.08);
+  white-space: nowrap;
+}
+
+.rsg-table td {
+  padding: 12px 20px;
+  color: #444;
+  border-bottom: 1px solid rgba(10,10,10,0.05);
+  white-space: nowrap;
+}
+
+.rsg-table tbody tr:last-child td { border-bottom: none; }
+.rsg-table tbody tr:hover { background: #f9f8f6; }
+
+.rsg-table-note {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 20px 0 0;
+}
+
+/* ── Shipping Policy ──────────────────────────────────────────── */
+
+.shp-hero {
+  padding: 100px 0 80px;
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.shp-hero__title {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  max-width: 680px;
+  margin: 0 0 1.2rem;
+}
+
+.shp-hero__sub {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 540px;
+  margin: 0;
+}
+
+.shp-packaging {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.shp-packaging__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.shp-packaging__text p {
+  font-size: 0.92rem;
+  color: #555;
+  line-height: 1.78;
+  margin: 0 0 1.2rem;
+}
+
+.shp-packaging__text p:last-child { margin-bottom: 0; }
+
+.shp-packaging__visual { display: flex; justify-content: center; }
+
+.shp-box-frame {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 7 / 5;
+  background: #f0ede8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shp-box-frame svg { width: 80%; height: 80%; }
+
+.shp-options {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.shp-options__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(10,10,10,0.08);
+}
+
+.shp-option {
+  padding: 36px 32px 36px 0;
+  border-right: 1px solid rgba(10,10,10,0.08);
+}
+
+.shp-option:last-child { border-right: none; padding-right: 0; }
+.shp-option:not(:first-child) { padding-left: 32px; }
+
+.shp-option__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.shp-option__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0;
+}
+
+.shp-option__price {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #888;
+  white-space: nowrap;
+}
+
+.shp-option__carrier {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0 0 4px;
+}
+
+.shp-option__time {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0a0a0a;
+  margin: 0 0 16px;
+}
+
+.shp-option__detail {
+  font-size: 0.82rem;
+  color: #666;
+  line-height: 1.68;
+  margin: 0;
+}
+
+.shp-timeline {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.shp-timeline__intro {
+  font-size: 0.92rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 560px;
+  margin: 0 0 48px;
+}
+
+.shp-steps {
+  position: relative;
+  max-width: 640px;
+  padding-left: 28px;
+  border-left: 1px solid rgba(10,10,10,0.10);
+}
+
+.shp-step {
+  position: relative;
+  padding: 0 0 40px 32px;
+}
+
+.shp-step--last { padding-bottom: 0; }
+
+.shp-step__dot {
+  position: absolute;
+  left: -5px;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(10,10,10,0.20);
+  border: 2px solid #fafaf8;
+}
+
+.shp-step__dot--gold {
+  background: #0a0a0a;
+}
+
+.shp-step__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0 0 6px;
+}
+
+.shp-step__body {
+  font-size: 0.84rem;
+  color: #666;
+  line-height: 1.68;
+  margin: 0;
+}
+
+.shp-faq {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.shp-faq .ap-section-title { margin-bottom: 32px; }
+
+.shp-faq .faq-list { max-width: 800px; }
+
+/* ── Care & Maintenance ───────────────────────────────────────── */
+
+.cm-hero {
+  padding: 100px 0 80px;
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.cm-hero__title {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  max-width: 680px;
+  margin: 0 0 1.2rem;
+}
+
+.cm-hero__sub {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 540px;
+  margin: 0;
+}
+
+.cm-rules {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.cm-by-metal {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.cm-metal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid rgba(10,10,10,0.08);
+  max-width: 820px;
+}
+
+.cm-metal {
+  border-bottom: 1px solid rgba(10,10,10,0.08);
+  padding: 36px 0;
+}
+
+.cm-metal__header { margin-bottom: 16px; }
+
+.cm-metal__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0;
+}
+
+.cm-metal__body p {
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.75;
+  margin: 0 0 1rem;
+}
+
+.cm-metal__body p:last-child { margin-bottom: 0; }
+
+.cm-stones {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.cm-service {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.cm-service__grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 80px;
+  align-items: start;
+}
+
+.cm-service__text p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.78;
+  margin: 0 0 1.1rem;
+}
+
+.cm-service__text p:last-child { margin-bottom: 0; }
+
+.cm-service__actions { display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+
+.cm-service__btn {
+  display: inline-block;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(10,10,10,0.3);
+  padding-bottom: 3px;
+  white-space: nowrap;
+  transition: border-color 0.12s ease;
+}
+
+.cm-service__btn:hover { border-color: #0a0a0a; }
+
+.cm-service__note {
+  font-size: 0.78rem;
+  color: #aaa;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ── Materials Guide ──────────────────────────────────────────── */
+
+.mg-hero {
+  padding: 100px 0 80px;
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.mg-hero__title {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  max-width: 680px;
+  margin: 0 0 1.2rem;
+}
+
+.mg-hero__sub {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 580px;
+  margin: 0;
+}
+
+.mg-metals {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.mg-metal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid rgba(10,10,10,0.08);
+}
+
+.mg-metal {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 40px;
+  padding: 44px 0;
+  border-bottom: 1px solid rgba(10,10,10,0.08);
+  align-items: start;
+}
+
+.mg-metal__swatch {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.mg-metal__swatch--yellow  { background: radial-gradient(circle at 35% 35%, #f0d080, #c8a240); }
+.mg-metal__swatch--white   { background: radial-gradient(circle at 35% 35%, #f8f8f8, #d0d0d8); }
+.mg-metal__swatch--rose    { background: radial-gradient(circle at 35% 35%, #f0c0a8, #c88060); }
+.mg-metal__swatch--platinum { background: radial-gradient(circle at 35% 35%, #f0f0f2, #b8b8c0); }
+.mg-metal__swatch--silver  { background: radial-gradient(circle at 35% 35%, #f4f4f4, #a8a8b0); }
+
+.mg-metal__name {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0 0 12px;
+}
+
+.mg-metal__attrs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.mg-attr {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mg-attr__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.mg-attr__val {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0a0a0a;
+}
+
+.mg-metal__desc {
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.75;
+  margin: 0 0 10px;
+}
+
+.mg-metal__best {
+  font-size: 0.78rem;
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}
+
+.mg-stones {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.mg-stones__intro {
+  font-size: 0.92rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 640px;
+  margin: 0 0 48px;
+}
+
+.mg-standard {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.mg-standard__inner {
+  max-width: 640px;
+}
+
+.mg-standard__title {
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 1.4rem;
+}
+
+.mg-standard__inner p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.78;
+  margin: 0 0 1.1rem;
+}
+
+.mg-standard__inner p:last-child { margin-bottom: 0; }
+
+/* ── Press ────────────────────────────────────────────────────── */
+
+.press-hero {
+  padding: 100px 0 80px;
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.press-hero__title {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+  margin: 0 0 1.2rem;
+}
+
+.press-hero__sub {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.72;
+  max-width: 520px;
+  margin: 0;
+}
+
+.press-logos {
+  padding: 72px 0;
+  background: #f5f4f0;
+}
+
+.press-logos__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  align-items: center;
+  border-top: 1px solid rgba(10,10,10,0.07);
+  border-left: 1px solid rgba(10,10,10,0.07);
+}
+
+.press-logo-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  border-right: 1px solid rgba(10,10,10,0.07);
+  border-bottom: 1px solid rgba(10,10,10,0.07);
+}
+
+.press-logo-item svg {
+  width: 100%;
+  max-width: 130px;
+  height: 48px;
+}
+
+.press-quotes {
+  padding: 88px 0 80px;
+  background: #fafaf8;
+}
+
+.press-quotes__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(10,10,10,0.08);
+}
+
+.press-quote {
+  padding: 44px 40px 44px 0;
+  border-right: 1px solid rgba(10,10,10,0.08);
+  margin: 0;
+}
+
+.press-quote:last-child { border-right: none; padding-right: 0; }
+.press-quote:not(:first-child) { padding-left: 40px; }
+
+.press-quote__text {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.72;
+  font-style: italic;
+  margin: 0 0 20px;
+}
+
+.press-quote__text::before { content: '\201C'; }
+.press-quote__text::after  { content: '\201D'; }
+
+.press-quote__source { display: flex; flex-direction: column; gap: 3px; }
+
+.press-quote__pub {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: 0.05em;
+}
+
+.press-quote__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.press-contact {
+  padding: 88px 0 80px;
+  background: #f5f4f0;
+}
+
+.press-contact__inner { max-width: 560px; }
+
+.press-contact__title {
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: #0a0a0a;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 1rem;
+}
+
+.press-contact__inner p {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.78;
+  margin: 0 0 1.8rem;
+}
+
+.press-contact__btn {
+  display: inline-block;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(10,10,10,0.30);
+  padding-bottom: 3px;
+  transition: border-color 0.12s ease;
+}
+
+.press-contact__btn:hover { border-color: #0a0a0a; }
+
+/* ── Lookbook ─────────────────────────────────────────────────── */
+
+.lb-hero {
+  background: #0a0a0a;
+  padding: 120px 0 100px;
+  text-align: center;
+}
+
+.lb-hero__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.lb-eyebrow {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(250,250,248,0.4);
+  margin-bottom: 1rem;
+}
+
+.lb-hero__title {
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 700;
+  color: #fafaf8;
+  letter-spacing: -0.035em;
+  line-height: 1.0;
+  margin: 0 0 1.2rem;
+}
+
+.lb-hero__sub {
+  font-size: 0.95rem;
+  color: rgba(250,250,248,0.5);
+  line-height: 1.72;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.lb-filter {
+  background: #fafaf8;
+  border-bottom: 1px solid rgba(10,10,10,0.08);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.lb-filter__bar {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  gap: 0;
+}
+
+.lb-filter__btn {
+  background: none;
+  border: none;
+  padding: 18px 20px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #aaa;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+
+.lb-filter__btn:hover { color: #0a0a0a; }
+
+.lb-filter__btn--active {
+  color: #0a0a0a;
+  border-bottom-color: #0a0a0a;
+}
+
+.lb-grid-section {
+  padding: 72px 0 88px;
+  background: #fafaf8;
+}
+
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.lb-item {
+  position: relative;
+  overflow: hidden;
+  background: #f0ede8;
+  cursor: pointer;
+}
+
+.lb-item__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.lb-item--tall .lb-item__image {
+  aspect-ratio: 4 / 6.5;
+}
+
+.lb-item__image svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.lb-item:hover .lb-item__image svg {
+  transform: scale(1.03);
+}
+
+.lb-item__caption {
+  padding: 20px 24px 24px;
+  background: #fafaf8;
+  border-top: 1px solid rgba(10,10,10,0.05);
+}
+
+.lb-item__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0 0 5px;
+}
+
+.lb-item__meta {
+  font-size: 0.76rem;
+  color: #999;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.lb-note {
+  padding: 32px 0 48px;
+  background: #fafaf8;
+  border-top: 1px solid rgba(10,10,10,0.07);
+}
+
+.lb-note__text {
+  font-size: 0.78rem;
+  color: #bbb;
+  line-height: 1.65;
+  max-width: 640px;
+  margin: 0;
+}
+
 /* ── Responsive ───────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
@@ -392,6 +1290,34 @@
   .ap-material:nth-child(3n) { border-right: 1px solid rgba(10,10,10,0.08); padding-left: 0; padding-right: 32px; }
   .ap-material:nth-child(2n) { border-right: none; padding-left: 32px; padding-right: 0; }
   .ap-material:nth-child(2n+1) { padding-left: 0; }
+
+  /* Ring size guide */
+  .rsg-methods__grid { grid-template-columns: 1fr; gap: 40px; }
+  .rsg-tips { grid-template-columns: repeat(2, 1fr); }
+
+  /* Shipping */
+  .shp-packaging__grid { grid-template-columns: 1fr; gap: 48px; }
+  .shp-packaging__visual { display: none; }
+  .shp-options__grid { grid-template-columns: 1fr; }
+  .shp-option { border-right: none !important; padding-left: 0 !important; padding-right: 0 !important; border-bottom: 1px solid rgba(10,10,10,0.08); padding-bottom: 36px; }
+  .shp-option:last-child { border-bottom: none; }
+
+  /* Materials */
+  .mg-metal { grid-template-columns: 1fr; gap: 20px; }
+  .mg-metal__swatch { width: 48px; height: 48px; }
+
+  /* Press */
+  .press-logos__grid { grid-template-columns: repeat(3, 1fr); }
+  .press-quotes__grid { grid-template-columns: 1fr; }
+  .press-quote { border-right: none; padding-left: 0 !important; padding-right: 0 !important; border-bottom: 1px solid rgba(10,10,10,0.08); }
+  .press-quote:last-child { border-bottom: none; }
+
+  /* Lookbook */
+  .lb-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Care */
+  .cm-service__grid { grid-template-columns: 1fr; gap: 32px; }
+  .cm-service__actions { align-items: flex-start; }
 }
 
 @media (max-width: 600px) {
@@ -411,4 +1337,30 @@
   .ap-material { border-right: none !important; padding-left: 0 !important; padding-right: 0 !important; }
   .ap-cta-band { padding: 64px 0; }
   .faq-footer { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+  /* Ring size guide */
+  .rsg-hero, .rsg-methods, .rsg-chart-section { padding-top: 56px; padding-bottom: 48px; }
+  .rsg-tips-band { padding: 40px 0; }
+  .rsg-tips { grid-template-columns: 1fr; gap: 20px; }
+
+  /* Shipping */
+  .shp-hero, .shp-packaging, .shp-options, .shp-timeline, .shp-faq { padding-top: 56px; padding-bottom: 48px; }
+  .lb-filter__bar { padding: 0 20px; gap: 0; }
+  .lb-filter__btn { padding: 14px 12px; font-size: 0.68rem; }
+
+  /* Press */
+  .press-logos__grid { grid-template-columns: repeat(2, 1fr); }
+  .press-hero, .press-quotes, .press-contact { padding-top: 56px; padding-bottom: 48px; }
+
+  /* Lookbook */
+  .lb-grid { grid-template-columns: 1fr; }
+  .lb-hero { padding: 80px 0 64px; }
+  .lb-hero__inner { padding: 0 20px; }
+  .lb-grid-section { padding: 48px 0 64px; }
+
+  /* Care */
+  .cm-hero, .cm-by-metal, .cm-stones, .cm-service, .cm-rules { padding-top: 56px; padding-bottom: 48px; }
+
+  /* Materials */
+  .mg-hero, .mg-metals, .mg-stones, .mg-standard { padding-top: 56px; padding-bottom: 48px; }
 }

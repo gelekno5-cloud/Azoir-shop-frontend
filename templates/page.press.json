@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "press_azoir": {
+      "type": "press",
+      "settings": {}
+    }
+  },
+  "order": ["press_azoir"]
+}

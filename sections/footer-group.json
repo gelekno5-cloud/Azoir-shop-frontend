@@ -50,10 +50,10 @@
       "blocks": {
         "menu_shop": {
           "type": "menu",
-          "name": "SHOP",
+          "name": "STORE INFO",
           "settings": {
-            "menu": "footer",
-            "heading": "SHOP",
+            "menu": "footer-store-info",
+            "heading": "STORE INFO",
             "menu_spacing": 7,
             "show_as_accordion": false,
             "accordion_icon": "caret",
@@ -71,10 +71,10 @@
         },
         "menu_information": {
           "type": "menu",
-          "name": "INFORMATION",
+          "name": "CUSTOMER CARE",
           "settings": {
-            "menu": "footer",
-            "heading": "INFORMATION",
+            "menu": "footer-customer-care",
+            "heading": "CUSTOMER CARE",
             "menu_spacing": 7,
             "show_as_accordion": false,
             "accordion_icon": "caret",
@@ -94,7 +94,7 @@
           "type": "menu",
           "name": "LEGAL",
           "settings": {
-            "menu": "footer",
+            "menu": "footer-legal",
             "heading": "LEGAL",
             "menu_spacing": 7,
             "show_as_accordion": false,

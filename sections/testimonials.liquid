@@ -1,57 +1,188 @@
-{%- comment -%} Testimonials — Azoir {%- endcomment -%}
+{%- comment -%} Testimonials — Azoir · scroll-reveal stagger + crossfade cycling {%- endcomment -%}
 <link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="{{ 'homepage-sections.css' | asset_url }}"></noscript>
 
-<section class="tm-section">
+<section class="tm-section" id="tm-section">
   <div class="tm-container">
 
-    <div class="tm-header">
+    <div class="tm-header tm-reveal">
       <span class="tm-eyebrow">CLIENT STORIES</span>
       <h2 class="tm-title">Made for the people who wear them.</h2>
     </div>
 
-    <div class="tm-grid">
+    <div class="tm-grid" id="tm-grid">
 
-      <article class="tm-card">
-        <div class="tm-card__quote">&ldquo;</div>
-        <blockquote class="tm-card__text">
-          The process was unlike anything I'd experienced. They listened to every detail — the metal, the weight, the way I wanted it to feel on my hand. The ring exceeded everything I imagined.
-        </blockquote>
-        <footer class="tm-card__footer">
-          <div class="tm-card__divider"></div>
-          <span class="tm-card__name">Sophia M.</span>
-          <span class="tm-card__piece">Bespoke engagement ring, 18k white gold</span>
-        </footer>
+      <article class="tm-card tm-reveal" style="--tm-delay:0.08s">
+        <div class="tm-card__inner">
+          <div class="tm-card__quote">&ldquo;</div>
+          <blockquote class="tm-card__text">
+            The process was unlike anything I'd experienced with a jeweller. They listened to every detail — the metal, the weight, the way I wanted it to feel on my hand. The ring exceeded everything I'd imagined and people stop me to ask about it constantly.
+          </blockquote>
+          <footer class="tm-card__footer">
+            <div class="tm-card__divider"></div>
+            <span class="tm-card__name">Sophia M.</span>
+            <span class="tm-card__piece">Bespoke engagement ring, 18k white gold</span>
+          </footer>
+        </div>
       </article>
 
-      <article class="tm-card">
-        <div class="tm-card__quote">&ldquo;</div>
-        <blockquote class="tm-card__text">
-          I commissioned a necklace for my wife's anniversary gift. The collaboration was seamless — they translated a simple sketch into something extraordinary. She hasn't taken it off since.
-        </blockquote>
-        <footer class="tm-card__footer">
-          <div class="tm-card__divider"></div>
-          <span class="tm-card__name">James T.</span>
-          <span class="tm-card__piece">Custom diamond necklace, platinum</span>
-        </footer>
+      <article class="tm-card tm-reveal" style="--tm-delay:0.2s">
+        <div class="tm-card__inner">
+          <div class="tm-card__quote">&ldquo;</div>
+          <blockquote class="tm-card__text">
+            I commissioned a necklace for my wife's anniversary. The collaboration was seamless — they translated a rough sketch into something extraordinary. She hasn't taken it off since the day she unwrapped it.
+          </blockquote>
+          <footer class="tm-card__footer">
+            <div class="tm-card__divider"></div>
+            <span class="tm-card__name">James T.</span>
+            <span class="tm-card__piece">Custom diamond necklace, platinum</span>
+          </footer>
+        </div>
       </article>
 
-      <article class="tm-card">
-        <div class="tm-card__quote">&ldquo;</div>
-        <blockquote class="tm-card__text">
-          I knew exactly what I wanted but had no idea how to describe it. The team at Azoir understood immediately. The bracelet feels like it was born on my wrist.
-        </blockquote>
-        <footer class="tm-card__footer">
-          <div class="tm-card__divider"></div>
-          <span class="tm-card__name">Camille R.</span>
-          <span class="tm-card__piece">Chain bracelet, 18k yellow gold</span>
-        </footer>
+      <article class="tm-card tm-reveal" style="--tm-delay:0.32s">
+        <div class="tm-card__inner">
+          <div class="tm-card__quote">&ldquo;</div>
+          <blockquote class="tm-card__text">
+            I knew exactly what I wanted but had no idea how to put it into words. The Azoir team understood immediately. The bracelet feels like it was born on my wrist — I keep finding details I didn't notice before.
+          </blockquote>
+          <footer class="tm-card__footer">
+            <div class="tm-card__divider"></div>
+            <span class="tm-card__name">Camille R.</span>
+            <span class="tm-card__piece">Chain bracelet, 18k yellow gold</span>
+          </footer>
+        </div>
       </article>
 
     </div>
 
+    <div class="tm-dots" id="tm-dots" aria-hidden="true">
+      <span class="tm-dot tm-dot--active"></span>
+      <span class="tm-dot"></span>
+      <span class="tm-dot"></span>
+    </div>
+
   </div>
 </section>
+
+<script>
+(function () {
+  // ── Review pool ────────────────────────────────────────────────
+  var reviews = [
+    {
+      text: "The process was unlike anything I'd experienced with a jeweller. They listened to every detail — the metal, the weight, the way I wanted it to feel on my hand. The ring exceeded everything I'd imagined and people stop me to ask about it constantly.",
+      name: "Sophia M.",
+      piece: "Bespoke engagement ring, 18k white gold"
+    },
+    {
+      text: "I commissioned a necklace for my wife's anniversary. The collaboration was seamless — they translated a rough sketch into something extraordinary. She hasn't taken it off since the day she unwrapped it.",
+      name: "James T.",
+      piece: "Custom diamond necklace, platinum"
+    },
+    {
+      text: "I knew exactly what I wanted but had no idea how to put it into words. The Azoir team understood immediately. The bracelet feels like it was born on my wrist — I keep finding details I didn't notice before.",
+      name: "Camille R.",
+      piece: "Chain bracelet, 18k yellow gold"
+    },
+    {
+      text: "Honestly wasn't sure about the design fee at first, but it completely makes sense once you're in the process. I had three rounds of revisions and they were patient every single time. The final ring is perfect.",
+      name: "Daniel K.",
+      piece: "Signet ring, 18k yellow gold"
+    },
+    {
+      text: "I reached out not really knowing what I wanted — just a vague idea and a budget. They worked backward from both and came back with something I genuinely love. The whole process took about six weeks and was completely stress-free.",
+      name: "Nadia F.",
+      piece: "Emerald pendant, 18k rose gold"
+    },
+    {
+      text: "My mother had a stone that had been sitting in a box for thirty years. We brought it to Azoir and they built a ring around it that looks like it was always meant to be there. She cried when she saw it.",
+      name: "Marcus B.",
+      piece: "Heirloom reset, old-cut diamond, platinum"
+    },
+    {
+      text: "The packaging alone made it feel like a luxury experience before I even opened the box. And the ring inside — I keep taking it off just to look at it properly. Every detail is considered.",
+      name: "Yuki A.",
+      piece: "Pavé band, 18k white gold"
+    }
+  ];
+
+  var cards = Array.from(document.querySelectorAll('#tm-grid .tm-card'));
+  var dots  = Array.from(document.querySelectorAll('#tm-dots .tm-dot'));
+  if (!cards.length) return;
+
+  // ── Scroll-reveal stagger ──────────────────────────────────────
+  var revealEls = Array.from(document.querySelectorAll('.tm-reveal'));
+  var observed  = false;
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('tm-revealed');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    // No IO support — just show everything
+    revealEls.forEach(function (el) { el.classList.add('tm-revealed'); });
+  }
+
+  // ── Crossfade cycling ──────────────────────────────────────────
+  // 3 cards, rotate through 7 reviews.
+  // One card cycles at a time, in order, with 5s between each swap.
+  var currentSet = [0, 1, 2]; // which review index each card is showing
+  var nextReview = 3;         // next review to show
+  var activeCard = 0;         // which card slot cycles next
+  var cycle;
+
+  function updateDots() {
+    var page = Math.floor(currentSet[0] / 3) % dots.length;
+    dots.forEach(function (d, i) { d.classList.toggle('tm-dot--active', i === page); });
+  }
+
+  function cycleCard() {
+    var card  = cards[activeCard];
+    var inner = card.querySelector('.tm-card__inner');
+    var rev   = reviews[nextReview % reviews.length];
+
+    // Fade out
+    inner.classList.add('tm-fade-out');
+
+    setTimeout(function () {
+      // Swap content
+      card.querySelector('.tm-card__text').textContent  = rev.text;
+      card.querySelector('.tm-card__name').textContent  = rev.name;
+      card.querySelector('.tm-card__piece').textContent = rev.piece;
+      currentSet[activeCard] = nextReview % reviews.length;
+
+      // Fade in
+      inner.classList.remove('tm-fade-out');
+      inner.classList.add('tm-fade-in');
+      setTimeout(function () { inner.classList.remove('tm-fade-in'); }, 700);
+
+      nextReview++;
+      activeCard = (activeCard + 1) % cards.length;
+      updateDots();
+    }, 500);
+  }
+
+  // Start cycling 3s after section is first revealed
+  var cycleStarted = false;
+  var startIo = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting && !cycleStarted) {
+      cycleStarted = true;
+      setTimeout(function () {
+        cycle = setInterval(cycleCard, 5000);
+      }, 3000);
+      startIo.disconnect();
+    }
+  }, { threshold: 0.4 });
+  var section = document.getElementById('tm-section');
+  if (section) startIo.observe(section);
+})();
+</script>
 
 {% schema %}
 {

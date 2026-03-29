@@ -232,6 +232,57 @@
   text-transform: uppercase;
 }
 
+/* ── Testimonial animations ───────────────────────────────────── */
+
+/* Scroll-reveal: cards start invisible and slide up */
+.tm-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease;
+  transition-delay: var(--tm-delay, 0s);
+}
+
+.tm-reveal.tm-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Crossfade: inner content fades when cycling */
+.tm-card__inner {
+  transition: opacity 0.5s ease;
+}
+
+.tm-card__inner.tm-fade-out {
+  opacity: 0;
+}
+
+.tm-card__inner.tm-fade-in {
+  opacity: 1;
+}
+
+/* Dots */
+.tm-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 48px;
+}
+
+.tm-dot {
+  width: 20px;
+  height: 2px;
+  background: rgba(10,10,10,0.15);
+  border-radius: 2px;
+  transition: background 0.3s ease, width 0.3s ease;
+}
+
+.tm-dot--active {
+  background: rgba(10,10,10,0.55);
+  width: 32px;
+}
+
 /* ── How It Works ─────────────────────────────────────────────── */
 
 .hiw-section {

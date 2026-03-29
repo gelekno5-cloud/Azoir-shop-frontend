@@ -174,7 +174,7 @@
     // Lenis smooth scroll — desktop only; iOS momentum scroll is better on touch
     if (window.Lenis && !isMobile) {
       var lenis = new Lenis({
-        duration: 0.7,
+        duration: 1.1,
         easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
         smoothWheel: true,
       });
@@ -193,19 +193,30 @@
       el._decimals = parseInt(el.dataset.decimals || '0', 10);
     });
 
-    // Main scroll driver — onUpdate fires inside GSAP's rAF tick, no extra wrapper needed
+    // Main scroll driver
+    // scrub: 1.5 adds interpolation lag — the canvas catches up over 1.5s instead of
+    // jumping instantly, which hides the frame-skip jank at fast scroll speeds.
+    var rafPending = false;
+    var latestProgress = 0;
     ScrollTrigger.create({
       trigger: root,
       start: 'top top',
       end: 'bottom bottom',
-      scrub: true,
+      scrub: 1.5,
       onUpdate: function (self) {
-        var p = self.progress;
-        updateHeroLayer(p);
-        updateFrame(p);
-        updateDarkOverlay(p);
-        updateMarquee(p);
-        updateSections(p);
+        latestProgress = self.progress;
+        if (!rafPending) {
+          rafPending = true;
+          requestAnimationFrame(function () {
+            rafPending = false;
+            var p = latestProgress;
+            updateHeroLayer(p);
+            updateFrame(p);
+            updateDarkOverlay(p);
+            updateMarquee(p);
+            updateSections(p);
+          });
+        }
       },
     });
   }
@@ -285,23 +296,23 @@
 
   function animateIn(sec) {
     gsap.killTweensOf(sec._children);
-    var base = { opacity: 1, stagger: 0.15, duration: 0.85, ease: 'power3.out' };
+    var base = { opacity: 1, stagger: 0.09, duration: 0.7, ease: 'power3.out' };
 
     switch (sec._anim) {
       case 'slide-left':
-        gsap.fromTo(sec._children, { x: -60, opacity: 0 }, Object.assign({ x: 0 }, base));
+        gsap.fromTo(sec._children, { x: -48, opacity: 0 }, Object.assign({ x: 0 }, base));
         break;
       case 'slide-right':
-        gsap.fromTo(sec._children, { x: 60, opacity: 0 }, Object.assign({ x: 0 }, base));
+        gsap.fromTo(sec._children, { x: 48, opacity: 0 }, Object.assign({ x: 0 }, base));
         break;
       case 'stagger-up':
-        gsap.fromTo(sec._children, { y: 40, opacity: 0 }, Object.assign({ y: 0, stagger: 0.18 }, base));
+        gsap.fromTo(sec._children, { y: 32, opacity: 0 }, Object.assign({ y: 0, stagger: 0.11 }, base));
         break;
       case 'fade-up':
-        gsap.fromTo(sec._children, { y: 24, opacity: 0 }, Object.assign({ y: 0 }, base));
+        gsap.fromTo(sec._children, { y: 20, opacity: 0 }, Object.assign({ y: 0 }, base));
         break;
       default:
-        gsap.fromTo(sec._children, { y: 20, opacity: 0 }, Object.assign({ y: 0 }, base));
+        gsap.fromTo(sec._children, { y: 16, opacity: 0 }, Object.assign({ y: 0 }, base));
     }
   }
 

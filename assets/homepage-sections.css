@@ -161,31 +161,6 @@
   max-width: 560px;
 }
 
-.tm-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  border-top: 1px solid rgba(10, 10, 10, 0.10);
-}
-
-.tm-card {
-  padding: 48px 48px 48px 0;
-  border-right: 1px solid rgba(10, 10, 10, 0.10);
-}
-
-.tm-card:first-child {
-  padding-left: 0;
-}
-
-.tm-card:last-child {
-  border-right: none;
-  padding-right: 0;
-  padding-left: 48px;
-}
-
-.tm-card:nth-child(2) {
-  padding-left: 48px;
-}
 
 .tm-card__quote {
   font-size: 4rem;
@@ -232,55 +207,68 @@
   text-transform: uppercase;
 }
 
-/* ── Testimonial animations ───────────────────────────────────── */
+/* ── Testimonial crossfade stage ──────────────────────────────── */
 
-/* Scroll-reveal: cards start invisible and slide up */
-.tm-reveal {
+.tm-stage {
+  position: relative;
+  min-height: 260px;
+  border-top: 1px solid rgba(10,10,10,0.10);
+}
+
+.tm-slide {
+  position: absolute;
+  inset: 0;
+  padding: 48px 0 0;
+  max-width: 720px;
   opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity 0.65s ease,
-    transform 0.65s ease;
-  transition-delay: var(--tm-delay, 0s);
+  transition: opacity 0.8s ease;
+  pointer-events: none;
 }
 
-.tm-reveal.tm-revealed {
+.tm-slide--active {
   opacity: 1;
-  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
 }
 
-/* Crossfade: inner content fades when cycling */
-.tm-card__inner {
-  transition: opacity 0.5s ease;
-}
-
-.tm-card__inner.tm-fade-out {
+.tm-slide--out {
   opacity: 0;
+  position: absolute;
+  pointer-events: none;
 }
 
-.tm-card__inner.tm-fade-in {
-  opacity: 1;
+/* Progress bar */
+.tm-progress {
+  height: 1px;
+  background: rgba(10,10,10,0.08);
+  margin-top: 40px;
+  overflow: hidden;
+}
+
+.tm-progress__bar {
+  height: 100%;
+  width: 0%;
+  background: rgba(10,10,10,0.35);
 }
 
 /* Dots */
 .tm-dots {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 48px;
+  gap: 6px;
+  margin-top: 16px;
 }
 
 .tm-dot {
-  width: 20px;
+  width: 16px;
   height: 2px;
-  background: rgba(10,10,10,0.15);
+  background: rgba(10,10,10,0.12);
   border-radius: 2px;
   transition: background 0.3s ease, width 0.3s ease;
 }
 
 .tm-dot--active {
-  background: rgba(10,10,10,0.55);
-  width: 32px;
+  background: rgba(10,10,10,0.50);
+  width: 28px;
 }
 
 /* ── How It Works ─────────────────────────────────────────────── */

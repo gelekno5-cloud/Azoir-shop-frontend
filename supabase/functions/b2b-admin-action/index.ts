@@ -5,6 +5,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { customerHasTag, addCustomerTag, removeCustomerTag } from "../_shared/shopify-admin.ts";
+import { sendSms } from "../_shared/sms.ts";
+import { sendWhatsApp } from "../_shared/whatsapp.ts";
 
 const ALLOWED_ORIGINS = Deno.env.get("ALLOWED_ORIGINS") ?? "*";
 
@@ -34,14 +36,60 @@ serve(async (req: Request) => {
     return json({ success: false, error: "Invalid JSON body" }, 400);
   }
 
-  const registration_id = sanitize(body.registration_id);
-  const action          = sanitize(body.action);          // "approve" | "reject"
-  const reviewed_by     = sanitize(body.reviewed_by);     // admin shopify_customer_id
+  const registration_id  = sanitize(body.registration_id);
+  const action           = sanitize(body.action);          // "approve" | "reject" | "send_message"
+  const reviewed_by      = sanitize(body.reviewed_by);
   const rejection_reason = sanitize(body.rejection_reason);
-  const internal_notes  = sanitize(body.internal_notes);
+  const internal_notes   = sanitize(body.internal_notes);
+
+  if (!action || !["approve", "reject", "send_message"].includes(action)) {
+    return json({ success: false, error: "Invalid action" }, 422);
+  }
+
+  // ── send_message: dispatch a client-facing order note via preferred channel ──
+  if (action === "send_message") {
+    const content        = sanitize(body.content);
+    const email          = sanitize(body.email);
+    const contact_name   = sanitize(body.contact_name) ?? "Valued Client";
+    const phone          = sanitize(body.phone);
+    const contact_method = sanitize(body.contact_method) ?? "email";
+
+    if (!content) return json({ success: false, error: "content is required" }, 422);
+    if (!email && contact_method === "email") return json({ success: false, error: "email is required" }, 422);
+
+    if (contact_method === "sms" && phone) {
+      const result = await sendSms(phone, `Azoir & Co: ${content}`);
+      if (result.error) return json({ success: false, error: result.error }, 500);
+    } else if (contact_method === "whatsapp" && phone) {
+      const result = await sendWhatsApp(phone, content);
+      if (result.error) return json({ success: false, error: result.error }, 500);
+    } else {
+      // Default: email via SendGrid
+      const from   = Deno.env.get("EMAIL_FROM") ?? "info@azoir.co";
+      const apiKey = Deno.env.get("SENDGRID_API_KEY");
+      if (!apiKey) return json({ success: false, error: "SENDGRID_API_KEY not set" }, 500);
+      const firstName = contact_name.split(" ")[0];
+      const html = buildMessageEmail(firstName, content);
+      const fromParts = from.match(/^(.+?)\s*<(.+?)>$/);
+      const fromObj   = fromParts ? { name: fromParts[1].trim(), email: fromParts[2].trim() } : { email: from };
+      const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: email }] }],
+          from: fromObj,
+          subject: "Message from Azoir & Co",
+          content: [{ type: "text/html", value: html }],
+        }),
+      });
+      if (!res.ok) return json({ success: false, error: `SendGrid error ${res.status}` }, 500);
+    }
+
+    return json({ success: true }, 200);
+  }
 
   if (!registration_id) return json({ success: false, error: "registration_id is required" }, 422);
-  if (!action || !["approve", "reject"].includes(action)) {
+  if (!["approve", "reject"].includes(action)) {
     return json({ success: false, error: "action must be 'approve' or 'reject'" }, 422);
   }
   if (action === "reject" && !rejection_reason) {
@@ -191,6 +239,41 @@ async function sendDecisionEmail(
       content: [{ type: "text/html", value: html }],
     }),
   });
+}
+
+// ── Email templates ───────────────────────────────────────────────────────────
+
+function buildMessageEmail(firstName: string, content: string): string {
+  const escaped = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4f0;font-family:Georgia,serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f0;padding:40px 16px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:4px;overflow:hidden">
+        <tr>
+          <td style="background:#0a0a0a;padding:32px 40px;text-align:center">
+            <p style="margin:0;color:#fff;font-family:Georgia,serif;font-size:22px;letter-spacing:0.12em">AZOIR & CO</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;color:#1a1a1a;font-size:15px;line-height:1.6">
+            <p style="margin:0 0 20px">Dear ${firstName},</p>
+            <p style="margin:0 0 20px">${escaped}</p>
+            <p style="margin:0;color:#888;font-size:13px">With warmth,<br>Azoir &amp; Co</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f5f4f0;padding:24px 40px;text-align:center;color:#888;font-size:11px;font-family:sans-serif">
+            <p style="margin:0">© Azoir &amp; Co · <a href="mailto:info@azoir.co" style="color:#888">info@azoir.co</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

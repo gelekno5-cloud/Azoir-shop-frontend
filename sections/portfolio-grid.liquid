@@ -15,7 +15,7 @@
 
       {%- for block in section.blocks -%}
         {%- assign img   = block.settings.image -%}
-        {%- assign vid   = block.settings.video_url -%}
+        {%- assign vid   = block.settings.video -%}
         {%- assign label = block.settings.label -%}
         {%- assign meta  = block.settings.meta -%}
 
@@ -26,13 +26,16 @@
               {%- comment -%} Video — autoplay, muted, loop, no controls {%- endcomment -%}
               <video
                 class="pg-card__video"
-                src="{{ vid }}"
                 autoplay
                 muted
                 loop
                 playsinline
                 preload="metadata"
-              ></video>
+              >
+                {%- for source in vid.sources -%}
+                  <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                {%- endfor -%}
+              </video>
 
             {%- elsif img != blank -%}
               <img
@@ -132,10 +135,10 @@
           "label": "Image"
         },
         {
-          "type": "text",
-          "id": "video_url",
-          "label": "Video URL (optional)",
-          "info": "Direct URL to an .mp4 file. If set, the video plays instead of the image."
+          "type": "video",
+          "id": "video",
+          "label": "Video (optional)",
+          "info": "Upload an .mp4 video. If set, plays instead of the image."
         },
         {
           "type": "text",

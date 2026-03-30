@@ -395,6 +395,35 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  /* Brand story: stack on all mobile/tablet */
+  .bs-container {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .bs-visual {
+    display: flex;
+    order: -1;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .bs-visual__frame {
+    width: 120px;
+    height: 120px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+  }
+
+  .bs-visual__tag {
+    display: none;
+  }
+
+  .bs-statement {
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    margin-bottom: 1.2rem;
+  }
+
   .tm-grid {
     grid-template-columns: 1fr;
     border-top: none;
@@ -468,34 +497,6 @@
 
   .pr-divider { display: none; }
 
-  .bs-container {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  /* Show a compact visual above the text on mobile */
-  .bs-visual {
-    display: flex;
-    order: -1;
-    justify-content: center;
-    margin-bottom: 32px;
-  }
-
-  .bs-visual__frame {
-    width: 120px;
-    height: 120px;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-  }
-
-  .bs-visual__tag {
-    display: none;
-  }
-
-  .bs-statement {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-    margin-bottom: 1.2rem;
-  }
 
   .bs-body p:not(:first-child) {
     display: none;

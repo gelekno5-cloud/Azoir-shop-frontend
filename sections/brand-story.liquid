@@ -35,22 +35,42 @@
 
     <div class="bs-visual" aria-hidden="true">
       <div class="bs-visual__frame">
-        <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg" class="bs-visual__svg">
-          <!-- Large ring silhouette -->
-          <circle cx="200" cy="240" r="120" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.10"/>
-          <circle cx="200" cy="240" r="88"  stroke="#0a0a0a" stroke-width="1"   fill="none" opacity="0.07"/>
-          <circle cx="200" cy="240" r="56"  stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.05"/>
-          <!-- Band arc -->
-          <path d="M114 240 Q200 130 286 240" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
-          <path d="M124 235 Q200 145 276 235" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.10"/>
-          <!-- Setting dots -->
-          <circle cx="200" cy="125" r="5" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.22"/>
-          <circle cx="161" cy="136" r="3.5" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.16"/>
-          <circle cx="239" cy="136" r="3.5" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.16"/>
-          <!-- Label -->
-          <text x="200" y="408" text-anchor="middle" fill="#0a0a0a" font-size="9" letter-spacing="4" opacity="0.18" font-family="sans-serif">AZOIR &amp; CO.</text>
-          <text x="200" y="424" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="2" opacity="0.12" font-family="sans-serif">NEW YORK</text>
-        </svg>
+
+        {%- if section.settings.video != blank -%}
+          <video
+            class="bs-visual__media"
+            autoplay muted loop playsinline preload="metadata"
+          >
+            {%- for source in section.settings.video.sources -%}
+              <source src="{{ source.url }}" type="{{ source.mime_type }}">
+            {%- endfor -%}
+          </video>
+
+        {%- elsif section.settings.image != blank -%}
+          <img
+            class="bs-visual__media"
+            src="{{ section.settings.image | image_url: width: 800 }}"
+            alt="{{ section.settings.image.alt | escape }}"
+            width="{{ section.settings.image.width }}"
+            height="{{ section.settings.image.height }}"
+            loading="lazy"
+          >
+
+        {%- else -%}
+          <svg viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg" class="bs-visual__svg">
+            <circle cx="200" cy="240" r="120" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.10"/>
+            <circle cx="200" cy="240" r="88"  stroke="#0a0a0a" stroke-width="1"   fill="none" opacity="0.07"/>
+            <circle cx="200" cy="240" r="56"  stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.05"/>
+            <path d="M114 240 Q200 130 286 240" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
+            <path d="M124 235 Q200 145 276 235" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.10"/>
+            <circle cx="200" cy="125" r="5" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.22"/>
+            <circle cx="161" cy="136" r="3.5" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.16"/>
+            <circle cx="239" cy="136" r="3.5" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.16"/>
+            <text x="200" y="408" text-anchor="middle" fill="#0a0a0a" font-size="9" letter-spacing="4" opacity="0.18" font-family="sans-serif">AZOIR &amp; CO.</text>
+            <text x="200" y="424" text-anchor="middle" fill="#0a0a0a" font-size="7" letter-spacing="2" opacity="0.12" font-family="sans-serif">NEW YORK</text>
+          </svg>
+        {%- endif -%}
+
         <div class="bs-visual__tag">
           <span class="bs-visual__tag-line">Handcrafted</span>
           <span class="bs-visual__tag-line">in New York</span>
@@ -83,8 +103,10 @@
 {
   "name": "Brand Story",
   "settings": [
-    { "type": "url",  "id": "cta_url",  "label": "CTA URL" },
-    { "type": "text", "id": "cta_text", "label": "CTA text", "default": "About the atelier" }
+    { "type": "video",       "id": "video",    "label": "Video (optional)", "info": "Upload an .mp4 video. Takes priority over image." },
+    { "type": "image_picker","id": "image",    "label": "Image (optional)", "info": "Used if no video is set." },
+    { "type": "url",         "id": "cta_url",  "label": "CTA URL" },
+    { "type": "text",        "id": "cta_text", "label": "CTA text", "default": "About the atelier" }
   ],
   "presets": [{ "name": "Brand Story" }]
 }

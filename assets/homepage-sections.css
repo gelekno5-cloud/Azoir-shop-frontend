@@ -470,10 +470,55 @@
 
   .bs-container {
     grid-template-columns: 1fr;
+    gap: 0;
   }
 
+  /* Show a compact visual above the text on mobile */
   .bs-visual {
+    display: flex;
+    order: -1;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .bs-visual__frame {
+    width: 120px;
+    height: 120px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+  }
+
+  .bs-visual__tag {
     display: none;
+  }
+
+  .bs-statement {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    margin-bottom: 1.2rem;
+  }
+
+  .bs-body p:not(:first-child) {
+    display: none;
+  }
+
+  .bs-body--expanded p:not(:first-child) {
+    display: block;
+  }
+
+  .bs-read-more {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #0a0a0a;
+    border-bottom: 1px solid rgba(10,10,10,0.25);
+    padding-bottom: 2px;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
   }
 
   .nl-field {

@@ -12,7 +12,7 @@
         Every piece begins<br>as a conversation.
       </h2>
 
-      <div class="bs-body">
+      <div class="bs-body" id="bs-body">
         <p>
           Azoir was founded in New York with a single premise: that the most meaningful jewellery is made for one person, by hand, with full intention. Not produced. Not catalogued. Made.
         </p>
@@ -23,6 +23,7 @@
           We work in 18k gold, platinum, and sterling silver. We source conflict-free stones. And we never rush a piece that is meant to last a lifetime.
         </p>
       </div>
+      <button class="bs-read-more" id="bs-read-more" aria-expanded="false">Read more</button>
 
       <a href="{{ section.settings.cta_url | default: '/pages/about' }}" class="bs-cta">
         {{ section.settings.cta_text | default: 'About the atelier' }}
@@ -59,6 +60,24 @@
 
   </div>
 </section>
+
+<style>
+  /* Hide read-more button on desktop */
+  @media (min-width: 601px) { #bs-read-more { display: none; } }
+</style>
+<script>
+(function () {
+  var btn  = document.getElementById('bs-read-more');
+  var body = document.getElementById('bs-body');
+  if (!btn || !body) return;
+  btn.addEventListener('click', function () {
+    var expanded = btn.getAttribute('aria-expanded') === 'true';
+    body.classList.toggle('bs-body--expanded', !expanded);
+    btn.setAttribute('aria-expanded', String(!expanded));
+    btn.textContent = expanded ? 'Read more' : 'Read less';
+  });
+})();
+</script>
 
 {% schema %}
 {

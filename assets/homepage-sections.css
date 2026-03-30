@@ -78,6 +78,14 @@
   height: 70%;
 }
 
+.pg-card__img,
+.pg-card__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .pg-card__overlay {
   position: absolute;
   inset: 0;

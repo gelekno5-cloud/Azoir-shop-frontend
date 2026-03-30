@@ -13,114 +13,96 @@
 
     <div class="pg-grid">
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="140" cy="150" r="68" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
-              <circle cx="140" cy="150" r="48" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
-              <path d="M100 150 Q140 100 180 150" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
-              <path d="M106 145 Q140 108 174 145" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.15"/>
-              <text x="140" y="236" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">RING</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Bespoke Ring</span>
-            <span class="pg-card__meta">18k White Gold</span>
-          </div>
-        </div>
-      </div>
+      {%- for block in section.blocks -%}
+        {%- assign img   = block.settings.image -%}
+        {%- assign vid   = block.settings.video_url -%}
+        {%- assign label = block.settings.label -%}
+        {%- assign meta  = block.settings.meta -%}
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="140,72 172,122 140,158 108,122" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
-              <polygon points="140,86 164,122 140,148 116,122" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.12"/>
-              <line x1="140" y1="60" x2="140" y2="72" stroke="#0a0a0a" stroke-width="1.5" opacity="0.3"/>
-              <circle cx="140" cy="52" r="8" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.28"/>
-              <text x="140" y="200" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">PENDANT</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Diamond Pendant</span>
-            <span class="pg-card__meta">Platinum</span>
-          </div>
-        </div>
-      </div>
+        <div class="pg-card" {{ block.shopify_attributes }}>
+          <div class="pg-card__media">
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M75 110 Q140 175 205 110" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
-              <path d="M75 110 Q52 118 56 138" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.2"/>
-              <path d="M205 110 Q228 118 224 138" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.2"/>
-              <circle cx="140" cy="178" r="20" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
-              <circle cx="140" cy="178" r="11" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.12"/>
-              <text x="140" y="230" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">NECKLACE</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Statement Necklace</span>
-            <span class="pg-card__meta">18k Yellow Gold</span>
-          </div>
-        </div>
-      </div>
+            {%- if vid != blank -%}
+              {%- comment -%} Video — autoplay, muted, loop, no controls {%- endcomment -%}
+              <video
+                class="pg-card__video"
+                src="{{ vid }}"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+              ></video>
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="140" cy="148" rx="82" ry="30" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
-              <ellipse cx="140" cy="148" rx="60" ry="18" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
-              <circle cx="186" cy="136" r="7" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
-              <circle cx="94" cy="136" r="7" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
-              <text x="140" y="210" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">BRACELET</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Chain Bracelet</span>
-            <span class="pg-card__meta">Sterling Silver</span>
-          </div>
-        </div>
-      </div>
+            {%- elsif img != blank -%}
+              <img
+                class="pg-card__img"
+                src="{{ img | image_url: width: 800 }}"
+                alt="{{ img.alt | default: label | escape }}"
+                width="{{ img.width }}"
+                height="{{ img.height }}"
+                loading="lazy"
+              >
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="140" cy="148" r="68" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
-              <circle cx="140" cy="148" r="48" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
-              <circle cx="140" cy="148" r="28" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.08"/>
-              <path d="M112 148 Q140 112 168 148" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
-              <text x="140" y="236" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">RING</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Engagement Ring</span>
-            <span class="pg-card__meta">18k Rose Gold</span>
-          </div>
-        </div>
-      </div>
+            {%- else -%}
+              {%- comment -%} SVG placeholder per card index {%- endcomment -%}
+              <div class="pg-card__placeholder">
+                {%- case forloop.index -%}
+                  {%- when 1 -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="140" cy="150" r="68" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
+                      <circle cx="140" cy="150" r="48" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
+                      <path d="M100 150 Q140 100 180 150" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
+                      <text x="140" y="236" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">RING</text>
+                    </svg>
+                  {%- when 2 -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <polygon points="140,72 172,122 140,158 108,122" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
+                      <line x1="140" y1="60" x2="140" y2="72" stroke="#0a0a0a" stroke-width="1.5" opacity="0.3"/>
+                      <circle cx="140" cy="52" r="8" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.28"/>
+                      <text x="140" y="200" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">PENDANT</text>
+                    </svg>
+                  {%- when 3 -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M75 110 Q140 175 205 110" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
+                      <circle cx="140" cy="178" r="20" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
+                      <text x="140" y="230" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">NECKLACE</text>
+                    </svg>
+                  {%- when 4 -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <ellipse cx="140" cy="148" rx="82" ry="30" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
+                      <circle cx="186" cy="136" r="7" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
+                      <circle cx="94" cy="136" r="7" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
+                      <text x="140" y="210" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">BRACELET</text>
+                    </svg>
+                  {%- when 5 -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="140" cy="148" r="68" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.18"/>
+                      <circle cx="140" cy="148" r="48" stroke="#0a0a0a" stroke-width="1" fill="none" opacity="0.10"/>
+                      <path d="M112 148 Q140 112 168 148" stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.28"/>
+                      <text x="140" y="236" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">RING</text>
+                    </svg>
+                  {%- else -%}
+                    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <polygon points="140,68 156,96 188,100 165,122 170,154 140,138 110,154 115,122 92,100 124,96" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
+                      <line x1="140" y1="56" x2="140" y2="68" stroke="#0a0a0a" stroke-width="1.5" opacity="0.3"/>
+                      <circle cx="140" cy="48" r="8" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.28"/>
+                      <text x="140" y="200" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">PENDANT</text>
+                    </svg>
+                {%- endcase -%}
+              </div>
+            {%- endif -%}
 
-      <div class="pg-card">
-        <div class="pg-card__media">
-          <div class="pg-card__placeholder">
-            <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="140,68 156,96 188,100 165,122 170,154 140,138 110,154 115,122 92,100 124,96" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.22"/>
-              <polygon points="140,84 152,104 174,107 157,124 161,146 140,134 119,146 123,124 106,107 128,104" stroke="#0a0a0a" stroke-width="0.8" fill="none" opacity="0.10"/>
-              <line x1="140" y1="56" x2="140" y2="68" stroke="#0a0a0a" stroke-width="1.5" opacity="0.3"/>
-              <circle cx="140" cy="48" r="8" stroke="#0a0a0a" stroke-width="1.5" fill="none" opacity="0.28"/>
-              <text x="140" y="200" text-anchor="middle" fill="#0a0a0a" font-size="8" letter-spacing="3" opacity="0.25" font-family="sans-serif">PENDANT</text>
-            </svg>
-          </div>
-          <div class="pg-card__overlay">
-            <span class="pg-card__label">Star Pendant</span>
-            <span class="pg-card__meta">Platinum &amp; Diamond</span>
+            {%- if label != blank or meta != blank -%}
+              <div class="pg-card__overlay">
+                {%- if label != blank -%}<span class="pg-card__label">{{ label }}</span>{%- endif -%}
+                {%- if meta != blank -%}<span class="pg-card__meta">{{ meta }}</span>{%- endif -%}
+              </div>
+            {%- endif -%}
+
           </div>
         </div>
-      </div>
+      {%- endfor -%}
 
     </div>
 
@@ -139,10 +121,53 @@
 {% schema %}
 {
   "name": "Portfolio Grid",
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "video_url",
+          "label": "Video URL (optional)",
+          "info": "Direct URL to an .mp4 file. If set, the video plays instead of the image."
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Bespoke Piece"
+        },
+        {
+          "type": "text",
+          "id": "meta",
+          "label": "Material / detail",
+          "default": "18k Gold"
+        }
+      ]
+    }
+  ],
   "settings": [
     { "type": "url",  "id": "cta_url",  "label": "CTA URL" },
     { "type": "text", "id": "cta_text", "label": "CTA text", "default": "Start your commission" }
   ],
-  "presets": [{ "name": "Portfolio Grid" }]
+  "presets": [
+    {
+      "name": "Portfolio Grid",
+      "blocks": [
+        { "type": "card", "settings": { "label": "Bespoke Ring",       "meta": "18k White Gold" } },
+        { "type": "card", "settings": { "label": "Diamond Pendant",    "meta": "Platinum" } },
+        { "type": "card", "settings": { "label": "Statement Necklace", "meta": "18k Yellow Gold" } },
+        { "type": "card", "settings": { "label": "Chain Bracelet",     "meta": "Sterling Silver" } },
+        { "type": "card", "settings": { "label": "Engagement Ring",    "meta": "18k Rose Gold" } },
+        { "type": "card", "settings": { "label": "Star Pendant",       "meta": "Platinum & Diamond" } }
+      ]
+    }
+  ]
 }
 {% endschema %}

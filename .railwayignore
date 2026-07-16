@@ -1,0 +1,14 @@
+_video/
+assets/
+blocks/
+config/
+layout/
+locales/
+sections/
+snippets/
+templates/
+supabase/
+scripts/
+.shopifyignore
+test-email.sh
+*.md

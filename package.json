@@ -1,0 +1,16 @@
+{
+  "name": "azoir-retail",
+  "private": true,
+  "type": "module",
+  "description": "Azoir & Co. bespoke fine jewelry — retail site (static pages + commission inquiry)",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

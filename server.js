@@ -14,9 +14,8 @@ const INQUIRY_FROM = process.env.INQUIRY_FROM || "Azoir & Co <hello@azoir.co>";
 
 app.get("/health", (_req, res) => res.send("ok"));
 
-// Static assets
+// Static assets (media incl. hero.mp4 lives under web/media)
 app.use(express.static(WEB, { extensions: ["html"], maxAge: "1h" }));
-app.use("/_video", express.static(path.join(__dirname, "_video"), { maxAge: "7d" }));
 
 // Commission inquiry — email the brief to the atelier
 app.post("/inquiry", async (req, res) => {

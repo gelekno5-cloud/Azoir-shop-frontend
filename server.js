@@ -22,6 +22,24 @@ const WEB = path.join(__dirname, "web");
 const INQUIRY_TO = process.env.INQUIRY_EMAIL || "hello@azoir.co";
 const INQUIRY_FROM = process.env.INQUIRY_FROM || "Azoir & Co <hello@azoir.co>";
 
+// Persist an inquiry to the shared Supabase (retail_inquiries). No-op if env unset.
+async function saveInquiry(record) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) { console.log("[inquiry] Supabase env unset — not persisted (email still sent)"); return; }
+  const r = await fetch(`${url}/rest/v1/retail_inquiries`, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(record),
+  });
+  if (!r.ok) console.error("[inquiry] supabase insert failed", r.status, await r.text());
+}
+
 app.get("/health", (_req, res) => res.send("ok"));
 
 // Static assets (media incl. hero.mp4 lives under web/media)
@@ -54,6 +72,21 @@ app.post("/inquiry", async (req, res) => {
   const html =
     `<h2 style="font-family:Georgia,serif">New commission inquiry</h2>` +
     rows.map(([k, v]) => `<p><strong>${k}:</strong> ${clean(v).replace(/\n/g, "<br>")}</p>`).join("");
+
+  // Persist the lead first (email is the safety net if this fails)
+  try {
+    await saveInquiry({
+      name, email,
+      phone: clean(f.phone) || null,
+      type: clean(f.type) || null,
+      metal: clean(f.metal) || null,
+      stone: clean(f.stone) || null,
+      budget: clean(f.budget) || null,
+      timeline: clean(f.timeline) || null,
+      message: clean(f.message) || null,
+      source: "azoir.co",
+    });
+  } catch (e) { console.error("[inquiry] save error", e); }
 
   async function send(payload) {
     const r = await fetch("https://api.resend.com/emails", {

@@ -217,3 +217,45 @@ body.nav-clear nav.solid{background:rgba(240,242,248,.82);backdrop-filter:blur(1
 .consent p a{color:var(--blue);text-decoration:underline}
 .consent-actions{display:flex;gap:10px;flex-shrink:0}
 .btn-outline.sm,.btn-fill.sm{padding:9px 18px;font-size:11px}
+
+/* Commission wizard */
+.wizard{max-width:680px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:24px;
+  padding:40px 44px 32px;box-shadow:0 20px 50px rgba(15,23,42,.08)}
+.wiz-progress{margin-bottom:32px}
+.wiz-bar{height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.wiz-bar span{display:block;height:100%;width:20%;background:var(--blue);border-radius:99px;transition:width .45s cubic-bezier(.22,1,.36,1)}
+.wiz-count{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:12px}
+.wiz-step{display:none}
+.wiz-step.active{display:block;animation:wizIn .35s ease}
+@keyframes wizIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wiz-q{font-size:clamp(26px,3.4vw,36px);font-weight:500;color:var(--ink);margin:0 0 6px}
+.wiz-sub{font-size:15px;color:var(--body);line-height:1.6;margin:0 0 24px}
+.wiz-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
+.wiz-note{font-size:12.5px;color:var(--faint);margin-top:12px}
+.wiz-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.wiz-cards.sm{grid-template-columns:repeat(3,1fr)}
+.wcard{display:flex;align-items:center;gap:10px;justify-content:flex-start;text-align:left;
+  padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--soft);
+  font-family:inherit;font-size:14.5px;color:var(--ink);cursor:pointer;transition:.2s;font-weight:500}
+.wiz-cards.sm .wcard{padding:13px 14px;font-size:13.5px;justify-content:center;text-align:center}
+.wcard:hover{border-color:var(--blue);background:var(--blue-tint)}
+.wcard.on{border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue)}
+.wcard .sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0}
+.wiz-cards.nudge{animation:wizShake .5s}
+@keyframes wizShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.wizard textarea{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:14px;color:var(--ink);
+  font-family:inherit;font-size:15px;padding:14px 16px;outline:none;transition:border-color .3s;resize:vertical}
+.wizard textarea:focus{border-color:var(--blue)}
+.wizard .fld{margin-bottom:16px}
+.wizard .fld input{width:100%}
+.wiz-err{background:#FBEBEB;border:1px solid #E9C9C9;color:#9B4A4A;font-size:13px;border-radius:12px;padding:11px 15px;margin-bottom:16px}
+.wiz-summary{margin-top:24px;border-top:1px solid var(--line);padding-top:18px}
+.wsum-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
+.wsum-row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;color:var(--body)}
+.wsum-row b{color:var(--ink);font-weight:600}
+.wiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:30px;gap:12px}
+.wiz-nav .btn-fill{min-width:150px}
+@media(max-width:560px){
+  .wizard{padding:28px 20px 24px;border-radius:18px}
+  .wiz-cards,.wiz-cards.sm{grid-template-columns:1fr 1fr}
+}

@@ -6,7 +6,7 @@
 <title>Begin a Commission — Azoir & Co.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=2">
+<link rel="stylesheet" href="azoir.css?v=3">
 
 <meta name="description" content="Tell us what you're imagining and begin a bespoke jewelry commission. No commitment — a designer replies within one business day.">
 <link rel="canonical" href="https://azoir.co/commission.html">
@@ -33,46 +33,117 @@
   </div>
 </nav>
 
-<header class="page-hero">
+<header class="page-hero" style="padding:150px 0 24px">
   <span class="eyebrow">Begin a commission</span>
-  <h1 class="serif">Tell us what you're <em>imagining</em>.</h1>
-  <p>No commitment — just the start of a conversation. Share as much or as little as you like; a designer will reply within one business day.</p>
+  <h1 class="serif">Let's design something <em>only yours</em>.</h1>
+  <p>A few quick questions — no commitment. A designer replies within one business day.</p>
 </header>
 
-<section style="padding-top:20px">
+<section style="padding:10px 0 60px">
   <div class="wrap">
-    <div class="commission-card">
-      <div id="err" style="display:none;background:#FBEBEB;border:1px solid #E9C9C9;color:#9B4A4A;font-size:13px;border-radius:12px;padding:12px 16px;margin-bottom:8px">
-        Please add your name and a valid email so we can reply.
+    <div class="wizard" id="wizard">
+      <div class="wiz-progress">
+        <div class="wiz-bar"><span id="wizBar"></span></div>
+        <div class="wiz-count" id="wizCount">Step 1 of 5</div>
       </div>
-      <form class="frm" method="POST" action="/inquiry">
-        <input type="hidden" name="type" id="type" value="Engagement ring">
-        <div class="fld full">
-          <label>What are you dreaming of?</label>
-          <div class="opts" id="opts">
-            <span class="opt on">Engagement ring</span><span class="opt">Wedding bands</span><span class="opt">Necklace / pendant</span>
-            <span class="opt">Earrings</span><span class="opt">Bracelet</span><span class="opt">Signet</span>
-            <span class="opt">Heirloom redesign</span><span class="opt">Something else</span>
-          </div>
+
+      <!-- 1 · piece type -->
+      <div class="wiz-step active" data-step="1">
+        <h2 class="wiz-q serif">What are you dreaming of?</h2>
+        <p class="wiz-sub">Pick a starting point — everything else is refined together.</p>
+        <div class="wiz-cards" data-field="type" data-auto="1">
+          <button type="button" class="wcard" data-v="Engagement ring">Engagement ring</button>
+          <button type="button" class="wcard" data-v="Wedding bands">Wedding bands</button>
+          <button type="button" class="wcard" data-v="Necklace / pendant">Necklace / pendant</button>
+          <button type="button" class="wcard" data-v="Earrings">Earrings</button>
+          <button type="button" class="wcard" data-v="Bracelet">Bracelet</button>
+          <button type="button" class="wcard" data-v="Signet ring">Signet ring</button>
+          <button type="button" class="wcard" data-v="Heirloom redesign">Heirloom redesign</button>
+          <button type="button" class="wcard" data-v="Something else">Something else</button>
         </div>
-        <div class="fld"><label>Your name</label><input name="name" required placeholder="Full name"></div>
-        <div class="fld"><label>Email</label><input name="email" type="email" required placeholder="you@email.com"></div>
-        <div class="fld"><label>Phone (optional)</label><input name="phone" placeholder="+1 555 000 0000"></div>
-        <div class="fld"><label>Ideal timeline</label>
-          <select name="timeline"><option value="">Select…</option><option>As soon as possible</option><option>1–3 months</option><option>3–6 months</option><option>Just exploring</option></select></div>
-        <div class="fld"><label>Preferred metal</label>
-          <select name="metal"><option value="">Not sure yet</option><option>Yellow gold (10–24K)</option><option>White gold</option><option>Rose gold</option><option>Platinum</option><option>Sterling silver</option></select></div>
-        <div class="fld"><label>Stone (optional)</label>
-          <select name="stone"><option value="">Not sure yet</option><option>Natural diamond</option><option>Lab-grown diamond</option><option>Coloured gemstone</option><option>My own stone</option><option>No stone</option></select></div>
-        <div class="fld full"><label>Tell us more</label><textarea name="message" rows="4" placeholder="The occasion, a stone you love, an inspiration, a piece you'd like reimagined…"></textarea></div>
-        <div class="submit"><button class="btn-fill" type="submit">Send inquiry</button>
-          <p style="font-size:12px;color:var(--faint);margin-top:16px">We reply within one business day. You can share inspiration images once we're in touch.</p></div>
-      </form>
+      </div>
+
+      <!-- 2 · materials -->
+      <div class="wiz-step" data-step="2">
+        <h2 class="wiz-q serif">Metal &amp; stone</h2>
+        <p class="wiz-sub">Not sure yet? Perfectly fine — we'll guide you.</p>
+        <div class="wiz-label">Preferred metal</div>
+        <div class="wiz-cards sm" data-field="metal">
+          <button type="button" class="wcard" data-v="Yellow gold"><span class="sw" style="background:#E6C67A"></span>Yellow gold</button>
+          <button type="button" class="wcard" data-v="White gold"><span class="sw" style="background:#E8E8EA"></span>White gold</button>
+          <button type="button" class="wcard" data-v="Rose gold"><span class="sw" style="background:#E6B0A0"></span>Rose gold</button>
+          <button type="button" class="wcard" data-v="Platinum"><span class="sw" style="background:#D8DADE"></span>Platinum</button>
+          <button type="button" class="wcard" data-v="Sterling silver"><span class="sw" style="background:#C8CACE"></span>Sterling silver</button>
+          <button type="button" class="wcard" data-v="Not sure yet">Not sure yet</button>
+        </div>
+        <div class="wiz-label" style="margin-top:26px">Stone</div>
+        <div class="wiz-cards sm" data-field="stone">
+          <button type="button" class="wcard" data-v="Natural diamond">Natural diamond</button>
+          <button type="button" class="wcard" data-v="Lab-grown diamond">Lab-grown diamond</button>
+          <button type="button" class="wcard" data-v="Coloured gemstone">Coloured gemstone</button>
+          <button type="button" class="wcard" data-v="My own stone">My own stone</button>
+          <button type="button" class="wcard" data-v="No stone">No stone</button>
+          <button type="button" class="wcard" data-v="Not sure yet">Not sure yet</button>
+        </div>
+      </div>
+
+      <!-- 3 · budget & timeline -->
+      <div class="wiz-step" data-step="3">
+        <h2 class="wiz-q serif">Budget &amp; timeline</h2>
+        <p class="wiz-sub">A ballpark is perfect — it helps us guide the design. Optional.</p>
+        <div class="wiz-label">Budget range</div>
+        <div class="wiz-cards sm" data-field="budget">
+          <button type="button" class="wcard" data-v="Prefer not to say">Prefer not to say</button>
+          <button type="button" class="wcard" data-v="Under $2,500">Under $2,500</button>
+          <button type="button" class="wcard" data-v="$2,500–$5,000">$2,500–$5,000</button>
+          <button type="button" class="wcard" data-v="$5,000–$10,000">$5,000–$10,000</button>
+          <button type="button" class="wcard" data-v="$10,000–$25,000">$10,000–$25,000</button>
+          <button type="button" class="wcard" data-v="$25,000+">$25,000+</button>
+        </div>
+        <div class="wiz-label" style="margin-top:26px">Ideal timeline</div>
+        <div class="wiz-cards sm" data-field="timeline">
+          <button type="button" class="wcard" data-v="As soon as possible">As soon as possible</button>
+          <button type="button" class="wcard" data-v="1–3 months">1–3 months</button>
+          <button type="button" class="wcard" data-v="3–6 months">3–6 months</button>
+          <button type="button" class="wcard" data-v="Just exploring">Just exploring</button>
+        </div>
+      </div>
+
+      <!-- 4 · inspiration -->
+      <div class="wiz-step" data-step="4">
+        <h2 class="wiz-q serif">Tell us the story.</h2>
+        <p class="wiz-sub">The occasion, a stone you love, a piece to reimagine — anything at all.</p>
+        <textarea id="wizMessage" rows="6" placeholder="e.g. An engagement ring for my partner who loves vintage Art Deco. I have my grandmother's diamond I'd like to use…"></textarea>
+        <p class="wiz-note">You'll be able to share inspiration photos once a designer replies.</p>
+      </div>
+
+      <!-- 5 · contact -->
+      <div class="wiz-step" data-step="5">
+        <h2 class="wiz-q serif">Where do we reach you?</h2>
+        <p class="wiz-sub">A real designer — never a bot — replies within one business day.</p>
+        <div id="wizErr" class="wiz-err" style="display:none">Please add your name and a valid email so we can reply.</div>
+        <div class="fld"><label>Your name</label><input id="wizName" autocomplete="name" placeholder="Full name"></div>
+        <div class="fld"><label>Email</label><input id="wizEmail" type="email" autocomplete="email" placeholder="you@email.com"></div>
+        <div class="fld"><label>Phone (optional)</label><input id="wizPhone" autocomplete="tel" placeholder="+1 555 000 0000"></div>
+        <div class="wiz-summary" id="wizSummary"></div>
+      </div>
+
+      <div class="wiz-nav">
+        <button type="button" class="btn-outline" id="wizBack" style="visibility:hidden">← Back</button>
+        <button type="button" class="btn-fill" id="wizNext">Next</button>
+      </div>
     </div>
+
+    <!-- real form, populated + submitted by wizard.js -->
+    <form id="wizForm" method="POST" action="/inquiry" hidden>
+      <input name="type"><input name="metal"><input name="stone">
+      <input name="budget"><input name="timeline"><input name="message">
+      <input name="name"><input name="email"><input name="phone">
+    </form>
   </div>
 </section>
 
-<section class="guarantee" style="padding:80px 0">
+<section class="guarantee" style="padding:70px 0">
   <div class="wrap gcards">
     <div class="gcard"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M4 7l8 6 8-6"/></svg><h4>A designer replies</h4><p>Not a bot. A real person from our atelier, within one business day.</p></div>
     <div class="gcard"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg><h4>No obligation</h4><p>The consultation is free. You commit only once you love the design.</p></div>
@@ -92,22 +163,7 @@
   </div>
 </footer>
 
-<script>
-  var opts = document.getElementById('opts');
-  var typeInput = document.getElementById('type');
-  opts.addEventListener('click', function (e) {
-    var t = e.target.closest('.opt');
-    if (!t) return;
-    opts.querySelectorAll('.opt').forEach(function (o) { o.classList.remove('on'); });
-    t.classList.add('on');
-    typeInput.value = t.textContent.trim();
-  });
-  if (new URLSearchParams(location.search).get('error')) {
-    document.getElementById('err').style.display = 'block';
-  }
-</script>
-
-
+<script src="/wizard.js?v=1" defer></script>
 <script src="/analytics.js" defer></script>
 </body>
 </html>

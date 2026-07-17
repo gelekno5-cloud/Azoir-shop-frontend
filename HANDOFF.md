@@ -1,41 +1,39 @@
-# Azoir retail site — status & remaining steps
+# Azoir retail — status & handoff
 
-Consumer storefront for **azoir.co** (bespoke fine jewelry). Separate from Moksh Diam (the B2B/trade side). This repo (the old dead Shopify theme) is being repurposed — the new site lives in **`web/`**; the old theme files are left untouched for now.
+Consumer storefront for **azoir.co** (bespoke fine jewelry), separate from Moksh Diam (the B2B/trade side). The site lives in **`web/`** of this repo (the old dead Shopify theme is left untouched alongside it).
 
-## ✅ What's done and LIVE
-- **Live now:** https://azoir-retail-production.up.railway.app
-- **Railway project:** `azoir-retail` (workspace: gelekno5-cloud's Projects) — separate service from Moksh Diam's `lucky-patience`.
-- **Stack:** static HTML/CSS + tiny Express `server.js` (single dep: `express`). `npm start` → serves `web/`, handles the commission form.
-- **Pages:** `web/{index,how,gallery,about,commission,thanks}.html`, shared `web/azoir.css`. Light/blue brand, Cormorant + DM Sans, AZOIR wordmark.
-- **Hero video:** `web/media/hero.mp4` (832 KB, 1080p H.264 — transcoded from the old 8K HEVC clip).
-- **Commission form:** POST `/inquiry` → emails `hello@azoir.co` via Resend; redirects to `/thanks.html`. Logs (doesn't email) until `RESEND_API_KEY` is set.
+## ✅ LIVE right now
+- **azoir.co** — full site, DNS + SSL done, deployed on Railway project **`azoir-retail`** (separate from Moksh Diam's `lucky-patience`). Also at `azoir-retail-production.up.railway.app`.
+- **Stack:** static HTML/CSS + tiny Express `server.js` (single dep: `express`). `npm start` serves `web/` + handles `/inquiry`.
+- **Pages:** `web/{index,how,gallery,about,commission,thanks,404,terms,privacy,shipping,accessibility}.html`, shared `web/azoir.css`. Light/blue brand, Cormorant + DM Sans, AZOIR wordmark. Scroll-driven sketch→render hero (`web/hero-scrub.js` + `web/media/seq/`).
+- **Phase 0 (foundations):** SEO/OG meta, favicon + OG image, legal pages, custom 404, robots.txt, sitemap.xml, www→apex 301, **GA4 `G-DJVC5Y7EPF`** + cookie-consent banner (`web/analytics.js`).
+- **Phase 1 (guided inquiry) — DONE:**
+  - `web/commission.html` + `web/wizard.js` — 5-step wizard (piece → materials → budget/timeline → story → contact): progress bar, back/forward, localStorage, visual pickers.
+  - `POST /inquiry` (in `server.js`) → **saves to Supabase `retail_inquiries`** + emails the brief to `hello@azoir.co` + **warm auto-reply to the customer** → `/thanks.html`. Saving is non-fatal (email is the safety net).
+  - Env on `azoir-retail` Railway: `RESEND_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (all set).
+  - **Admin view lives in the MOKSH DIAM repo** (`azoir-b2b-admin-`): `app/routes/app.inquiries.tsx` → **admin.mokshdiam.com/app/inquiries** (Commerce → Inquiries). Deployed to production.
 - **Locked decisions:** crafted in **NYC**; **inquiry-only, no prices**.
 
-## ⬜ Remaining — 2 steps to finish azoir.co
-
-### 1. Cloudflare DNS (azoir.co zone)
-- **Delete** the old Shopify A record: `azoir.co  A  23.227.38.65`
-- **Add** CNAME: name `@` → target `enrsdse5.up.railway.app` → **Proxy OFF (grey / "DNS only")**
-- **Add** TXT: name `_railway-verify` → content `railway-verify=9762dc5eb0240bda552050ad231d9db98cc89cb218b25c6b5af7fd9fa215371d`
-- **DO NOT touch** email records: the `…sendgrid.net` CNAMEs, `_domainkey`/DKIM, any MX. (azoir.co email is load-bearing.)
-- After saving, Railway auto-verifies and issues SSL (minutes, up to 72h to propagate).
-
-### 2. Railway env var (so the form emails)
-- Railway → `azoir-retail` → **Variables** → add `RESEND_API_KEY` (same Resend account Moksh Diam uses, or a fresh key).
-- Optional: `INQUIRY_EMAIL` (default `hello@azoir.co`), `INQUIRY_FROM` (default `Azoir & Co <hello@azoir.co>`).
-
-## Working locally / deploying updates
+## Run & deploy (Azoir retail)
 ```bash
-npm install          # installs express
-npm start            # → http://localhost:3000
-
-# deploy an update to Railway:
-railway link         # pick project: azoir-retail
-railway up           # uploads + builds + deploys
+npm install && npm start          # → http://localhost:3000
+railway link -p c50d15c9-ff66-4c23-bde2-3e0059454510   # link to azoir-retail
+railway up --ci                   # build + deploy to azoir.co
 ```
-`.railwayignore` keeps the old Shopify theme + the 21 MB source video out of the deploy.
+`.railwayignore` keeps the old Shopify theme + 21 MB source video out of the deploy.
+**Push needs a fresh fine-grained GitHub PAT each session** (Contents:write on `Azoir-shop-frontend`) — the Codespace token can't push here.
 
-## Known gaps / next ideas
-- **Imagery:** everything is the AZOIR ring + CAD/orb renders. No photos of necklaces/earrings/lifestyle (old Shopify CDN photos are gone). New renders/photos needed to fill the gallery + testimonial.
-- Copy specifics (testimonial name "Amara R.", etc.) are placeholders.
-- Could later connect the GitHub repo to Railway for push-to-deploy, and/or store inquiries in a DB.
+## Admin (Moksh Diam repo) — deploy
+Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a branch, then `git checkout main && git merge <branch> && git push origin main`.
+⚠️ Its dev server OOMs in the Codespace (three.js/threepipe) — verify UI via typecheck + standalone preview, or in a beefier env.
+
+## What's next (roadmap: `docs/ROADMAP.md`)
+- **Phase 1 remaining (optional):** photo upload in the story step (Supabase storage); optional "book a design call" step (reuse the Moksh funnel Google Calendar slot-picker).
+- **Phase 2:** Stripe payment links (design fee → deposit → balance).
+- **Phase 3:** customer order tracking (magic link; reuse Moksh `b2b_orders` + channel column).
+- **Phase 4:** **photography sprint** — biggest blocker; gallery + testimonial still recycle 4 renders. Copy specifics (e.g. testimonial "Amara R.") are placeholders.
+
+## Gotchas
+- **Work in this persistent clone (`/workspaces/Azoir-shop-frontend`), never the scratchpad** — scratchpad wiped twice and lost unpushed commits. Push each chunk immediately.
+- Editing azoir.co DNS: only touch the website A/CNAME — **never** MX / Resend/SendGrid TXT/DKIM (Moksh Diam's email falls back to `hello@azoir.co`).
+- `retail_inquiries` lives in the **shared Moksh Diam Supabase** (migration: `azoir-b2b-admin-/supabase/migrations/2026-07-17-retail-inquiries.sql`).

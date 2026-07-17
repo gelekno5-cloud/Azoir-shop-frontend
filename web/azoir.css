@@ -171,3 +171,23 @@ footer{background:var(--ink);color:#C4CBDE;padding:70px 0 40px}
   .gallery{columns:2}.gcards{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr 1fr}
   .frm{grid-template-columns:1fr}.commission-card{padding:40px 26px}.testi-imgs{height:340px}
 }
+
+
+/* ---- Scroll-scrub hero (hero-scrub.js) ---- */
+.hero-full{height:100svh;min-height:620px;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-full::before{display:none}
+.hero-full .hero-media{position:absolute;inset:0;margin:0;max-width:none;border-radius:0;border:none;aspect-ratio:auto;box-shadow:none}
+.hero-full .hero-media video{width:100%;height:100%;object-fit:cover}
+#heroCanvas{display:none;width:100%;height:100%;object-fit:cover}
+body.scrub #heroCanvas{display:block}
+body.scrub .hero-media video{display:none}
+body.scrub .hero{position:sticky;top:0}
+.hero-full .hero-inner{z-index:2;padding:0 24px}
+.hero-full .hero-inner::before{content:"";position:absolute;inset:-70px -90px;z-index:-1;
+  background:radial-gradient(closest-side,rgba(240,242,248,.85),rgba(240,242,248,0));}
+body.nav-clear nav{background:transparent;backdrop-filter:none;border-bottom:1px solid transparent;
+  transition:background .35s,border-color .35s}
+body.nav-clear nav.solid{background:rgba(240,242,248,.82);backdrop-filter:blur(16px);
+  border-bottom-color:rgba(213,217,232,.6)}
+.brand img{height:24px;width:auto;display:block}
+.fbrand img{height:22px;width:auto;display:block;margin-bottom:14px}

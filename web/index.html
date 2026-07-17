@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css">
+<link rel="stylesheet" href="azoir.css?v=2">
 </head>
-<body>
+<body class="nav-clear">
 
 <nav>
-  <a href="index.html" class="brand">AZOIR</a>
+  <a href="index.html" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."></a>
   <div class="navlinks">
     <a href="how.html">How it Works</a>
     <a href="gallery.html">Gallery</a>
@@ -21,18 +21,22 @@
   </div>
 </nav>
 
-<header class="hero">
+<div class="hero-scroll" id="heroScroll">
+<header class="hero hero-full">
+  <div class="hero-media">
+    <canvas id="heroCanvas" width="1280" height="720" aria-label="The Signature Band — sketch becoming a finished ring"></canvas>
+    <video autoplay muted loop playsinline poster="media/hero-poster.webp"><source src="media/hero.mp4" type="video/mp4"></video>
+    <span class="vcap">The Signature Band</span>
+  </div>
   <div class="wrap hero-inner">
     <span class="eyebrow">Bespoke Fine Jewelry · New York</span>
     <h1 class="serif">Make the piece <em>no one</em> else has.</h1>
     <p class="sub">Work one-on-one with our designers on a piece that's truly yours — a ring, a necklace, an heirloom reborn. Sketched by hand, rendered in 3D, crafted in New York.</p>
     <a href="commission.html" class="btn-fill">Begin a commission</a>
-    <div class="hero-media">
-      <video autoplay muted loop playsinline poster="media/hero-poster.webp"><source src="media/hero.mp4" type="video/mp4"></video>
-      <span class="vcap">The Signature Band</span>
-    </div>
   </div>
 </header>
+</div>
+<script src="hero-scrub.js?v=2" defer></script>
 
 <div class="pillars">
   <div class="wrap row">
@@ -150,7 +154,7 @@
 <footer>
   <div class="wrap">
     <div class="fgrid">
-      <div><a href="index.html" class="fbrand serif">AZOIR</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div><a href="index.html" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co."></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
       <div class="fcol"><h5>What we make</h5><a href="commission.html">Engagement rings</a><a href="commission.html">Necklaces & pendants</a><a href="commission.html">Earrings & bracelets</a><a href="commission.html">Heirloom redesign</a></div>
       <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="commission.html">Book a consult</a></div>
       <div class="fcol"><h5>Contact</h5><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="#">Instagram</a><a href="#">TikTok</a></div>

@@ -6,7 +6,17 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.disable("x-powered-by");
+app.set("trust proxy", true);
 app.use(express.urlencoded({ extended: true, limit: "256kb" }));
+
+// Redirect www → apex (301, preserves path)
+app.use((req, res, next) => {
+  const host = req.headers.host || "";
+  if (host.startsWith("www.")) {
+    return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  }
+  next();
+});
 
 const WEB = path.join(__dirname, "web");
 const INQUIRY_TO = process.env.INQUIRY_EMAIL || "hello@azoir.co";
@@ -74,7 +84,7 @@ app.post("/inquiry", async (req, res) => {
   res.redirect("/thanks.html");
 });
 
-app.use((_req, res) => res.status(404).sendFile(path.join(WEB, "index.html")));
+app.use((_req, res) => res.status(404).sendFile(path.join(WEB, "404.html")));
 
 const port = Number(process.env.PORT) || 3000;
 app.listen(port, "0.0.0.0", () => console.log(`Azoir site on http://0.0.0.0:${port}`));

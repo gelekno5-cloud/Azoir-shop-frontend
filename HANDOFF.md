@@ -37,3 +37,15 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - **Work in this persistent clone (`/workspaces/Azoir-shop-frontend`), never the scratchpad** — scratchpad wiped twice and lost unpushed commits. Push each chunk immediately.
 - Editing azoir.co DNS: only touch the website A/CNAME — **never** MX / Resend/SendGrid TXT/DKIM (Moksh Diam's email falls back to `hello@azoir.co`).
 - `retail_inquiries` lives in the **shared Moksh Diam Supabase** (migration: `azoir-b2b-admin-/supabase/migrations/2026-07-17-retail-inquiries.sql`).
+
+## 2026-07-20 session
+
+- **Phase 2 payments SHIPPED & LIVE** (in the Moksh repo, `main`): retail commissions pay by link in 3 milestones (design fee → deposit → balance). Admin: "Convert to order" on `/app/inquiries`, then a "Retail Payments" card on the order. Customer pays at `os.azoir.co/pay/<token>` — no login. Migration `2026-07-20-retail-orders-payments.sql` is **already applied** to Supabase.
+  - Retail orders = `b2b_orders` with the existing `customer_type='retail'`. Retail deliberately does **not** use `b2b_invoices`, so **retail payments do not appear in `/app/billing`**.
+  - ⚠️ Untested: a real Stripe charge. Do a small live test (convert an inquiry, $1 design fee, pay it, confirm it flips to Paid).
+- **Phase 3 specced, not built:** `azoir-b2b-admin-/docs/phase-3-retail-accounts.md`. Retail clients will approve designs in a simplified portal.
+- **Homepage:** fabricated "Amara R." testimonial replaced with the atelier's own promise (live).
+- ⚠️ **In the Moksh repo, run `npm run build` before merging** — a `.server` import used in a component passes typecheck and tests but fails the Remix client build.
+
+### Where the numbers actually are
+**0 retail inquiries, 0 retail orders, 4 days live.** The funnel works end to end; nothing is entering it. Check **GA4 `G-DJVC5Y7EPF`** before building more features — near-zero visitors is a distribution problem, visitors-without-inquiries is the photography gap. **Phase 4 photography is still the biggest blocker** and needs no code.

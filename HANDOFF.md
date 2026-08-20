@@ -49,3 +49,29 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 
 ### Where the numbers actually are
 **0 retail inquiries, 0 retail orders, 4 days live.** The funnel works end to end; nothing is entering it. Check **GA4 `G-DJVC5Y7EPF`** before building more features — near-zero visitors is a distribution problem, visitors-without-inquiries is the photography gap. **Phase 4 photography is still the biggest blocker** and needs no code.
+
+## 2026-08-20 session
+
+- ⚠️ **CRITICAL — rotate the Supabase service_role key.** `test-email.sh` in THIS PUBLIC repo
+  contains a live service_role key for the shared production Supabase (`avmcksqllodvspbtcmgf`
+  — same DB as Moksh Diam). It bypasses RLS: full read/write on b2b_orders, b2b_registrations,
+  retail_inquiries. Rotate in the Supabase dashboard first, then delete the file, purge history
+  (or recreate the repo), make the repo private. Nothing else matters until this is done.
+- **Full site audit** (13 findings: no funnel analytics events, bot gate silently drops real
+  leads, no mobile nav below 900px, 9.2 MB homepage, no JSON-LD, no security headers):
+  artifact "azoir.co Assay" → https://claude.ai/code/artifact/65c773b0-5422-40a9-afd1-ffcbbc0f9b29
+- **Redesign direction in progress** — clickable prototype of a new azoir.co built this session:
+  `design/commission-studio-prototype.html` (self-contained, open in any browser). Live artifact:
+  https://claude.ai/code/artifact/0dc3fd0b-a029-4a4e-bab6-15b974e790c4
+  Concept: hero = jewelry line-art that draws itself (constant pen-speed SVG engine);
+  two doors (start with setting / start with stone); 4-step studio, one question per screen;
+  ten facet-diagram cut icons; stone-first door shows a real-time 3D diamond (custom WebGL,
+  two-pass transparent, per-channel refraction fire) — 3D deliberately ONLY in that door.
+  Decided along the way: white ground, warm ink, indigo only for interaction; wizard traps
+  trackpad back-swipe as step-back. Deliberately NOT reusing any Moksh Diam viewer code.
+- **Skills added** to `.claude/skills/`: taste-skill + redesign-skill (see skills/VENDORED.md —
+  it also flags that `.claude/rules/frontend.md` and `design-review` still describe the DEAD
+  Shopify theme, not the live `web/` site).
+- **Open items:** photography with people/hands is still the biggest asset gap (hero can't say
+  "this could be you" without it); pricing still absent at the end of the studio flow; heart
+  cut in the hero pendant worth trying.

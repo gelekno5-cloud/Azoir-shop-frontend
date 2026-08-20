@@ -22,6 +22,44 @@ const WEB = path.join(__dirname, "web");
 const INQUIRY_TO = process.env.INQUIRY_EMAIL || "hello@azoir.co";
 const INQUIRY_FROM = process.env.INQUIRY_FROM || "Azoir & Co <hello@azoir.co>";
 
+// ── Bot defense ──────────────────────────────────────────────────────────────
+// Bots were submitting the commission form with strangers' emails; the warm
+// auto-reply below made Resend mail each one a "confirmation" — a spam relay
+// with our domain's reputation on the line. Three layers, cheapest first:
+// honeypot, minimum fill time (wizard.js stamps fg_ts at page load; a direct
+// POST has none), per-IP sliding-window rate limit. Caught bots get the same
+// /thanks.html redirect a human gets — with no email and no database row —
+// because a bot that believes it succeeded stops probing.
+const MIN_FILL_MS = 4_000;
+const MAX_AGE_MS = 6 * 60 * 60 * 1000;
+const WINDOW_MS = 10 * 60 * 1000, MAX_PER_WINDOW = 3;
+const DAY_MS = 24 * 60 * 60 * 1000, MAX_PER_DAY = 8;
+const hits = new Map();
+
+function botVerdict(req) {
+  if (String(req.body?.website_url || "").trim() !== "") return "honeypot";
+  const ts = Number(req.body?.fg_ts);
+  if (!Number.isFinite(ts) || ts <= 0) return "no_ts";
+  const age = Date.now() - ts;
+  if (age < MIN_FILL_MS) return "too_fast";
+  if (age > MAX_AGE_MS) return "stale";
+  const ip = req.ip || "unknown";
+  const now = Date.now();
+  const seen = (hits.get(ip) || []).filter((t) => now - t < DAY_MS);
+  if (seen.filter((t) => now - t < WINDOW_MS).length >= MAX_PER_WINDOW || seen.length >= MAX_PER_DAY) {
+    return "rate_limited";
+  }
+  seen.push(now);
+  hits.set(ip, seen);
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) if (v.every((t) => now - t > DAY_MS)) hits.delete(k);
+  }
+  return null;
+}
+
+const escapeHtml = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 // Persist an inquiry to the shared Supabase (retail_inquiries). No-op if env unset.
 async function saveInquiry(record) {
   const url = process.env.SUPABASE_URL;
@@ -52,6 +90,13 @@ app.post("/inquiry", async (req, res) => {
   const name = clean(f.name);
   const email = clean(f.email);
 
+  // Bot gate — before Supabase, before any Resend call.
+  const verdict = botVerdict(req);
+  if (verdict) {
+    console.log(`[inquiry] bot dropped (${verdict}) ip=${req.ip}`);
+    return res.redirect("/thanks.html");
+  }
+
   if (!name || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return res.redirect("/commission.html?error=1");
   }
@@ -71,7 +116,7 @@ app.post("/inquiry", async (req, res) => {
   const text = rows.map(([k, v]) => `${k}: ${clean(v)}`).join("\n");
   const html =
     `<h2 style="font-family:Georgia,serif">New commission inquiry</h2>` +
-    rows.map(([k, v]) => `<p><strong>${k}:</strong> ${clean(v).replace(/\n/g, "<br>")}</p>`).join("");
+    rows.map(([k, v]) => `<p><strong>${k}:</strong> ${escapeHtml(clean(v)).replace(/\n/g, "<br>")}</p>`).join("");
 
   // Persist the lead first (email is the safety net if this fails)
   try {
@@ -107,7 +152,7 @@ app.post("/inquiry", async (req, res) => {
   const p = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#475569';
   const arHtml =
     `<div style="max-width:520px;margin:0 auto">` +
-    `<p style="font-family:Georgia,serif;font-size:20px;color:#18181B">Thank you, ${firstName}.</p>` +
+    `<p style="font-family:Georgia,serif;font-size:20px;color:#18181B">Thank you, ${escapeHtml(firstName)}.</p>` +
     `<p style="${p}">We've received your commission inquiry and it's with our atelier. A designer will personally reply within one business day to begin the conversation — no obligation, just possibilities.</p>` +
     `<p style="${p}">In the meantime, feel free to gather any inspiration — a stone you love, a piece you've seen, a photo of something meaningful. You'll be able to share it with us once we're in touch.</p>` +
     `<p style="${p}">With care,<br><strong style="color:#18181B">Azoir &amp; Co.</strong> · New York</p>` +

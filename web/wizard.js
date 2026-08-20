@@ -20,6 +20,9 @@
   var phoneI = document.getElementById("wizPhone");
   var summary = document.getElementById("wizSummary");
   var form = document.getElementById("wizForm");
+  // Bot guard: stamp the render time. The server rejects submissions that
+  // arrive without it (direct POSTs) or faster than a human can fill a form.
+  if (form && form.elements.fg_ts) form.elements.fg_ts.value = String(Date.now());
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function validEmail(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }

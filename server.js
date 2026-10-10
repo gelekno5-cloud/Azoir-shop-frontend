@@ -86,7 +86,7 @@ async function stripe(endpoint, params) {
     body: params ? new URLSearchParams(params) : undefined,
   });
   const body = await r.json();
-  if (!r.ok) throw new Error(`stripe ${r.status}: ${body.error?.message}`);
+  if (!r.ok) throw Object.assign(new Error(`stripe ${r.status}: ${body.error?.message}`), { code: body.error?.code, param: body.error?.param });
   return body;
 }
 
@@ -126,13 +126,13 @@ function verifyStripeEvent(raw, header, secret) {
   return ok ? JSON.parse(raw.toString("utf8")) : null;
 }
 
-// Persist an inquiry to the shared Supabase (retail_inquiries). Returns false
-// only when this Stripe session is already recorded; an unset env or a failed
-// write returns true so the email safety net still fires.
+// Persist an inquiry to the shared Supabase (retail_inquiries). Returns true
+// when inserted, false when this Stripe session is already recorded, and null
+// when unset or failed — the email safety net still fires then.
 async function saveInquiry(record) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) { console.log("[inquiry] Supabase env unset — not persisted (email still sent)"); return true; }
+  if (!url || !key) { console.log("[inquiry] Supabase env unset — not persisted (email still sent)"); return null; }
   const r = await fetch(`${url}/rest/v1/retail_inquiries?on_conflict=stripe_session_id&select=id`, {
     method: "POST",
     headers: {
@@ -143,11 +143,12 @@ async function saveInquiry(record) {
     },
     body: JSON.stringify(record),
   });
-  if (!r.ok) { console.error("[inquiry] supabase insert failed", r.status, await r.text()); return true; }
+  if (!r.ok) { console.error("[inquiry] supabase insert failed", r.status, await r.text()); return null; }
   return (await r.json()).length > 0;
 }
 
 // Email the brief to the atelier, then a warm auto-reply to the customer.
+// Returns whether the brief reached the atelier (or the log, with Resend unset).
 async function sendInquiryEmails(f, session) {
   const name = f.name;
   const email = f.email;
@@ -197,11 +198,12 @@ async function sendInquiryEmails(f, session) {
 
   try {
     if (process.env.RESEND_API_KEY) {
-      await send({
+      const sent = await send({
         from: INQUIRY_FROM, to: [INQUIRY_TO], reply_to: email,
         subject: `Commission inquiry — ${name}${f.type ? ` (${clean(f.type)})` : ""}`,
         text, html,
       });
+      if (!sent) console.log("[inquiry] payload:\n" + text);
       // Warm auto-reply to the customer — non-fatal if it fails
       try {
         await send({
@@ -210,25 +212,34 @@ async function sendInquiryEmails(f, session) {
           text: arText, html: arHtml,
         });
       } catch (e) { console.error("[inquiry] auto-reply error", e); }
-    } else {
-      console.log("[inquiry] RESEND_API_KEY unset — inquiry logged only:\n" + text);
+      return sent;
     }
+    console.log("[inquiry] RESEND_API_KEY unset — inquiry logged only:\n" + text);
+    return true;
   } catch (err) {
     console.error("[inquiry] send error", err);
     // Never lose the lead — log it and still thank the customer
     console.log("[inquiry] payload:\n" + text);
+    return false;
   }
 }
+
+// Sessions this process has delivered — the dedupe for when the Supabase write
+// fails and the unique index can't (a replayed /inquiry/paid would otherwise
+// send another pair of emails each time).
+const delivered = new Set();
 
 // Record a paid request once and email it. Both the success redirect and the
 // webhook call this; anything but a paid azoir inquiry session is ignored.
 async function deliverInquiry(session) {
   if (session.metadata?.mode !== FEE_MODE || session.payment_status !== "paid") return;
+  if (delivered.has(session.id)) return;
+  delivered.add(session.id); // before any await, so a concurrent redirect + webhook can't both pass
   const f = metadataToBrief(session.metadata);
   // Persist the lead first (email is the safety net if this fails)
-  let isNew = true;
+  let saved = null;
   try {
-    isNew = await saveInquiry({
+    saved = await saveInquiry({
       name: f.name, email: f.email,
       phone: f.phone || null,
       type: f.type || null,
@@ -243,7 +254,14 @@ async function deliverInquiry(session) {
       stripe_session_id: session.id,
     });
   } catch (e) { console.error("[inquiry] save error", e); }
-  if (isNew) await sendInquiryEmails(f, session);
+  if (saved === false) return; // already recorded — delivered before
+  const emailed = await sendInquiryEmails(f, session);
+  if (!saved && !emailed) {
+    // Neither the row nor the atelier email landed: forget the session so the
+    // webhook's retry (it answers 500) or a replayed redirect can deliver it.
+    delivered.delete(session.id);
+    throw new Error(`inquiry ${session.id} not delivered`);
+  }
 }
 
 app.get("/health", (_req, res) => res.send("ok"));
@@ -258,11 +276,14 @@ app.post("/inquiry", async (req, res) => {
   const name = clean(f.name);
   const email = clean(f.email);
 
-  // Bot gate — before any Stripe call.
+  // Bot gate — before any Stripe call. Only a bot fills the honeypot or posts
+  // without the wizard's stamp; those get the fake success page. Too fast, stale
+  // or rate limited can be a person retrying after leaving the checkout, so they
+  // go back to the form with their answers — the fee is the real barrier now.
   const verdict = botVerdict(req);
   if (verdict) {
     console.log(`[inquiry] bot dropped (${verdict}) ip=${req.ip}`);
-    return res.redirect("/thanks.html");
+    return res.redirect(verdict === "honeypot" || verdict === "no_ts" ? "/thanks.html" : "/commission.html?error=busy");
   }
 
   if (!name || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -294,7 +315,8 @@ app.post("/inquiry", async (req, res) => {
     res.redirect(303, session.url);
   } catch (e) {
     console.error("[inquiry] checkout error", e);
-    res.redirect("/commission.html?error=payment");
+    // An address our regex passes but Stripe rejects needs fixing, not retrying.
+    res.redirect(e.code === "email_invalid" || e.param === "customer_email" ? "/commission.html?error=1" : "/commission.html?error=payment");
   }
 });
 

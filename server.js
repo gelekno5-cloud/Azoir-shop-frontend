@@ -86,7 +86,7 @@ async function stripe(endpoint, params) {
     body: params ? new URLSearchParams(params) : undefined,
   });
   const body = await r.json();
-  if (!r.ok) throw new Error(`stripe ${r.status}: ${body.error?.message}`);
+  if (!r.ok) throw Object.assign(new Error(`stripe ${r.status}: ${body.error?.message}`), { code: body.error?.code, param: body.error?.param });
   return body;
 }
 
@@ -220,10 +220,17 @@ async function sendInquiryEmails(f, session) {
   }
 }
 
+// Sessions this process has delivered — the dedupe for when the Supabase write
+// fails and the unique index can't (a replayed /inquiry/paid would otherwise
+// send another pair of emails each time).
+const delivered = new Set();
+
 // Record a paid request once and email it. Both the success redirect and the
 // webhook call this; anything but a paid azoir inquiry session is ignored.
 async function deliverInquiry(session) {
   if (session.metadata?.mode !== FEE_MODE || session.payment_status !== "paid") return;
+  if (delivered.has(session.id)) return;
+  delivered.add(session.id); // before any await, so a concurrent redirect + webhook can't both pass
   const f = metadataToBrief(session.metadata);
   // Persist the lead first (email is the safety net if this fails)
   let isNew = true;
@@ -258,11 +265,14 @@ app.post("/inquiry", async (req, res) => {
   const name = clean(f.name);
   const email = clean(f.email);
 
-  // Bot gate — before any Stripe call.
+  // Bot gate — before any Stripe call. Only a bot fills the honeypot or posts
+  // without the wizard's stamp; those get the fake success page. Too fast, stale
+  // or rate limited can be a person retrying after leaving the checkout, so they
+  // go back to the form with their answers — the fee is the real barrier now.
   const verdict = botVerdict(req);
   if (verdict) {
     console.log(`[inquiry] bot dropped (${verdict}) ip=${req.ip}`);
-    return res.redirect("/thanks.html");
+    return res.redirect(verdict === "honeypot" || verdict === "no_ts" ? "/thanks.html" : "/commission.html?error=busy");
   }
 
   if (!name || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -294,7 +304,8 @@ app.post("/inquiry", async (req, res) => {
     res.redirect(303, session.url);
   } catch (e) {
     console.error("[inquiry] checkout error", e);
-    res.redirect("/commission.html?error=payment");
+    // An address our regex passes but Stripe rejects needs fixing, not retrying.
+    res.redirect(e.code === "email_invalid" || e.param === "customer_email" ? "/commission.html?error=1" : "/commission.html?error=payment");
   }
 });
 

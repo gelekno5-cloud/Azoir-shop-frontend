@@ -25,7 +25,7 @@
   // arrive without it (direct POSTs) or faster than a human can fill a form.
   // The stamp lives in the saved answers so a return from the Stripe checkout
   // isn't "too fast"; it renews past 5h, inside the server's 6h limit.
-  if (!(Date.now() - state.fg_ts < 5 * 60 * 60 * 1000)) state.fg_ts = Date.now();
+  if (!(state.fg_ts <= Date.now() && Date.now() - state.fg_ts < 5 * 60 * 60 * 1000)) state.fg_ts = Date.now();
   if (form && form.elements.fg_ts) form.elements.fg_ts.value = String(state.fg_ts);
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
@@ -136,7 +136,12 @@
   if (feeMsg) { current = TOTAL; errBox.textContent = feeMsg; errBox.style.display = "block"; }
   // Drop the notice from the URL, so a later visit (history, Back from thanks)
   // doesn't tell a customer who has since paid that their payment failed.
-  if (location.search) { try { history.replaceState(null, "", location.pathname); } catch (e) {} }
+  // Other params (utm_*, gclid) stay for analytics.
+  if (q.has("fee") || q.has("error")) {
+    q.delete("fee"); q.delete("error");
+    var rest = q.toString();
+    try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch (e) {}
+  }
 
   render();
 })();

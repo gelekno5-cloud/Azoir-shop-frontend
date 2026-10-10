@@ -14,6 +14,7 @@
   var backBtn = document.getElementById("wizBack");
   var nextBtn = document.getElementById("wizNext");
   var errBox = document.getElementById("wizErr");
+  var errText = errBox.textContent;
   var msg = document.getElementById("wizMessage");
   var nameI = document.getElementById("wizName");
   var emailI = document.getElementById("wizEmail");
@@ -55,7 +56,7 @@
     bar.style.width = (current / TOTAL * 100) + "%";
     count.textContent = "Step " + current + " of " + TOTAL;
     backBtn.style.visibility = current === 1 ? "hidden" : "visible";
-    nextBtn.textContent = current === TOTAL ? "Send inquiry" : "Next";
+    nextBtn.textContent = current === TOTAL ? "Pay $60 & send request" : "Next";
     if (current === TOTAL) buildSummary();
     state.step = current; save();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -88,7 +89,8 @@
     ["type", "metal", "stone", "budget", "timeline", "message", "name", "email", "phone"].forEach(function (k) {
       form.elements[k].value = state[k] || "";
     });
-    try { localStorage.removeItem(KEY); } catch (e) {}
+    // Answers stay saved until thanks.html, so backing out of the Stripe
+    // checkout returns to a filled-in wizard.
     form.submit();
   }
 
@@ -100,15 +102,23 @@
       return;
     }
     if (current === TOTAL) {
-      if (!state.name.trim() || !validEmail(state.email.trim())) { errBox.style.display = "block"; return; }
+      if (!state.name.trim() || !validEmail(state.email.trim())) { errBox.textContent = errText; errBox.style.display = "block"; return; }
       submit(); return;
     }
     current++; render();
   });
   backBtn.addEventListener("click", function () { if (current > 1) { current--; render(); } });
 
-  // server bounced (invalid email) → jump to contact and show the error
-  if (new URLSearchParams(location.search).get("error")) current = TOTAL;
+  // server bounced (invalid email) → jump to contact and show the error;
+  // back from the design-fee checkout unpaid → same step, saying so
+  var q = new URLSearchParams(location.search);
+  if (q.get("error")) current = TOTAL;
+  var feeMsg = q.get("fee") === "cancelled"
+    ? "Your payment wasn't completed, so your request hasn't been sent yet. You can pay and send it below."
+    : q.get("error") === "payment"
+    ? "We couldn't open the payment page. Please try again in a moment, or write to us at hello@azoir.co."
+    : "";
+  if (feeMsg) { current = TOTAL; errBox.textContent = feeMsg; errBox.style.display = "block"; }
 
   render();
 })();

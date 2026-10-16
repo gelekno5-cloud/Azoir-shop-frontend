@@ -811,7 +811,12 @@ function profileIconPath(key) {
 document.querySelectorAll('#bbProfiles [data-opt="profile"] svg').forEach((svg) => {
   svg.innerHTML = `<path d="${profileIconPath(svg.parentElement.dataset.v)}"/>`;
 });
-const setRange = (el, v) => { el.value = v; el.style.setProperty("--p", `${(v - el.min) / (el.max - el.min) * 100}%`); };
+const setRange = (el, v, label) => {
+  const f = (v - el.min) / (el.max - el.min);
+  el.value = v; el.style.setProperty("--p", `${f * 100}%`);
+  const wrap = el.parentElement; wrap.style.setProperty("--p", `${f * 100}%`); wrap.style.setProperty("--pf", f);
+  const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
+};
 
 const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", diamonds: "Diamonds", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
 
@@ -832,8 +837,8 @@ function syncUI() {
   $("bbPairRow").hidden = !ui.pair; $("bbPairNote").hidden = !ui.pair;
   $("bbEditing").hidden = !ui.pair; $("bbEditing").textContent = `Editing ${BAND_NAMES[ui.active]}`;
 
-  setRange($("bbWidth"), b.width); $("bbWidthV").textContent = fmt(b.width) + " mm";
-  setRange($("bbDepth"), b.depth); $("bbDepthV").textContent = fmt(b.depth) + " mm";
+  setRange($("bbWidth"), b.width, fmt(b.width) + " mm"); $("bbWidthV").textContent = fmt(b.width) + " mm";
+  setRange($("bbDepth"), b.depth, fmt(b.depth) + " mm"); $("bbDepthV").textContent = fmt(b.depth) + " mm";
   // size: rebuild the list for the chosen system, pick the nearest entry
   const sel = $("bbSize"), opts = sizeOptions(ui.sizesys);
   const key = ui.sizesys + ":" + opts.length;
@@ -856,8 +861,8 @@ function syncUI() {
   seg.hidden = b.zones === 1;
   seg.innerHTML = zn.map((n, i) => `<button type="button" class="bb-segb${i === ui.zone ? " on" : ""}" data-zone="${i}" aria-pressed="${i === ui.zone}"><span class="sw" style="background:${METALS[b.metals[i]].sw}"></span>${n}</button>`).join("");
   $("bbSplitG").hidden = b.zones !== 2; $("bbMidG").hidden = b.zones !== 3;
-  setRange($("bbSplit"), Math.round(b.zsplit * 100)); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
-  setRange($("bbMid"), Math.round(b.zmid * 100)); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
+  setRange($("bbSplit"), Math.round(b.zsplit * 100), `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
+  setRange($("bbMid"), Math.round(b.zmid * 100), `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
   $("bbMetalH").textContent = b.zones === 1 ? "Metal" : `Metal · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbFinishH").textContent = b.zones === 1 ? "Finish" : `Finish · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbStoneSizeNote").textContent = sizeNoteText(b);
@@ -880,7 +885,7 @@ function syncUI() {
     $("bbBarTitle").textContent = `${PROFILES[b0.profile].name} · ${short(b0.metals[0])}${b0.zones > 1 ? " + " + (b0.zones - 1) : ""}`;
     $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""}`;
   }
-  $("bbRequest").textContent = ui.pair ? "Request this pair" : "Request this band";
+  $("bbRequestLabel").textContent = ui.pair ? "Request this pair" : "Request this band";
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);

@@ -23,81 +23,134 @@
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
 <style>
-.bb-hero{padding:140px 0 26px}
-.bb-hero h1{max-width:20ch}
-.bb-sec{padding:20px 0 90px}
-.bb{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,440px);gap:32px;align-items:start}
-.bb-stage{position:sticky;top:96px}
-.bb-viewer{position:relative;background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden;
-  aspect-ratio:1/1;max-height:calc(100vh - 190px);box-shadow:0 20px 50px rgba(15,23,42,.08);touch-action:none}
+/* ── Band builder: studio layout ─────────────────────────────────────────── */
+.bb-app{--bb-ink:#17171c;--bb-ink2:#474751;--bb-mute:#8b8b96;--bb-line:#e7e3dc;--bb-line2:#d6d1c7;--bb-paper:#fbfaf7;--bb-soft:#f3f0ea;
+  --bb-gold:#b1873a;--bb-gold-tint:#f6efe0;--bb-shadow:0 1px 2px rgba(50,40,20,.06),0 10px 30px -12px rgba(50,40,20,.18);
+  display:grid;grid-template-columns:minmax(0,1fr) 460px;min-height:100dvh;padding-top:72px;background:var(--bb-paper);color:var(--bb-ink)}
+.bb-app *{box-sizing:border-box}
+.bb-app button{font-family:inherit}
+.bb-app :focus-visible{outline:2px solid var(--bb-gold);outline-offset:2px}
+/* stage */
+.bb-stage{position:sticky;top:72px;height:calc(100dvh - 72px);min-width:0;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 38%,#ffffff 0%,#f6f4ef 48%,#e9e5dc 100%)}
+.bb-viewer{position:absolute;inset:0;touch-action:none}
 .bb-viewer canvas{display:block;width:100%!important;height:100%!important}
-.bb-chip{position:absolute;left:18px;top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
-  background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:99px;padding:7px 12px;pointer-events:none;max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bb-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);pointer-events:none}
-.bb-stagebar{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
-.bb-panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px 30px 26px;box-shadow:0 20px 50px rgba(15,23,42,.06)}
-.bb-g{padding:18px 0;border-top:1px solid var(--line)}
-.bb-g:first-child{border-top:0;padding-top:0}
-.bb-g h3{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
-.bb-g h3 span{font-family:'DM Sans',sans-serif;letter-spacing:0;text-transform:none;font-size:13px;color:var(--ink);font-weight:600}
+.bb-stage::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 160px rgba(60,50,30,.10)}
+.bb-intro{position:absolute;left:40px;top:34px;max-width:360px;pointer-events:none;z-index:2}
+.bb-kicker{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bb-gold);font-weight:600;margin-bottom:10px}
+.bb-intro h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,3vw,42px);line-height:1.02;letter-spacing:-.01em;margin:0 0 10px;color:var(--bb-ink);text-wrap:balance}
+.bb-intro h1 em{font-style:italic;color:var(--bb-ink)}
+.bb-intro p{font-size:13.5px;line-height:1.6;color:var(--bb-ink2);margin:0;max-width:32ch}
+.bb-chip{position:absolute;left:40px;bottom:34px;z-index:2;font-size:11.5px;letter-spacing:.06em;color:var(--bb-ink2);background:rgba(255,255,255,.72);
+  backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.9);border-radius:99px;padding:8px 14px;pointer-events:none;max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;box-shadow:var(--bb-shadow)}
+.bb-hint{position:absolute;right:92px;bottom:40px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bb-mute);pointer-events:none;z-index:2}
+.bb-tools{position:absolute;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:3}
+.bb-tool{position:relative;width:44px;height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.78);backdrop-filter:blur(8px);
+  color:var(--bb-ink);cursor:pointer;display:grid;place-items:center;box-shadow:var(--bb-shadow);transition:transform .18s ease,background .18s ease}
+.bb-tool svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bb-tool:hover{background:#fff;transform:translateX(-2px)}
+.bb-tool:active{transform:scale(.96)}
+.bb-tool span{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(4px);white-space:nowrap;font-size:11.5px;letter-spacing:.04em;
+  background:var(--bb-ink);color:#fff;padding:6px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:.18s ease}
+.bb-tool:hover span,.bb-tool:focus-visible span{opacity:1;transform:translateY(-50%)}
+.bb-tool.primary{background:var(--bb-ink);color:#fff;border-color:var(--bb-ink)}
+.bb-tool.primary:hover{background:#2a2a32}
+/* panel */
+.bb-panel{position:relative;display:flex;flex-direction:column;height:calc(100dvh - 72px);position:sticky;top:72px;background:#fff;border-left:1px solid var(--bb-line);min-width:0}
+.bb-panel [hidden],.bb-sheet [hidden]{display:none!important}
+.bb-head{padding:18px 26px 0}
+.bb-seg{display:flex;background:var(--bb-soft);border-radius:12px;padding:3px;gap:2px}
+.bb-segb{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:9px;padding:9px 10px;font-size:12.5px;font-weight:500;color:var(--bb-ink2);cursor:pointer;transition:.18s ease;white-space:nowrap;min-width:0}
+.bb-segb:hover{color:var(--bb-ink)}
+.bb-segb.on{background:#fff;color:var(--bb-ink);box-shadow:0 1px 3px rgba(40,30,10,.14)}
+.bb-segb:active{transform:scale(.98)}
+.bb-segb .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex:none}
+.bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.bb-note{font-size:12.5px;color:var(--bb-mute);margin:10px 0 0;line-height:1.55}
+.bb-note a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px}
+.bb-tabs{display:flex;margin:16px 26px 0;border-bottom:1px solid var(--bb-line);overflow-x:auto;scrollbar-width:none;gap:4px;justify-content:space-between}
+.bb-tabs::-webkit-scrollbar{display:none}
+.bb-tabs button{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font-size:12.5px;font-weight:500;color:var(--bb-mute);padding:12px 6px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s ease}
+.bb-tabs button i{font-style:normal;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--bb-line2);font-size:10.5px;color:var(--bb-mute);transition:.18s ease}
+.bb-tabs button:hover{color:var(--bb-ink)}
+.bb-tabs button[aria-selected=true]{color:var(--bb-ink);border-bottom-color:var(--bb-ink)}
+.bb-tabs button[aria-selected=true] i{background:var(--bb-ink);border-color:var(--bb-ink);color:#fff}
+.bb-editing{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bb-gold);font-weight:600;margin:14px 26px -4px}
+.bb-scroll{flex:1;overflow-y:auto;padding:4px 26px 24px;overscroll-behavior:contain}
+.bb-g{padding:20px 0 4px}
+.bb-g h3{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bb-mute);font-weight:600;margin:0 0 12px}
+.bb-g h3 span{font-family:inherit;letter-spacing:0;text-transform:none;font-size:13px;color:var(--bb-ink);font-weight:600;font-variant-numeric:tabular-nums}
+.bb-sub{font-size:11px;color:var(--bb-mute);margin:0 0 8px;letter-spacing:.1em;text-transform:uppercase}
 .bb-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .bb-opts.two{grid-template-columns:1fr 1fr}
 .bb-opts.four{grid-template-columns:repeat(4,1fr)}
-.bb-opt{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 8px 9px;border:1px solid var(--line);border-radius:12px;background:var(--soft);
-  font-family:inherit;font-size:12.5px;color:var(--ink);cursor:pointer;transition:.12s ease;font-weight:500;text-align:center;line-height:1.2}
-.bb-opt:hover{border-color:var(--blue);background:var(--blue-tint)}
-.bb-opt.on{border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue)}
-.bb-opt:disabled{opacity:.4;cursor:not-allowed}
-.bb-opt svg{width:44px;height:28px;display:block}
-.bb-opt svg path{fill:#D6DBEA;stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
-.bb-opt.on svg path{fill:#C9D5F3;stroke:var(--blue)}
-.bb-opt .sw{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,0,0,.12);box-shadow:inset -4px -5px 8px rgba(0,0,0,.12),inset 3px 4px 6px rgba(255,255,255,.7)}
-.bb-opt small{display:block;color:var(--faint);font-weight:400;font-size:11px}
+.bb-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 8px 10px;border:1px solid var(--bb-line);border-radius:14px;background:#fff;
+  font-size:12.5px;color:var(--bb-ink);cursor:pointer;transition:border-color .18s ease,background .18s ease,transform .18s ease;font-weight:500;text-align:center;line-height:1.25}
+.bb-opt:hover{border-color:var(--bb-line2);background:var(--bb-paper);transform:translateY(-1px)}
+.bb-opt:active{transform:scale(.98)}
+.bb-opt.on{border-color:var(--bb-ink);box-shadow:inset 0 0 0 1px var(--bb-ink);background:#fff}
+.bb-opt:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.bb-opt svg{width:64px;height:36px;display:block}
+.bb-opt svg path{fill:#ebe6dc;stroke:var(--bb-ink);stroke-width:1.1;stroke-linejoin:round}
+.bb-opt.on svg path{fill:#e2c98f}
+.bb-opt svg circle{stroke:var(--bb-ink)}
+.bb-opt svg circle.mg{fill:var(--bb-ink);stroke:none}
+.bb-opt .sw{width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.1);box-shadow:inset -5px -6px 9px rgba(0,0,0,.14),inset 4px 5px 7px rgba(255,255,255,.75)}
+.sw-polished{background:linear-gradient(135deg,#fff 0%,#cfcbc3 35%,#f4f2ee 50%,#b9b4aa 70%,#e9e6e0 100%)}
+.sw-satin{background:repeating-linear-gradient(90deg,#d9d5cd 0 1px,#eceae5 1px 3px)}
+.sw-hammered{background:radial-gradient(circle at 30% 30%,#f2efe9 0 18%,#cfcac0 19% 30%,transparent 31%),radial-gradient(circle at 70% 65%,#f2efe9 0 18%,#cfcac0 19% 30%,transparent 31%),#e2ded6}
+.sw-matte{background:#dedad2}
+.bb-opt small{display:block;color:var(--bb-mute);font-weight:400;font-size:11px;line-height:1.35}
 .bb-range{display:flex;align-items:center;gap:14px}
-.bb-range input[type=range]{flex:1;accent-color:var(--blue);height:28px}
-.bb-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:2px}
+.bb-range input[type=range]{flex:1;appearance:none;-webkit-appearance:none;height:28px;background:transparent;margin:0}
+.bb-range input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--bb-ink) var(--p,50%),var(--bb-line2) var(--p,50%))}
+.bb-range input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--bb-line2)}
+.bb-range input[type=range]::-moz-range-progress{height:3px;background:var(--bb-ink)}
+.bb-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:1.5px solid var(--bb-ink);margin-top:-8.5px;box-shadow:0 2px 6px rgba(40,30,10,.18);cursor:grab;transition:transform .18s ease}
+.bb-range input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid var(--bb-ink);box-shadow:0 2px 6px rgba(40,30,10,.18);cursor:grab}
+.bb-range input[type=range]:active::-webkit-slider-thumb{transform:scale(1.12);cursor:grabbing}
+.bb-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--bb-mute);margin-top:2px}
 .bb-field{display:flex;gap:10px}
-.bb-field input,.bb-field select{background:var(--soft);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-family:inherit;font-size:14.5px;padding:12px 14px;outline:none;transition:border-color .12s;min-width:0}
+.bb-field input,.bb-field select{background:#fff;border:1px solid var(--bb-line);border-radius:12px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-width:0}
 .bb-field input{flex:1}
-.bb-field input:focus,.bb-field select:focus{border-color:var(--blue)}
-.bb-note{font-size:12.5px;color:var(--faint);margin-top:10px;line-height:1.5}
-.bb-note a{color:var(--blue);text-decoration:underline}
-.bb-summary{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
-.bb-row{display:flex;justify-content:space-between;gap:16px;font-size:13.5px;padding:5px 0;color:var(--body)}
-.bb-row b{color:var(--ink);font-weight:600;text-align:right}
-.bb-cta{margin-top:18px;display:flex;flex-direction:column;gap:10px}
-.bb-cta .btn-fill{text-align:center;width:100%}
-.bb-cta p{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5}
-.bb-panel [hidden],.bb-sheet [hidden]{display:none!important}
-.bb-seg{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
-.bb-segb{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:9px;padding:8px 10px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:.12s ease;white-space:nowrap;min-width:0}
-.bb-segb:hover{color:var(--ink)}
-.bb-segb.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
-.bb-segb .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex:none}
+.bb-field select{flex:1}
+.bb-field input:focus,.bb-field select:focus{border-color:var(--bb-ink)}
 .bb-seg-sm{flex:none}
 .bb-seg-sm .bb-segb{padding:8px 12px}
-.bb-pairbar{display:flex;flex-direction:column;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.bb-tabs{display:flex;gap:2px;margin:10px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
-.bb-tabs::-webkit-scrollbar{display:none}
-.bb-tabs button{flex:none;border:0;background:none;font-family:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);padding:13px 10px 11px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.12s ease}
-.bb-tabs button:hover{color:var(--ink)}
-.bb-tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--blue)}
-.bb-editing{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin:12px 0 -6px}
-.bb-pane{padding-top:6px}
-.bb-pane>.bb-g:first-child{border-top:0}
-.bb-sub{font-size:11px;color:var(--faint);margin:0 0 6px;letter-spacing:.08em;text-transform:uppercase}
-.bb-edges{display:grid;gap:12px}
+.bb-g-in{padding:14px 0 2px}
 .bb-zoneseg{margin-top:10px}
-.bb-g-in{border-top:0;padding:14px 0 4px}
-.bb-opt svg circle.mg{fill:var(--ink);stroke:none}
-.bb-sumh{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin:12px 0 4px}
+.bb-next{margin:26px 0 6px}
+.bb-nextbtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bb-line2);background:var(--bb-paper);color:var(--bb-ink);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease}
+.bb-nextbtn:hover{background:var(--bb-soft);border-color:var(--bb-ink)}
+.bb-nextbtn:active{transform:scale(.99)}
+.bb-nextbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bb-sumbox{margin-top:10px;border-top:1px solid var(--bb-line);padding-top:6px}
+.bb-sumbox summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:12.5px;font-weight:600;color:var(--bb-ink)}
+.bb-sumbox summary::-webkit-details-marker{display:none}
+.bb-sumbox summary span{color:var(--bb-mute);font-weight:400}
+.bb-sumbox summary::after{content:"";width:8px;height:8px;border-right:1.4px solid var(--bb-ink);border-bottom:1.4px solid var(--bb-ink);transform:rotate(45deg);margin-left:10px;transition:transform .18s ease}
+.bb-sumbox[open] summary::after{transform:rotate(-135deg)}
+.bb-row{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:6px 0;color:var(--bb-ink2);border-top:1px solid var(--bb-line)}
+.bb-row b{color:var(--bb-ink);font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.bb-sumh{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bb-gold);font-weight:600;margin:12px 0 4px}
 .bb-sumh:first-child{margin-top:0}
-.bb-opts .bb-opt svg circle{stroke:var(--ink)}
+.bb-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 26px;border-top:1px solid var(--bb-line);background:#fff}
+.bb-bar-info{min-width:0}
+.bb-bar-info b{display:block;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:19px;line-height:1.1;color:var(--bb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bb-bar-info span{display:block;font-size:12px;color:var(--bb-mute);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bb-cta{flex:none;border:1px solid var(--bb-ink);background:var(--bb-ink);color:#fff;border-radius:12px;padding:14px 20px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:.18s ease}
+.bb-cta:hover{background:#2b2b33}
+.bb-cta:active{transform:scale(.98)}
+/* below the app */
+.bb-after{background:var(--bb-paper);padding:70px 0 60px;border-top:1px solid var(--bb-line)}
+.bb-steps{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:34px}
+.bb-steps .eyebrow{color:var(--bb-gold)}
+.bb-steps h4{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;margin:10px 0 8px;color:var(--bb-ink)}
+.bb-steps p{font-size:14px;line-height:1.65;color:var(--bb-ink2);max-width:36ch}
 /* spec sheet — a dedicated print view */
 .bb-sheet{position:fixed;inset:0;z-index:1000;background:#fff;overflow:auto;display:none;color:#0f172a;-webkit-overflow-scrolling:touch}
 .bb-sheet.open{display:block}
-.bb-sheet-bar{position:sticky;top:0;z-index:1;display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line)}
+.bb-sheet-bar{position:sticky;top:0;z-index:1;display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;background:rgba(255,255,255,.94);border-bottom:1px solid #e7e3dc}
 .bb-doc{max-width:860px;margin:0 auto;padding:36px 28px 60px;font-size:13px;line-height:1.5}
 .bb-doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #0f172a;padding-bottom:16px;margin-bottom:22px}
 .bb-doc-head img{height:24px;display:block;margin-bottom:10px}
@@ -121,26 +174,35 @@
   .bb-doc{max-width:none;padding:0}
   @page{margin:14mm}
 }
-.bb-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:40px}
-.bb-steps h4{font-size:18px;font-weight:600;margin:12px 0 8px}
-.bb-steps p{font-size:14px;line-height:1.65;color:var(--body)}
-@media(max-width:1000px){
-  .bb{grid-template-columns:minmax(0,1fr)}
-  .bb-stage,.bb-panel{min-width:0}
-  .bb-stage{position:static}
-  .bb-viewer{aspect-ratio:4/3;max-height:70vh}
-  .bb-steps{grid-template-columns:1fr}
-}
-@media(max-width:560px){
-  .bb-hero{padding-top:120px}
-  .bb-panel{padding:22px 18px}
-  .bb-opts,.bb-opts.four{grid-template-columns:repeat(3,1fr)}
-  .bb-opt{font-size:12px;padding:9px 6px 8px}
+@media(max-width:1100px){.bb-app{grid-template-columns:minmax(0,1fr) 400px}.bb-intro{max-width:300px}}
+@media(max-width:900px){
+  .bb-app{grid-template-columns:minmax(0,1fr);padding-top:64px;min-height:0}
+  .bb-stage{position:sticky;top:64px;height:46dvh;min-height:300px;z-index:3;box-shadow:0 10px 30px rgba(50,40,20,.10)}
+  .bb-intro{left:18px;top:16px;max-width:60%}
+  .bb-intro h1,.bb-intro p{display:none}
+  .bb-chip{left:18px;bottom:16px;max-width:calc(100% - 36px)}
+  .bb-hint{display:none}
+  .bb-tools{right:14px;top:auto;bottom:58px;transform:none;flex-direction:row}
+  .bb-tool{width:40px;height:40px;border-radius:12px}
+  .bb-tool span{display:none}
+  .bb-panel{position:static;height:auto;border-left:0;border-top:1px solid var(--bb-line);z-index:1}
+  .bb-head{padding:18px 18px 0}
+  .bb-tabs,.bb-editing{margin-left:18px;margin-right:18px}
+  .bb-scroll{overflow:visible;padding:4px 18px 24px}
+  .bb-bar{position:sticky;bottom:0;z-index:5;padding:12px 18px;box-shadow:0 -8px 24px rgba(50,40,20,.08)}
   .bb-pairrow{grid-template-columns:1fr}
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
   .bb-doc-band{grid-template-columns:1fr}
-  .bb-viewer{border-radius:16px;aspect-ratio:1/1}
+  .bb-steps{grid-template-columns:1fr;gap:26px}
+  .bb-after{padding:50px 0 40px}
+}
+@media(max-width:560px){
+  .bb-opts,.bb-opts.four{grid-template-columns:repeat(3,1fr)}
+  .bb-opt{font-size:12px;padding:10px 6px 9px}
+  .bb-opt svg{width:52px;height:30px}
+  .bb-bar-info b{font-size:17px}
+  .bb-cta{padding:13px 16px}
 }
 </style>
 </head>
@@ -156,65 +218,63 @@
   </div>
 </nav>
 
-<header class="page-hero bb-hero">
-  <span class="eyebrow">Wedding Band Builder</span>
-  <h1 class="serif">Design your band, <em>live</em> in 3D.</h1>
-  <p>Choose the profile, width, edges, metals and finish — one band or a matching pair — add diamonds or an engraving, and watch your ring take shape. When it's right, print the spec sheet or send it to our atelier to be made by hand in New York.</p>
-</header>
-
-<section class="bb-sec">
-  <div class="wrap bb">
-    <div class="bb-stage">
-      <div class="bb-viewer" id="bbViewer">
-        <span class="bb-chip" id="bbChip"></span>
-        <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
-      </div>
-      <div class="bb-stagebar">
-        <button type="button" class="btn-outline sm" id="bbSheetBtn">Spec sheet</button>
-        <button type="button" class="btn-outline sm" id="bbSave">Save image</button>
-        <button type="button" class="btn-outline sm" id="bbCopy">Copy link</button>
-        <button type="button" class="btn-outline sm" id="bbReset">Start over</button>
-      </div>
+<main class="bb-app">
+  <section class="bb-stage" aria-label="3D preview">
+    <div class="bb-viewer" id="bbViewer"></div>
+    <div class="bb-intro">
+      <span class="bb-kicker">Wedding band builder</span>
+      <h1>Design your band, <em>live</em> in 3D.</h1>
+      <p>Every option is cut into real geometry and weighed. When it's right, print the spec sheet or send it to our New York atelier.</p>
     </div>
+    <span class="bb-chip" id="bbChip"></span>
+    <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
+    <div class="bb-tools" role="toolbar" aria-label="Design tools">
+      <button type="button" class="bb-tool primary" id="bbSheetBtn" aria-label="Spec sheet"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/></svg><span>Spec sheet</span></button>
+      <button type="button" class="bb-tool" id="bbSave" aria-label="Save image"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="14" rx="2.5"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8.5 5.5l1-2h5l1 2"/></svg><span>Save image</span></button>
+      <button type="button" class="bb-tool" id="bbCopy" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg><span>Copy link</span></button>
+      <button type="button" class="bb-tool" id="bbReset" aria-label="Start over"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></svg><span>Start over</span></button>
+    </div>
+  </section>
 
-    <aside class="bb-panel" aria-label="Band options">
-      <div class="bb-pairbar">
-        <div class="bb-seg" role="group" aria-label="One band or a pair">
-          <button type="button" class="bb-segb" data-ui="pair" data-v="0" aria-pressed="true">One band</button>
-          <button type="button" class="bb-segb" data-ui="pair" data-v="1" aria-pressed="false">His &amp; Hers pair</button>
-        </div>
-        <div class="bb-pairrow" id="bbPairRow" hidden>
-          <div class="bb-seg" role="group" aria-label="Band to edit">
-            <button type="button" class="bb-segb" data-band="0" aria-pressed="true">Hers</button>
-            <button type="button" class="bb-segb" data-band="1" aria-pressed="false">His</button>
-          </div>
-          <div class="bb-seg" role="group" aria-label="Linked or independent bands">
-            <button type="button" class="bb-segb" data-ui="link" data-v="1" aria-pressed="true">Linked</button>
-            <button type="button" class="bb-segb" data-ui="link" data-v="0" aria-pressed="false">Independent</button>
-          </div>
-        </div>
-        <p class="bb-note" id="bbPairNote" hidden>Linked bands share profile, interior, edges, metals and finish. Width, depth, size, diamonds and engraving are set per band.</p>
+  <aside class="bb-panel" aria-label="Band options">
+    <header class="bb-head">
+      <div class="bb-seg" role="group" aria-label="One band or a pair">
+        <button type="button" class="bb-segb" data-ui="pair" data-v="0" aria-pressed="true">One band</button>
+        <button type="button" class="bb-segb" data-ui="pair" data-v="1" aria-pressed="false">His &amp; Hers pair</button>
       </div>
-
-      <div class="bb-tabs" role="tablist" aria-label="Design steps">
-        <button type="button" role="tab" data-tab="shape" aria-selected="true">Shape &amp; Size</button>
-        <button type="button" role="tab" data-tab="metal" aria-selected="false">Metals &amp; Design</button>
-        <button type="button" role="tab" data-tab="stones" aria-selected="false">Diamonds</button>
-        <button type="button" role="tab" data-tab="engrave" aria-selected="false">Engraving</button>
+      <div class="bb-pairrow" id="bbPairRow" hidden>
+        <div class="bb-seg" role="group" aria-label="Band to edit">
+          <button type="button" class="bb-segb" data-band="0" aria-pressed="true">Hers</button>
+          <button type="button" class="bb-segb" data-band="1" aria-pressed="false">His</button>
+        </div>
+        <div class="bb-seg" role="group" aria-label="Linked or independent bands">
+          <button type="button" class="bb-segb" data-ui="link" data-v="1" aria-pressed="true">Linked</button>
+          <button type="button" class="bb-segb" data-ui="link" data-v="0" aria-pressed="false">Independent</button>
+        </div>
       </div>
-      <p class="bb-editing" id="bbEditing" hidden></p>
+      <p class="bb-note" id="bbPairNote" hidden>Linked bands share profile, interior, edges, metals and finish. Width, depth, size, diamonds and engraving are set per band.</p>
+    </header>
 
+    <div class="bb-tabs" role="tablist" aria-label="Design steps">
+      <button type="button" role="tab" data-tab="shape" aria-selected="true"><i>1</i>Shape</button>
+      <button type="button" role="tab" data-tab="metal" aria-selected="false"><i>2</i>Metals</button>
+      <button type="button" role="tab" data-tab="stones" aria-selected="false"><i>3</i>Diamonds</button>
+      <button type="button" role="tab" data-tab="engrave" aria-selected="false"><i>4</i>Engraving</button>
+    </div>
+    <p class="bb-editing" id="bbEditing" hidden></p>
+
+    <div class="bb-scroll" id="bbScroll">
       <div class="bb-pane" data-pane="shape" role="tabpanel">
         <div class="bb-g">
           <h3>Profile</h3>
-          <div class="bb-opts four">
-            <button type="button" class="bb-opt" data-opt="profile" data-v="court" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 Q22 2 38 10 V22 Z"/></svg>Court</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="dshape" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V15 A16 12 0 0 1 38 15 V22 Z"/></svg>D-shape</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="knife" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L22 4 L38 13 V22 Z"/></svg>Knife edge</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 L12 6 H32 L38 12 V22 Z"/></svg>Bevelled</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="concave" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 Q22 16 38 6 V22 Z"/></svg>Concave</button>
-            <button type="button" class="bb-opt" data-opt="profile" data-v="round" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 14 A16 11 0 1 1 38 14 A16 11 0 1 1 6 14 Z"/></svg>Full round</button>
+          <div class="bb-opts four" id="bbProfiles">
+            <button type="button" class="bb-opt" data-opt="profile" data-v="court" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Court</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="flat" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Flat</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="dshape" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>D-shape</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="knife" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Knife edge</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Bevelled</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="concave" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Concave</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="round" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Full round</button>
           </div>
           <p class="bb-note" id="bbRoundNote" hidden>A full-round band is round inside too, so interior and edge options don't apply.</p>
         </div>
@@ -222,8 +282,8 @@
         <div class="bb-g">
           <h3>Interior</h3>
           <div class="bb-opts two">
-            <button type="button" class="bb-opt" data-opt="interior" data-v="comfort" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V17 Q22 25 6 17 Z"/></svg>Comfort fit<small>Rounded inside, slips on easily</small></button>
-            <button type="button" class="bb-opt" data-opt="interior" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat<small>Traditional, sits flush</small></button>
+            <button type="button" class="bb-opt" data-opt="interior" data-v="comfort" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 6 H54 V22 Q32 34 10 22 Z"/></svg>Comfort fit<small>Rounded inside, slips on easily</small></button>
+            <button type="button" class="bb-opt" data-opt="interior" data-v="flat" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 6 H54 V30 H10 Z"/></svg>Flat<small>Traditional, sits flush</small></button>
           </div>
         </div>
 
@@ -241,25 +301,19 @@
 
         <div class="bb-g">
           <h3>Edges</h3>
-          <div class="bb-edges">
-            <div>
-              <p class="bb-sub">Left edge</p>
-              <div class="bb-opts four">
-                <button type="button" class="bb-opt" data-opt="edgel" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 Q6 6 12 6 H38 V22 Z"/></svg>Rounded</button>
-                <button type="button" class="bb-opt" data-opt="edgel" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L13 6 H38 V22 Z"/></svg>Bevelled</button>
-                <button type="button" class="bb-opt" data-opt="edgel" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H38 V22 Z"/></svg>Sharp</button>
-                <button type="button" class="bb-opt" data-opt="edgel" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 Q6 6 12 6 H38 V22 Z"/><circle class="mg" cx="9" cy="7" r="1.6"/><circle class="mg" cx="9" cy="12" r="1.6"/><circle class="mg" cx="9" cy="17" r="1.6"/></svg>Milgrain</button>
-              </div>
-            </div>
-            <div>
-              <p class="bb-sub">Right edge</p>
-              <div class="bb-opts four">
-                <button type="button" class="bb-opt" data-opt="edger" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H32 Q38 6 38 12 V22 Z"/></svg>Rounded</button>
-                <button type="button" class="bb-opt" data-opt="edger" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H31 L38 13 V22 Z"/></svg>Bevelled</button>
-                <button type="button" class="bb-opt" data-opt="edger" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H38 V22 Z"/></svg>Sharp</button>
-                <button type="button" class="bb-opt" data-opt="edger" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H32 Q38 6 38 12 V22 Z"/><circle class="mg" cx="35" cy="7" r="1.6"/><circle class="mg" cx="35" cy="12" r="1.6"/><circle class="mg" cx="35" cy="17" r="1.6"/></svg>Milgrain</button>
-              </div>
-            </div>
+          <p class="bb-sub">Left edge</p>
+          <div class="bb-opts four">
+            <button type="button" class="bb-opt" data-opt="edgel" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V16 Q10 6 20 6 H54 V30 Z"/></svg>Rounded</button>
+            <button type="button" class="bb-opt" data-opt="edgel" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V16 L20 6 H54 V30 Z"/></svg>Bevelled</button>
+            <button type="button" class="bb-opt" data-opt="edgel" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V6 H54 V30 Z"/></svg>Sharp</button>
+            <button type="button" class="bb-opt" data-opt="edgel" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V16 Q10 6 20 6 H54 V30 Z"/><circle class="mg" cx="15" cy="9" r="1.9"/><circle class="mg" cx="15" cy="15" r="1.9"/><circle class="mg" cx="15" cy="21" r="1.9"/><circle class="mg" cx="15" cy="27" r="1.9"/></svg>Milgrain</button>
+          </div>
+          <p class="bb-sub" style="margin-top:12px">Right edge</p>
+          <div class="bb-opts four">
+            <button type="button" class="bb-opt" data-opt="edger" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V6 H44 Q54 6 54 16 V30 Z"/></svg>Rounded</button>
+            <button type="button" class="bb-opt" data-opt="edger" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V6 H44 L54 16 V30 Z"/></svg>Bevelled</button>
+            <button type="button" class="bb-opt" data-opt="edger" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V6 H54 V30 Z"/></svg>Sharp</button>
+            <button type="button" class="bb-opt" data-opt="edger" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V6 H44 Q54 6 54 16 V30 Z"/><circle class="mg" cx="49" cy="9" r="1.9"/><circle class="mg" cx="49" cy="15" r="1.9"/><circle class="mg" cx="49" cy="21" r="1.9"/><circle class="mg" cx="49" cy="27" r="1.9"/></svg>Milgrain</button>
           </div>
         </div>
 
@@ -273,17 +327,18 @@
             </div>
             <select id="bbSize" aria-label="Ring size"></select>
           </div>
-          <p class="bb-note"><span id="bbSizeAll"></span><br>Not sure? Use our <a href="ring-size.html">ring size guide</a> — we confirm every size before a ring goes into production.</p>
+          <p class="bb-note"><span id="bbSizeAll"></span><br>Not sure? Use our <a href="ring-size.html">ring size guide</a>. We confirm every size before a ring goes into production.</p>
         </div>
+        <div class="bb-next"><button type="button" class="bb-nextbtn" data-tab="metal">Continue to metals &amp; design <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
       </div>
 
       <div class="bb-pane" data-pane="metal" role="tabpanel" hidden>
         <div class="bb-g">
           <h3>Colour zones</h3>
           <div class="bb-opts">
-            <button type="button" class="bb-opt" data-opt="zones" data-v="1" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>One metal</button>
-            <button type="button" class="bb-opt" data-opt="zones" data-v="2" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H22 V22 H6 Z"/><path d="M22 6 H38 V22 H22 Z" style="fill:#fff"/></svg>Two-tone</button>
-            <button type="button" class="bb-opt" data-opt="zones" data-v="3" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H16.7 V22 H6 Z"/><path d="M16.7 6 H27.3 V22 H16.7 Z" style="fill:#fff"/><path d="M27.3 6 H38 V22 H27.3 Z"/></svg>Three-tone</button>
+            <button type="button" class="bb-opt" data-opt="zones" data-v="1" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 8 H54 V28 H10 Z"/></svg>One metal</button>
+            <button type="button" class="bb-opt" data-opt="zones" data-v="2" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 8 H32 V28 H10 Z"/><path d="M32 8 H54 V28 H32 Z" style="fill:#fff"/></svg>Two-tone</button>
+            <button type="button" class="bb-opt" data-opt="zones" data-v="3" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 8 H24.7 V28 H10 Z"/><path d="M24.7 8 H39.3 V28 H24.7 Z" style="fill:#fff"/><path d="M39.3 8 H54 V28 H39.3 Z"/></svg>Three-tone</button>
           </div>
           <div class="bb-g bb-g-in" id="bbSplitG" hidden>
             <h3>Split <span id="bbSplitV">50 / 50</span></h3>
@@ -314,12 +369,13 @@
         <div class="bb-g">
           <h3 id="bbFinishH">Finish</h3>
           <div class="bb-opts four">
-            <button type="button" class="bb-opt" data-opt="finish" data-v="polished" aria-pressed="false">Polished</button>
-            <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false">Satin</button>
-            <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false">Hammered</button>
-            <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false">Matte</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="polished" aria-pressed="false"><span class="sw sw-polished"></span>Polished</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false"><span class="sw sw-satin"></span>Satin</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false"><span class="sw sw-hammered"></span>Hammered</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false"><span class="sw sw-matte"></span>Matte</button>
           </div>
         </div>
+        <div class="bb-next"><button type="button" class="bb-nextbtn" data-tab="stones">Continue to diamonds <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
       </div>
 
       <div class="bb-pane" data-pane="stones" role="tabpanel" hidden>
@@ -338,9 +394,9 @@
         <div class="bb-g">
           <h3>Setting</h3>
           <div class="bb-opts">
-            <button type="button" class="bb-opt" data-opt="setting" data-v="channel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H15 V12 H29 V6 H38 V22 Z"/><circle cx="22" cy="12" r="5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Channel<small>Stones sit inside a groove</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="bezel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 H38 V22 Z"/><path d="M14 10 V4 H30 V10 Z"/><circle cx="22" cy="6" r="5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Bezel<small>A collar of metal around each stone</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="prong" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 H38 V22 Z"/><path d="M12 10 V3 H15 V10 Z M29 10 V3 H32 V10 Z"/><circle cx="22" cy="7" r="5.5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Prong<small>Shared prongs, most light</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="channel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V8 H22 V16 H42 V8 H54 V30 Z"/><circle cx="32" cy="16" r="7" fill="#fff" stroke-width="1.1"/></svg>Channel<small>Stones sit inside a groove</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="bezel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V14 H54 V30 Z"/><path d="M21 14 V6 H43 V14 Z"/><circle cx="32" cy="9" r="7" fill="#fff" stroke-width="1.1"/></svg>Bezel<small>A collar of metal around each stone</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="prong" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M10 30 V14 H54 V30 Z"/><path d="M19 14 V4 H23 V14 Z M41 14 V4 H45 V14 Z"/><circle cx="32" cy="10" r="8" fill="#fff" stroke-width="1.1"/></svg>Prong<small>Shared prongs, most light</small></button>
           </div>
         </div>
 
@@ -353,6 +409,7 @@
           </div>
           <p class="bb-note" id="bbStoneSizeNote"></p>
         </div>
+        <div class="bb-next"><button type="button" class="bb-nextbtn" data-tab="engrave">Continue to engraving <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
       </div>
 
       <div class="bb-pane" data-pane="engrave" role="tabpanel" hidden>
@@ -362,24 +419,28 @@
             <input type="text" id="bbEngrave" maxlength="30" placeholder="A date, initials, a few words…" aria-label="Engraving text">
             <select id="bbFont" aria-label="Engraving style"><option value="script">Script</option><option value="serif">Serif</option><option value="sans">Modern</option></select>
           </div>
-          <p class="bb-note">Hand-engraved on the inside of the band. Up to 30 characters — in a pair, each band has its own.</p>
+          <p class="bb-note">Hand-engraved on the inside of the band. Up to 30 characters. In a pair, each band has its own.</p>
         </div>
       </div>
 
-      <div class="bb-summary">
+      <details class="bb-sumbox" id="bbSumBox">
+        <summary>Full specification <span id="bbSumHint"></span></summary>
         <div id="bbSummary"></div>
-        <div class="bb-cta">
-          <button type="button" class="btn-fill" id="bbRequest">Request this band</button>
-          <p>Your design goes straight into the commission request. A designer replies within one business day.</p>
-        </div>
-      </div>
-    </aside>
-  </div>
+      </details>
+    </div>
 
+    <footer class="bb-bar">
+      <div class="bb-bar-info"><b id="bbBarTitle"></b><span id="bbBarSub"></span></div>
+      <button type="button" class="bb-cta" id="bbRequest">Request this band</button>
+    </footer>
+  </aside>
+</main>
+
+<section class="bb-after">
   <div class="wrap">
     <div class="bb-steps">
-      <div><span class="eyebrow">01</span><h4>Design it here</h4><p>Everything you see is real geometry — the width, profile and channel you choose are what we cut, down to the millimetre.</p></div>
-      <div><span class="eyebrow">02</span><h4>We refine it with you</h4><p>A designer reviews your band, confirms size and comfort, and sends a hand-finished 3D render before anything is made.</p></div>
+      <div><span class="eyebrow">01</span><h4>Design it here</h4><p>Everything you see is real geometry. The width, profile, edges and channel you choose are what we cut, to the tenth of a millimetre.</p></div>
+      <div><span class="eyebrow">02</span><h4>We refine it with you</h4><p>A designer reviews your band, confirms size and comfort, and sends a hand-finished render before anything is made.</p></div>
       <div><span class="eyebrow">03</span><h4>Made in New York</h4><p>Cast, set and polished by hand in our atelier, in your chosen metal, with diamonds that are ethically sourced.</p></div>
     </div>
   </div>
@@ -405,7 +466,7 @@
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=17"></script>
+<script type="module" src="band-builder.js?v=19"></script>
 <script src="/analytics.js" defer></script>
 </body>
 </html>

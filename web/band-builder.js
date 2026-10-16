@@ -18,27 +18,30 @@ const PROFILES = {
 };
 const INTERIORS = { comfort: "Comfort fit", flat: "Flat" };
 // Base colour = sRGB of the metal's reflectance; density in g/cm³.
+// `color` is the alloy's reflectance at normal incidence (F0) in sRGB — what a
+// metal really reflects — so the band's colour comes from the studio, not a tint.
 const METALS = {
-  "14y": { name: "14k Yellow Gold", wizard: "Yellow gold", color: "#F3C66A", density: 13.1, sw: "#E6C67A" },
-  "14w": { name: "14k White Gold",  wizard: "White gold",  color: "#EDEEF2", density: 12.7, sw: "#E8E8EA" },
-  "14r": { name: "14k Rose Gold",   wizard: "Rose gold",   color: "#EBAC8E", density: 13.0, sw: "#E6B0A0" },
-  "18y": { name: "18k Yellow Gold", wizard: "Yellow gold", color: "#EDB84F", density: 15.5, sw: "#E0B85E" },
-  "18w": { name: "18k White Gold",  wizard: "White gold",  color: "#E9EAEF", density: 15.1, sw: "#E0E0E4" },
-  "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#E6A07F", density: 15.2, sw: "#DFA08E" },
-  "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#E2E4E9", density: 20.6, sw: "#D8DADE" },
+  "14y": { name: "14k Yellow Gold", wizard: "Yellow gold", color: "#F5D79C", density: 13.1, sw: "#E9CB84" },
+  "14w": { name: "14k White Gold",  wizard: "White gold",  color: "#F1F0EC", density: 12.7, sw: "#E6E6E3" },
+  "14r": { name: "14k Rose Gold",   wizard: "Rose gold",   color: "#F3C9B3", density: 13.0, sw: "#E6B8A4" },
+  "18y": { name: "18k Yellow Gold", wizard: "Yellow gold", color: "#F7D08A", density: 15.5, sw: "#E8C06A" },
+  "18w": { name: "18k White Gold",  wizard: "White gold",  color: "#EFEEEA", density: 15.1, sw: "#E2E1DD" },
+  "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#F1BFA4", density: 15.2, sw: "#E4AE96" },
+  "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#E1DEDA", density: 20.6, sw: "#D5D2CE" },
 };
+// Each finish is a real surface: a generated normal map at true scale (tile = mm).
 const FINISHES = {
-  polished: { name: "Polished",  roughness: 0.09 },
-  satin:    { name: "Satin",     roughness: 0.34, anisotropy: 0.75 },
-  hammered: { name: "Hammered",  roughness: 0.1, bump: true },
-  matte:    { name: "Matte",     roughness: 0.62 },
+  polished: { name: "Polished",  roughness: 0.035 },
+  satin:    { name: "Satin",     roughness: 0.3, anisotropy: 0.85, map: "satin", tile: 2.5, scale: 0.8 },
+  hammered: { name: "Hammered",  roughness: 0.1, map: "hammered", tile: 7, scale: 1.0 },
+  matte:    { name: "Matte",     roughness: 0.55, map: "matte", tile: 1.2, scale: 0.45, env: 0.9 },
 };
 // `stones` keeps its original values (none / half / full) and gains two spans.
 const SPANS = { none: "None", full: "Full eternity", half: "Half eternity", third: "⅓ eternity", quarter: "¼ eternity" };
 const SPAN_ANGLE = { full: Math.PI * 2, half: Math.PI, third: Math.PI * 2 / 3, quarter: Math.PI / 2 };
 const SETTINGS = { channel: "Channel set", bezel: "Bezel set", prong: "Prong set" };
 const STONE_SIZES = { s: { name: "Petite", k: 0.75 }, m: { name: "Classic", k: 1 }, l: { name: "Bold", k: 1.3 } };
-const EDGES = { rounded: "Rounded", bevel: "Bevelled", sharp: "Sharp" };
+const EDGES = { rounded: "Rounded", bevel: "Bevelled", sharp: "Sharp", milgrain: "Milgrain" };
 const FONTS = {
   script: 'italic 500 104px "Cormorant Garamond", Georgia, serif',
   serif:  '500 96px "Cormorant Garamond", Georgia, serif',
@@ -48,7 +51,7 @@ const ZONE_NAMES = { 1: ["Metal"], 2: ["Left", "Right"], 3: ["Left", "Centre", "
 const SIZE_SYS = { us: "US", eu: "EU", uk: "UK" };
 const BAND_NAMES = ["Hers", "His"];
 // What a linked pair shares. Width, depth, size, diamonds and engraving stay per band.
-const LINKED = ["profile", "interior", "zones", "metals", "finishes", "edgel", "edger"];
+const LINKED = ["profile", "interior", "zones", "zsplit", "zmid", "metals", "finishes", "edgel", "edger"];
 const MIN_STONE_WIDTH = 2.5;
 
 // ── Ring sizes (US chart = web/ring-size.html; EU = ISO circumference; UK letters) ──
@@ -77,7 +80,7 @@ const sizeText = (us) => `US ${usLabel(us)} · EU ${Math.round(usToEU(us))} · U
 // ── State ────────────────────────────────────────────────────────────────────
 const defaultBand = (i) => ({
   profile: "court", interior: "comfort", width: i ? 6 : 4, depth: i ? 2 : 1.8,
-  metals: ["18y", "18y", "18y"], finishes: ["polished", "polished", "polished"], zones: 1,
+  metals: ["18y", "18y", "18y"], finishes: ["polished", "polished", "polished"], zones: 1, zsplit: 0.5, zmid: 0.34,
   edgel: "rounded", edger: "rounded",
   stones: "none", setting: "channel", stonesz: "m",
   size: i ? 10 : 7, engraving: "", font: "script",
@@ -98,6 +101,7 @@ function readBand(q, p, b) {
   const num = (k, lo, hi, set) => { const v = parseFloat(g(k)); if (Number.isFinite(v)) set(Math.min(hi, Math.max(lo, v))); };
   num("width", 2, 8, (v) => (b.width = v)); num("depth", 1.2, 2.6, (v) => (b.depth = v));
   num("size", 3.75, 13, (v) => (b.size = Math.round(v * 4) / 4)); num("zones", 1, 3, (v) => (b.zones = Math.round(v)));
+  num("zsplit", 0.2, 0.8, (v) => (b.zsplit = v)); num("zmid", 0.2, 0.7, (v) => (b.zmid = v));
   const e = g("engraving"); if (e != null) b.engraving = e.slice(0, 30);
 }
 function readHash() {
@@ -111,7 +115,8 @@ function writeBand(q, p, b) {
   q.set(p + "profile", b.profile); q.set(p + "interior", b.interior); q.set(p + "width", b.width); q.set(p + "depth", b.depth);
   q.set(p + "metal", b.metals[0]); q.set(p + "finish", b.finishes[0]);
   if (b.zones > 1) { q.set(p + "zones", b.zones); q.set(p + "metal2", b.metals[1]); q.set(p + "finish2", b.finishes[1]); }
-  if (b.zones > 2) { q.set(p + "metal3", b.metals[2]); q.set(p + "finish3", b.finishes[2]); }
+  if (b.zones === 2 && b.zsplit !== 0.5) q.set(p + "zsplit", b.zsplit);
+  if (b.zones > 2) { q.set(p + "metal3", b.metals[2]); q.set(p + "finish3", b.finishes[2]); if (b.zmid !== 0.34) q.set(p + "zmid", b.zmid); }
   q.set(p + "stones", b.stones);
   if (b.stones !== "none") { q.set(p + "setting", b.setting); q.set(p + "stonesz", b.stonesz); }
   if (b.edgel !== "rounded") q.set(p + "edgel", b.edgel);
@@ -153,11 +158,23 @@ function innerRadius(b, ri, y) {
   if (b.interior !== "comfort") return ri;
   return ri + Math.min(0.32 * b.depth, 0.45) * u * u;
 }
+function zoneBoundsOf(b) {
+  const w = b.width, hw = w / 2;
+  if (b.zones === 2) return [-hw + w * b.zsplit];
+  if (b.zones === 3) return [-hw + w * (1 - b.zmid) / 2, hw - w * (1 - b.zmid) / 2];
+  return [];
+}
+function minZoneWidth(b) {
+  const ys = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
+  let m = Infinity; for (let i = 1; i < ys.length; i++) m = Math.min(m, ys[i] - ys[i - 1]);
+  return m;
+}
 function edgeTreatment(b, side) {
-  const mode = b.profile === "round" ? "sharp" : side < 0 ? b.edgel : b.edger;
+  const edge = side < 0 ? b.edgel : b.edger;
+  const mode = b.profile === "round" ? "sharp" : edge === "milgrain" ? "rounded" : edge;
   if (mode === "sharp") return { mode, d: 0 };
-  const base = mode === "rounded" ? Math.min(0.4 * b.depth, 0.55) : Math.min(0.38 * b.depth, 0.6);
-  return { mode, d: Math.min(base, 0.45 * b.width / b.zones, 0.3 * b.width) };
+  const base = edge === "milgrain" ? Math.min(0.28 * b.depth, 0.32) : mode === "rounded" ? Math.min(0.4 * b.depth, 0.55) : Math.min(0.38 * b.depth, 0.6);
+  return { mode, d: Math.min(base, 0.45 * minZoneWidth(b), 0.3 * b.width) };
 }
 // Cut `d` of arc length off one end of a polyline, inserting a point exactly
 // there, so a fillet / chamfer of that size has a clean neighbour to land on.
@@ -229,7 +246,7 @@ function buildSection(b) {
   const w = b.width, hw = w / 2;
   const st = stoneSpec(b);
   const cw = st && st.channel ? st.channelW / 2 : 0;
-  const zoneBounds = []; for (let z = 1; z < b.zones; z++) zoneBounds.push(-hw + w * z / b.zones);
+  const zoneBounds = zoneBoundsOf(b);
   // outer samples, including the channel edges and zone boundaries exactly
   const ys = []; const N = 40;
   for (let i = 0; i <= N; i++) ys.push(-hw + w * i / N);
@@ -420,23 +437,87 @@ function prongGeometry(d) {
   return { geometry: g, volume: Math.PI * rp * rp * (0.5 * d + 0.1), rp };
 }
 
-// ── Textures ─────────────────────────────────────────────────────────────────
-function hammeredBump() {
-  const c = document.createElement("canvas"); c.width = c.height = 512;
-  const x = c.getContext("2d");
-  x.fillStyle = "#808080"; x.fillRect(0, 0, 512, 512);
-  let seed = 7;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 110; i++) {
-    const px = rnd() * 512, py = rnd() * 512, r = 26 + rnd() * 30;
-    const g = x.createRadialGradient(px, py, 0, px, py, r);
-    g.addColorStop(0, "rgba(40,40,40,0.9)"); g.addColorStop(0.75, "rgba(128,128,128,0.4)"); g.addColorStop(1, "rgba(200,200,200,0)");
-    x.fillStyle = g;
-    for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) { x.beginPath(); x.arc(px + ox, py + oy, r, 0, Math.PI * 2); x.fill(); }
+// ── Finish textures ──────────────────────────────────────────────────────────
+// Height fields at real scale (one tile = FINISHES[].tile mm), turned into
+// tangent-space normal maps, so the brush grain, hammer facets and sandblast
+// grit are lit by the studio like the metal itself.
+const TEX = 512;
+let texSeed = 11;
+const rnd = () => (texSeed = (texSeed * 16807) % 2147483647) / 2147483647;
+function heightToNormal(h, n, strength) {
+  const data = new Uint8Array(n * n * 4);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const l = h[y * n + (x + n - 1) % n], r = h[y * n + (x + 1) % n];
+    const u = h[((y + n - 1) % n) * n + x], d = h[((y + 1) % n) * n + x];
+    let nx = (l - r) * strength, ny = (d - u) * strength, nz = 1;
+    const len = Math.hypot(nx, ny, nz); nx /= len; ny /= len; nz /= len;
+    const i = (y * n + x) * 4;
+    data[i] = (nx * 0.5 + 0.5) * 255; data[i + 1] = (ny * 0.5 + 0.5) * 255; data[i + 2] = (nz * 0.5 + 0.5) * 255; data[i + 3] = 255;
   }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.needsUpdate = true;
   return t;
+}
+// Hammered: overlapping spherical dimples; where they meet, a crisp ridge.
+function hammeredHeight(n) {
+  const h = new Float32Array(n * n).fill(1);
+  const dimples = [];
+  for (let i = 0; i < 48; i++) dimples.push({ x: rnd() * n, y: rnd() * n, r: n * (0.09 + rnd() * 0.07), d: 0.5 + rnd() * 0.5 });
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    let best = 1;
+    for (const q of dimples) {
+      let dx = Math.abs(x - q.x), dy = Math.abs(y - q.y);
+      dx = Math.min(dx, n - dx); dy = Math.min(dy, n - dy);
+      const t = (dx * dx + dy * dy) / (q.r * q.r);
+      if (t < 1) best = Math.min(best, 1 - q.d * (1 - t) * (1 - t * 0.35));
+    }
+    h[y * n + x] = best;
+  }
+  return h;
+}
+// Satin: parallel brush lines around the band — two scales of line noise so
+// the grain survives mip-filtering, broken into short strokes along the line.
+function satinHeight(n) {
+  const knots = (k) => { const v = new Float32Array(n); const K = Math.ceil(n / k) + 1, r = Array.from({ length: K }, rnd);
+    for (let y = 0; y < n; y++) { const i = y / k, i0 = Math.floor(i), t = i - i0; v[y] = r[i0 % K] * (1 - t) + r[(i0 + 1) % K] * t; } return v; };
+  const coarse = knots(16), fine = knots(5);
+  const h = new Float32Array(n * n);
+  for (let y = 0; y < n; y++) {
+    const line = 0.55 * coarse[y] + 0.35 * fine[y];
+    let pos = 0, amp = 1;
+    for (let x = 0; x < n; x++) {
+      if (x >= pos) { pos = x + 40 + rnd() * 120; amp = 0.25 + rnd() * 0.75; }
+      h[y * n + x] = 0.5 + (line - 0.45) * amp + (rnd() - 0.5) * 0.08;
+    }
+  }
+  return h;
+}
+// Matte: sandblast grit — white noise, lightly smoothed.
+function matteHeight(n) {
+  const raw = new Float32Array(n * n); for (let i = 0; i < raw.length; i++) raw[i] = rnd();
+  const h = new Float32Array(n * n);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    h[y * n + x] = 0.5 * raw[y * n + x] + 0.125 * (raw[y * n + (x + 1) % n] + raw[y * n + (x + n - 1) % n] + raw[((y + 1) % n) * n + x] + raw[((y + n - 1) % n) * n + x]);
+  }
+  return h;
+}
+// Brushed metal reads as streaks of changing sheen more than as grooves, so
+// satin also gets a roughness map (green channel) from the same lines.
+function heightToRoughness(h, n, lo, hi) {
+  const data = new Uint8Array(n * n * 4);
+  for (let i = 0; i < n * n; i++) { const v = Math.min(1, Math.max(0, h[i])); data[i * 4 + 1] = (lo + (hi - lo) * v) * 255; data[i * 4 + 3] = 255; }
+  const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.needsUpdate = true;
+  return t;
+}
+const FINISH_MAPS = {};
+function finishMap(key) {
+  if (!FINISH_MAPS[key]) {
+    if (key === "satin") { const h = satinHeight(TEX); FINISH_MAPS.satin = heightToNormal(h, TEX, 3.2); FINISH_MAPS.satinRough = heightToRoughness(h, TEX, 0.12, 0.5); }
+    else if (key === "hammered") FINISH_MAPS.hammered = heightToNormal(hammeredHeight(TEX), TEX, 2.0);
+    else if (key === "matte") FINISH_MAPS.matte = heightToNormal(matteHeight(TEX), TEX, 1.6);
+  }
+  return FINISH_MAPS[key];
 }
 function drawEngraving(canvas, text, font) {
   const x = canvas.getContext("2d");
@@ -459,41 +540,67 @@ function drawEngraving(canvas, text, font) {
 const viewer = document.getElementById("bbViewer");
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMapping = THREE.NeutralToneMapping; // keeps gold gold; ACES bleaches bright metal to white
+renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 viewer.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-// A soft studio: a graded dome plus a few moderate softboxes. The stock
-// RoomEnvironment's panels are so bright that polished gold tone-maps to white.
+// A high-key jewellery studio: a bright graded dome, large softboxes with
+// feathered edges (so highlights on polished metal have soft shoulders, not hard
+// rectangles) and two black flags that put dark bands into the reflections —
+// that contrast is what makes metal read as metal.
 function studioEnvironment() {
   const env = new THREE.Scene();
   const grad = document.createElement("canvas"); grad.width = 4; grad.height = 256;
   const gx = grad.getContext("2d"), lg = gx.createLinearGradient(0, 0, 0, 256);
-  lg.addColorStop(0, "#f2f4f8"); lg.addColorStop(0.42, "#c3c8d3"); lg.addColorStop(0.58, "#8e949f"); lg.addColorStop(1, "#353942");
+  lg.addColorStop(0, "#ffffff"); lg.addColorStop(0.38, "#e4e7ee"); lg.addColorStop(0.5, "#b9bec9"); lg.addColorStop(0.62, "#7d828d"); lg.addColorStop(1, "#3a3d45");
   gx.fillStyle = lg; gx.fillRect(0, 0, 4, 256);
   const domeTex = new THREE.CanvasTexture(grad); domeTex.colorSpace = THREE.SRGBColorSpace;
   env.add(new THREE.Mesh(new THREE.SphereGeometry(60, 32, 24), new THREE.MeshBasicMaterial({ map: domeTex, side: THREE.BackSide })));
-  const box = (w, h, x, y, z, i, warm) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(warm ? 0xfff2df : 0xeef3ff).multiplyScalar(i), side: THREE.DoubleSide }));
+  const soft = document.createElement("canvas"); soft.width = soft.height = 256;
+  { const x = soft.getContext("2d"), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.55, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 256, 256); }
+  const softTex = new THREE.CanvasTexture(soft);
+  const box = (w, h, x, y, z, i, warm, hard) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({
+      color: new THREE.Color(warm === "black" ? 0x000000 : warm ? 0xfff3e2 : 0xeef3ff).multiplyScalar(warm === "black" ? 1 : i),
+      map: hard ? null : softTex, transparent: !hard, side: THREE.DoubleSide,
+    }));
     m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
   };
-  box(22, 10, 10, 30, 22, 4.0, true);   // key, top front
-  box(8, 36, -40, 8, 6, 2.6, false);    // tall left strip
-  box(7, 28, 42, 2, -10, 2.0, false);   // right rim strip
-  box(36, 4, 0, -6, -48, 1.6, true);    // low back bar
+  box(30, 16, 8, 32, 20, 5.5, true);          // key: big warm octabox, top front
+  box(10, 40, -42, 10, 8, 3.2, false);        // tall cool strip, left
+  box(9, 30, 44, 4, -12, 3.6, false);         // rim strip, right rear
+  box(40, 6, 0, -8, -48, 2.0, true);          // low warm bar behind (lights the inside)
+  box(36, 5, -6, -14, 44, 2.4, false);        // low front fill
+  box(50, 3, 20, 20, 36, 1, "black", true);   // flag: a dark band through the key reflection
+  box(40, 4, -30, -2, -30, 1, "black", true); // flag: low dark band, rear left
   return env;
 }
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(studioEnvironment(), 0.02).texture;
 scene.environmentIntensity = 1.0;
+// A real cast shadow on the ground (the light itself adds nothing: direct light on mirror metal is one white blob).
+const GROUND_Y = -11.5;
+const sun = new THREE.DirectionalLight(0xffffff, 0.001);
+sun.position.set(-22, 46, 26); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 5; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 140 });
+scene.add(sun, sun.target);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.ShadowMaterial({ color: 0x1b2232, opacity: 0.26 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = GROUND_Y; ground.receiveShadow = true;
+scene.add(ground);
 
 const camera = new THREE.PerspectiveCamera(28, 1, 1, 500);
-camera.position.set(30, 22, 46);
+camera.position.set(30, 21, 46);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
 controls.enablePan = false; controls.minDistance = 30; controls.maxDistance = 120;
+controls.target.set(0, -0.8, 0);
 controls.autoRotate = true; controls.autoRotateSpeed = 0.9;
 controls.maxPolarAngle = Math.PI * 0.6; controls.minPolarAngle = Math.PI * 0.15;
 let idleTimer = 0;
@@ -504,14 +611,14 @@ controls.addEventListener("end", () => { idleTimer = setTimeout(() => (controls.
 
 const LEAN = Math.PI / 2 + 0.22; // lathe axis Y → mostly Z: the ring stands, its top tipped toward the viewer
 const PAIR_GAP = 3; // mm between the two rings
-const bumpTex = hammeredBump();
+// Diamond: transmissive with dispersion, so facets throw a little fire.
 const stoneMat = new THREE.MeshPhysicalMaterial({
-  color: 0xffffff, metalness: 0, roughness: 0.02, ior: 2.42, reflectivity: 1,
-  transmission: 0.3, thickness: 1.0, envMapIntensity: 2.6, flatShading: true, specularIntensity: 1,
+  color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, reflectivity: 1, specularIntensity: 1,
+  transmission: 0.3, thickness: 0.5, dispersion: 0.3, envMapIntensity: 3.6, flatShading: true,
 });
 const shadowC = document.createElement("canvas"); shadowC.width = shadowC.height = 256;
 { const x = shadowC.getContext("2d"); const g = x.createRadialGradient(128, 128, 10, 128, 128, 128);
-  g.addColorStop(0, "rgba(20,24,40,0.42)"); g.addColorStop(0.5, "rgba(20,24,40,0.16)"); g.addColorStop(1, "rgba(20,24,40,0)");
+  g.addColorStop(0, "rgba(20,24,40,0.3)"); g.addColorStop(0.5, "rgba(20,24,40,0.1)"); g.addColorStop(1, "rgba(20,24,40,0)");
   x.fillStyle = g; x.fillRect(0, 0, 256, 256); }
 const shadowTex = new THREE.CanvasTexture(shadowC);
 
@@ -519,8 +626,8 @@ const shadowTex = new THREE.CanvasTexture(shadowC);
 class BandView {
   constructor() {
     this.group = new THREE.Group(); this.group.rotation.x = LEAN; scene.add(this.group);
-    this.mats = [0, 1, 2].map(() => new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.07, envMapIntensity: 1 }));
-    this.bumps = this.mats.map(() => { const t = bumpTex.clone(); t.needsUpdate = true; return t; });
+    this.mats = [0, 1, 2].map(() => new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.035, envMapIntensity: 1 }));
+    this.maps = [{}, {}, {}]; // per zone, per finish: a clone of the shared normal map with its own repeat
     this.engraveMat = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.BackSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     this.engraveCanvas = document.createElement("canvas"); this.engraveCanvas.width = 2048; this.engraveCanvas.height = 160;
     this.engraveTex = new THREE.CanvasTexture(this.engraveCanvas); this.engraveTex.anisotropy = 8; this.engraveTex.colorSpace = THREE.SRGBColorSpace;
@@ -542,6 +649,7 @@ class BandView {
     const sec = this.sec = buildSection(b);
     const built = this.built = buildRingGeometry(sec, b);
     const ring = new THREE.Mesh(built.geometry, this.mats);
+    ring.castShadow = true;
     this.group.add(ring); this.parts.push(ring);
     this.metrics.circumference = built.circumference; this.metrics.loopLen = built.loopLen;
 
@@ -558,13 +666,13 @@ class BandView {
     if (lay) {
       const stones = new THREE.InstancedMesh(brilliantGeometry(lay.d), stoneMat, lay.n);
       lay.angles.forEach((th, i) => place(stones, i, th, lay.rg, 0));
-      stones.instanceMatrix.needsUpdate = true;
+      stones.instanceMatrix.needsUpdate = true; stones.castShadow = true;
       this.group.add(stones); this.parts.push(stones);
       if (sec.stone.setting === "bezel") {
         const bz = bezelGeometry(lay.d, sec.stone.wall);
         const cups = new THREE.InstancedMesh(bz.geometry, this.mats[zc], lay.n);
         lay.angles.forEach((th, i) => place(cups, i, th, lay.rg, 0));
-        cups.instanceMatrix.needsUpdate = true;
+        cups.instanceMatrix.needsUpdate = true; cups.castShadow = true;
         this.group.add(cups); this.parts.push(cups);
         partsVol[zc] += bz.volume * lay.n;
       } else if (sec.stone.setting === "prong") {
@@ -575,11 +683,24 @@ class BandView {
           const z = zoneOfY(sec, side * yOff);
           const prongs = new THREE.InstancedMesh(pg.geometry, this.mats[z], gaps);
           for (let k = 0; k < gaps; k++) place(prongs, k, lay.angles[0] - lay.ang / 2 + k * lay.ang, lay.rg, side * yOff);
-          prongs.instanceMatrix.needsUpdate = true;
+          prongs.instanceMatrix.needsUpdate = true; prongs.castShadow = true;
           this.group.add(prongs); this.parts.push(prongs);
           partsVol[z] += pg.volume * gaps;
         }
       }
+    }
+    // Milgrain: a row of tiny beads along the edge, in that edge's metal.
+    if (b.profile !== "round") for (const side of [-1, 1]) {
+      if ((side < 0 ? b.edgel : b.edger) !== "milgrain") continue;
+      const hw = b.width / 2, rb = Math.min(0.16, Math.max(0.1, 0.075 * b.depth));
+      const y = side * (hw - rb * 0.8), ringR = outerRadius(b, sec.ri, side * hw) - rb * 0.45;
+      const n = Math.floor(2 * Math.PI * ringR / (2.15 * rb));
+      const z = zoneOfY(sec, y);
+      const beads = new THREE.InstancedMesh(new THREE.SphereGeometry(rb, 10, 8), this.mats[z], n);
+      for (let k = 0; k < n; k++) { const th = k / n * Math.PI * 2; m.makeTranslation(Math.cos(th) * ringR, y, -Math.sin(th) * ringR); beads.setMatrixAt(k, m); }
+      beads.instanceMatrix.needsUpdate = true; beads.castShadow = true;
+      this.group.add(beads); this.parts.push(beads);
+      partsVol[z] += n * (4 / 3) * Math.PI * rb * rb * rb * 0.5;
     }
     if (b.engraving.trim()) {
       const h = Math.min(b.width * 0.55, 2.2);
@@ -590,7 +711,9 @@ class BandView {
     }
     const ro = sec.centerOuter + 0.1;
     this.metrics.outer = ro;
-    this.shadow.position.y = -ro * Math.sin(LEAN) - 0.2;
+    // stand the ring on the ground plane whatever its size
+    this.group.position.y = GROUND_Y + ro * Math.sin(LEAN) + (b.width / 2) * Math.abs(Math.cos(LEAN)) + 0.02;
+    this.shadow.position.y = GROUND_Y + 0.02;
     this.shadow.scale.set(ro * 2.6, ro * 2.6 * Math.abs(Math.cos(LEAN)) + b.width * 1.6, 1);
 
     // metrics — per zone, so a two-tone band reports the metal of each
@@ -606,12 +729,20 @@ class BandView {
       const met = METALS[b.metals[z]], fin = FINISHES[b.finishes[z]], mat = this.mats[z];
       mat.color.set(met.color);
       mat.roughness = fin.roughness;
+      mat.envMapIntensity = fin.env || 1;
       mat.anisotropy = fin.anisotropy || 0;
       mat.anisotropyRotation = Math.PI / 2;
-      // hammered dimples ≈ 1.6 mm across; tile by real size
-      this.bumps[z].repeat.set(this.metrics.circumference / (1.6 * 6), this.metrics.loopLen / (1.6 * 6));
-      mat.bumpMap = fin.bump ? this.bumps[z] : null;
-      mat.bumpScale = fin.bump ? 2.2 : 0;
+      if (fin.map) {
+        let t = this.maps[z][fin.map];
+        if (!t) { t = this.maps[z][fin.map] = finishMap(fin.map).clone(); t.needsUpdate = true; }
+        t.repeat.set(this.metrics.circumference / fin.tile, this.metrics.loopLen / fin.tile); // tile = real mm
+        mat.normalMap = t; mat.normalScale.set(fin.scale, fin.scale);
+        if (fin.map === "satin") {
+          let r = this.maps[z].satinRough;
+          if (!r) { finishMap("satin"); r = this.maps[z].satinRough = FINISH_MAPS.satinRough.clone(); r.needsUpdate = true; }
+          r.repeat.copy(t.repeat); mat.roughnessMap = r; mat.roughness = 1;
+        } else mat.roughnessMap = null;
+      } else { mat.normalMap = null; mat.roughnessMap = null; }
       mat.needsUpdate = true;
     }
   }
@@ -708,6 +839,9 @@ function syncUI() {
   const seg = $("bbZoneSeg");
   seg.hidden = b.zones === 1;
   seg.innerHTML = zn.map((n, i) => `<button type="button" class="bb-segb${i === ui.zone ? " on" : ""}" data-zone="${i}" aria-pressed="${i === ui.zone}"><span class="sw" style="background:${METALS[b.metals[i]].sw}"></span>${n}</button>`).join("");
+  $("bbSplitG").hidden = b.zones !== 2; $("bbMidG").hidden = b.zones !== 3;
+  $("bbSplit").value = Math.round(b.zsplit * 100); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
+  $("bbMid").value = Math.round(b.zmid * 100); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
   $("bbMetalH").textContent = b.zones === 1 ? "Metal" : `Metal · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbFinishH").textContent = b.zones === 1 ? "Finish" : `Finish · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbStoneSizeNote").textContent = sizeNoteText(b);
@@ -766,6 +900,8 @@ panel.addEventListener("click", (e) => {
 });
 $("bbWidth").addEventListener("input", (e) => { const b = active(); b.width = parseFloat(e.target.value); if (b.width < MIN_STONE_WIDTH) b.stones = "none"; update(); });
 $("bbDepth").addEventListener("input", (e) => { active().depth = parseFloat(e.target.value); update(); });
+$("bbSplit").addEventListener("input", (e) => { active().zsplit = parseInt(e.target.value, 10) / 100; update(); });
+$("bbMid").addEventListener("input", (e) => { active().zmid = parseInt(e.target.value, 10) / 100; update(); });
 $("bbSize").addEventListener("change", (e) => { active().size = clampSize(parseFloat(e.target.value)); update(); });
 $("bbEngrave").addEventListener("input", (e) => { active().engraving = e.target.value.slice(0, 30); update(); });
 $("bbFont").addEventListener("change", (e) => { active().font = e.target.value; update(); });

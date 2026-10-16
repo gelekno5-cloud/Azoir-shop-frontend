@@ -68,11 +68,65 @@
 .bb-cta{margin-top:18px;display:flex;flex-direction:column;gap:10px}
 .bb-cta .btn-fill{text-align:center;width:100%}
 .bb-cta p{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5}
+.bb-panel [hidden],.bb-sheet [hidden]{display:none!important}
+.bb-seg{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.bb-segb{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:9px;padding:8px 10px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:.12s ease;white-space:nowrap;min-width:0}
+.bb-segb:hover{color:var(--ink)}
+.bb-segb.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.bb-segb .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex:none}
+.bb-seg-sm{flex:none}
+.bb-seg-sm .bb-segb{padding:8px 12px}
+.bb-pairbar{display:flex;flex-direction:column;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bb-tabs{display:flex;gap:2px;margin:10px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.bb-tabs::-webkit-scrollbar{display:none}
+.bb-tabs button{flex:none;border:0;background:none;font-family:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);padding:13px 10px 11px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.12s ease}
+.bb-tabs button:hover{color:var(--ink)}
+.bb-tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--blue)}
+.bb-editing{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin:12px 0 -6px}
+.bb-pane{padding-top:6px}
+.bb-pane>.bb-g:first-child{border-top:0}
+.bb-sub{font-size:11px;color:var(--faint);margin:0 0 6px;letter-spacing:.08em;text-transform:uppercase}
+.bb-edges{display:grid;gap:12px}
+.bb-zoneseg{margin-top:10px}
+.bb-g-in{border-top:0;padding:14px 0 4px}
+.bb-opt svg circle.mg{fill:var(--ink);stroke:none}
+.bb-sumh{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin:12px 0 4px}
+.bb-sumh:first-child{margin-top:0}
+.bb-opts .bb-opt svg circle{stroke:var(--ink)}
+/* spec sheet — a dedicated print view */
+.bb-sheet{position:fixed;inset:0;z-index:1000;background:#fff;overflow:auto;display:none;color:#0f172a;-webkit-overflow-scrolling:touch}
+.bb-sheet.open{display:block}
+.bb-sheet-bar{position:sticky;top:0;z-index:1;display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line)}
+.bb-doc{max-width:860px;margin:0 auto;padding:36px 28px 60px;font-size:13px;line-height:1.5}
+.bb-doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #0f172a;padding-bottom:16px;margin-bottom:22px}
+.bb-doc-head img{height:24px;display:block;margin-bottom:10px}
+.bb-doc-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#64748b;font-weight:600}
+.bb-doc-meta{text-align:right;font-size:12px;color:#475569;line-height:1.5}
+.bb-doc-meta b{display:block;font-size:17px;color:#0f172a;letter-spacing:.1em;font-weight:600}
+.bb-doc-snap{display:block;width:100%;max-height:320px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:26px;background:#fff}
+.bb-doc-band{display:grid;grid-template-columns:270px 1fr;gap:10px 24px;margin-bottom:28px;break-inside:avoid;page-break-inside:avoid}
+.bb-doc-band h2{grid-column:1/-1;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin:0 0 2px;color:#0f172a}
+.bb-doc-sec svg{max-width:100%;height:auto;display:block}
+.bb-doc table{width:100%;border-collapse:collapse;align-self:start}
+.bb-doc td{padding:6px 0;border-bottom:1px solid #e2e8f0;vertical-align:top}
+.bb-doc td:first-child{color:#64748b;width:36%;padding-right:12px}
+.bb-doc-foot{margin-top:26px;font-size:11px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:12px;line-height:1.6}
+.bb-doc-link{word-break:break-all;color:#94a3b8}
+@media print{
+  body>*:not(.bb-sheet){display:none!important}
+  body{background:#fff;overflow:visible}
+  .bb-sheet{position:static;display:block;overflow:visible}
+  .bb-sheet-bar{display:none}
+  .bb-doc{max-width:none;padding:0}
+  @page{margin:14mm}
+}
 .bb-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:40px}
 .bb-steps h4{font-size:18px;font-weight:600;margin:12px 0 8px}
 .bb-steps p{font-size:14px;line-height:1.65;color:var(--body)}
 @media(max-width:1000px){
-  .bb{grid-template-columns:1fr}
+  .bb{grid-template-columns:minmax(0,1fr)}
+  .bb-stage,.bb-panel{min-width:0}
   .bb-stage{position:static}
   .bb-viewer{aspect-ratio:4/3;max-height:70vh}
   .bb-steps{grid-template-columns:1fr}
@@ -82,6 +136,10 @@
   .bb-panel{padding:22px 18px}
   .bb-opts,.bb-opts.four{grid-template-columns:repeat(3,1fr)}
   .bb-opt{font-size:12px;padding:9px 6px 8px}
+  .bb-pairrow{grid-template-columns:1fr}
+  .bb-field{flex-wrap:wrap}
+  .bb-field select{flex:1 1 100%}
+  .bb-doc-band{grid-template-columns:1fr}
   .bb-viewer{border-radius:16px;aspect-ratio:1/1}
 }
 </style>
@@ -101,7 +159,7 @@
 <header class="page-hero bb-hero">
   <span class="eyebrow">Wedding Band Builder</span>
   <h1 class="serif">Design your band, <em>live</em> in 3D.</h1>
-  <p>Choose the profile, width, metal and finish, add diamonds or an engraving, and watch your ring take shape. When it's right, send it to our atelier to be made by hand in New York.</p>
+  <p>Choose the profile, width, edges, metals and finish — one band or a matching pair — add diamonds or an engraving, and watch your ring take shape. When it's right, print the spec sheet or send it to our atelier to be made by hand in New York.</p>
 </header>
 
 <section class="bb-sec">
@@ -112,6 +170,7 @@
         <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
       </div>
       <div class="bb-stagebar">
+        <button type="button" class="btn-outline sm" id="bbSheetBtn">Spec sheet</button>
         <button type="button" class="btn-outline sm" id="bbSave">Save image</button>
         <button type="button" class="btn-outline sm" id="bbCopy">Copy link</button>
         <button type="button" class="btn-outline sm" id="bbReset">Start over</button>
@@ -119,89 +178,191 @@
     </div>
 
     <aside class="bb-panel" aria-label="Band options">
-      <div class="bb-g">
-        <h3>Profile</h3>
-        <div class="bb-opts">
-          <button type="button" class="bb-opt" data-opt="profile" data-v="court" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 Q22 2 38 10 V22 Z"/></svg>Court</button>
-          <button type="button" class="bb-opt" data-opt="profile" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat</button>
-          <button type="button" class="bb-opt" data-opt="profile" data-v="dshape" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V15 A16 12 0 0 1 38 15 V22 Z"/></svg>D-shape</button>
-          <button type="button" class="bb-opt" data-opt="profile" data-v="knife" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L22 4 L38 13 V22 Z"/></svg>Knife edge</button>
-          <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 L12 6 H32 L38 12 V22 Z"/></svg>Bevelled</button>
+      <div class="bb-pairbar">
+        <div class="bb-seg" role="group" aria-label="One band or a pair">
+          <button type="button" class="bb-segb" data-ui="pair" data-v="0" aria-pressed="true">One band</button>
+          <button type="button" class="bb-segb" data-ui="pair" data-v="1" aria-pressed="false">His &amp; Hers pair</button>
+        </div>
+        <div class="bb-pairrow" id="bbPairRow" hidden>
+          <div class="bb-seg" role="group" aria-label="Band to edit">
+            <button type="button" class="bb-segb" data-band="0" aria-pressed="true">Hers</button>
+            <button type="button" class="bb-segb" data-band="1" aria-pressed="false">His</button>
+          </div>
+          <div class="bb-seg" role="group" aria-label="Linked or independent bands">
+            <button type="button" class="bb-segb" data-ui="link" data-v="1" aria-pressed="true">Linked</button>
+            <button type="button" class="bb-segb" data-ui="link" data-v="0" aria-pressed="false">Independent</button>
+          </div>
+        </div>
+        <p class="bb-note" id="bbPairNote" hidden>Linked bands share profile, interior, edges, metals and finish. Width, depth, size, diamonds and engraving are set per band.</p>
+      </div>
+
+      <div class="bb-tabs" role="tablist" aria-label="Design steps">
+        <button type="button" role="tab" data-tab="shape" aria-selected="true">Shape &amp; Size</button>
+        <button type="button" role="tab" data-tab="metal" aria-selected="false">Metals &amp; Design</button>
+        <button type="button" role="tab" data-tab="stones" aria-selected="false">Diamonds</button>
+        <button type="button" role="tab" data-tab="engrave" aria-selected="false">Engraving</button>
+      </div>
+      <p class="bb-editing" id="bbEditing" hidden></p>
+
+      <div class="bb-pane" data-pane="shape" role="tabpanel">
+        <div class="bb-g">
+          <h3>Profile</h3>
+          <div class="bb-opts four">
+            <button type="button" class="bb-opt" data-opt="profile" data-v="court" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 Q22 2 38 10 V22 Z"/></svg>Court</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="dshape" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V15 A16 12 0 0 1 38 15 V22 Z"/></svg>D-shape</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="knife" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L22 4 L38 13 V22 Z"/></svg>Knife edge</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 L12 6 H32 L38 12 V22 Z"/></svg>Bevelled</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="concave" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 Q22 16 38 6 V22 Z"/></svg>Concave</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="round" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 14 A16 11 0 1 1 38 14 A16 11 0 1 1 6 14 Z"/></svg>Full round</button>
+          </div>
+          <p class="bb-note" id="bbRoundNote" hidden>A full-round band is round inside too, so interior and edge options don't apply.</p>
+        </div>
+
+        <div class="bb-g">
+          <h3>Interior</h3>
+          <div class="bb-opts two">
+            <button type="button" class="bb-opt" data-opt="interior" data-v="comfort" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V17 Q22 25 6 17 Z"/></svg>Comfort fit<small>Rounded inside, slips on easily</small></button>
+            <button type="button" class="bb-opt" data-opt="interior" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat<small>Traditional, sits flush</small></button>
+          </div>
+        </div>
+
+        <div class="bb-g">
+          <h3>Width <span id="bbWidthV">4 mm</span></h3>
+          <div class="bb-range"><input type="range" id="bbWidth" min="2" max="8" step="0.5" value="4" aria-label="Band width in millimetres"></div>
+          <div class="bb-ticks"><span>2 mm · delicate</span><span>8 mm · bold</span></div>
+        </div>
+
+        <div class="bb-g">
+          <h3>Depth <span id="bbDepthV">1.8 mm</span></h3>
+          <div class="bb-range"><input type="range" id="bbDepth" min="1.2" max="2.6" step="0.1" value="1.8" aria-label="Band depth in millimetres"></div>
+          <div class="bb-ticks"><span>1.2 mm · light</span><span>2.6 mm · substantial</span></div>
+        </div>
+
+        <div class="bb-g">
+          <h3>Edges</h3>
+          <div class="bb-edges">
+            <div>
+              <p class="bb-sub">Left edge</p>
+              <div class="bb-opts four">
+                <button type="button" class="bb-opt" data-opt="edgel" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 Q6 6 12 6 H38 V22 Z"/></svg>Rounded</button>
+                <button type="button" class="bb-opt" data-opt="edgel" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L13 6 H38 V22 Z"/></svg>Bevelled</button>
+                <button type="button" class="bb-opt" data-opt="edgel" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H38 V22 Z"/></svg>Sharp</button>
+                <button type="button" class="bb-opt" data-opt="edgel" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 Q6 6 12 6 H38 V22 Z"/><circle class="mg" cx="9" cy="7" r="1.6"/><circle class="mg" cx="9" cy="12" r="1.6"/><circle class="mg" cx="9" cy="17" r="1.6"/></svg>Milgrain</button>
+              </div>
+            </div>
+            <div>
+              <p class="bb-sub">Right edge</p>
+              <div class="bb-opts four">
+                <button type="button" class="bb-opt" data-opt="edger" data-v="rounded" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H32 Q38 6 38 12 V22 Z"/></svg>Rounded</button>
+                <button type="button" class="bb-opt" data-opt="edger" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H31 L38 13 V22 Z"/></svg>Bevelled</button>
+                <button type="button" class="bb-opt" data-opt="edger" data-v="sharp" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H38 V22 Z"/></svg>Sharp</button>
+                <button type="button" class="bb-opt" data-opt="edger" data-v="milgrain" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H32 Q38 6 38 12 V22 Z"/><circle class="mg" cx="35" cy="7" r="1.6"/><circle class="mg" cx="35" cy="12" r="1.6"/><circle class="mg" cx="35" cy="17" r="1.6"/></svg>Milgrain</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bb-g">
+          <h3>Size</h3>
+          <div class="bb-field">
+            <div class="bb-seg bb-seg-sm" role="group" aria-label="Size system">
+              <button type="button" class="bb-segb" data-ui="sizesys" data-v="us" aria-pressed="true">US</button>
+              <button type="button" class="bb-segb" data-ui="sizesys" data-v="eu" aria-pressed="false">EU</button>
+              <button type="button" class="bb-segb" data-ui="sizesys" data-v="uk" aria-pressed="false">UK</button>
+            </div>
+            <select id="bbSize" aria-label="Ring size"></select>
+          </div>
+          <p class="bb-note"><span id="bbSizeAll"></span><br>Not sure? Use our <a href="ring-size.html">ring size guide</a> — we confirm every size before a ring goes into production.</p>
         </div>
       </div>
 
-      <div class="bb-g">
-        <h3>Interior</h3>
-        <div class="bb-opts two">
-          <button type="button" class="bb-opt" data-opt="interior" data-v="comfort" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V17 Q22 25 6 17 Z"/></svg>Comfort fit<small>Rounded inside, slips on easily</small></button>
-          <button type="button" class="bb-opt" data-opt="interior" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat<small>Traditional, sits flush</small></button>
+      <div class="bb-pane" data-pane="metal" role="tabpanel" hidden>
+        <div class="bb-g">
+          <h3>Colour zones</h3>
+          <div class="bb-opts">
+            <button type="button" class="bb-opt" data-opt="zones" data-v="1" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>One metal</button>
+            <button type="button" class="bb-opt" data-opt="zones" data-v="2" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H22 V22 H6 Z"/><path d="M22 6 H38 V22 H22 Z" style="fill:#fff"/></svg>Two-tone</button>
+            <button type="button" class="bb-opt" data-opt="zones" data-v="3" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H16.7 V22 H6 Z"/><path d="M16.7 6 H27.3 V22 H16.7 Z" style="fill:#fff"/><path d="M27.3 6 H38 V22 H27.3 Z"/></svg>Three-tone</button>
+          </div>
+          <div class="bb-g bb-g-in" id="bbSplitG" hidden>
+            <h3>Split <span id="bbSplitV">50 / 50</span></h3>
+            <div class="bb-range"><input type="range" id="bbSplit" min="20" max="80" step="5" value="50" aria-label="Width of the left zone, percent"></div>
+            <div class="bb-ticks"><span>Narrow left</span><span>Narrow right</span></div>
+          </div>
+          <div class="bb-g bb-g-in" id="bbMidG" hidden>
+            <h3>Centre band <span id="bbMidV">33 / 34 / 33</span></h3>
+            <div class="bb-range"><input type="range" id="bbMid" min="20" max="70" step="2" value="34" aria-label="Width of the centre zone, percent"></div>
+            <div class="bb-ticks"><span>Thin stripe</span><span>Wide centre</span></div>
+          </div>
+          <div class="bb-seg bb-zoneseg" id="bbZoneSeg" role="group" aria-label="Zone to edit" hidden></div>
+        </div>
+
+        <div class="bb-g">
+          <h3 id="bbMetalH">Metal</h3>
+          <div class="bb-opts four">
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#E9CB84"></span>14k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#E6E6E3"></span>14k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#E6B8A4"></span>14k Rose</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#D5D2CE"></span>Platinum</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#E8C06A"></span>18k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#E2E1DD"></span>18k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#E4AE96"></span>18k Rose</button>
+          </div>
+        </div>
+
+        <div class="bb-g">
+          <h3 id="bbFinishH">Finish</h3>
+          <div class="bb-opts four">
+            <button type="button" class="bb-opt" data-opt="finish" data-v="polished" aria-pressed="false">Polished</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false">Satin</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false">Hammered</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false">Matte</button>
+          </div>
         </div>
       </div>
 
-      <div class="bb-g">
-        <h3>Width <span id="bbWidthV">4 mm</span></h3>
-        <div class="bb-range"><input type="range" id="bbWidth" min="2" max="8" step="0.5" value="4" aria-label="Band width in millimetres"></div>
-        <div class="bb-ticks"><span>2 mm · delicate</span><span>8 mm · bold</span></div>
-      </div>
+      <div class="bb-pane" data-pane="stones" role="tabpanel" hidden>
+        <div class="bb-g">
+          <h3>Diamonds</h3>
+          <div class="bb-opts">
+            <button type="button" class="bb-opt" data-opt="stones" data-v="none" aria-pressed="false">None</button>
+            <button type="button" class="bb-opt" data-opt="stones" data-v="full" aria-pressed="false">Full eternity<small>All the way around</small></button>
+            <button type="button" class="bb-opt" data-opt="stones" data-v="half" aria-pressed="false">Half eternity<small>Front half</small></button>
+            <button type="button" class="bb-opt" data-opt="stones" data-v="third" aria-pressed="false">⅓ eternity<small>Front third</small></button>
+            <button type="button" class="bb-opt" data-opt="stones" data-v="quarter" aria-pressed="false">¼ eternity<small>Front quarter</small></button>
+          </div>
+          <p class="bb-note" id="bbStoneNote" hidden>Diamonds need a band at least 2.5 mm wide.</p>
+        </div>
 
-      <div class="bb-g">
-        <h3>Depth <span id="bbDepthV">1.8 mm</span></h3>
-        <div class="bb-range"><input type="range" id="bbDepth" min="1.2" max="2.6" step="0.1" value="1.8" aria-label="Band depth in millimetres"></div>
-        <div class="bb-ticks"><span>1.2 mm · light</span><span>2.6 mm · substantial</span></div>
-      </div>
+        <div class="bb-g">
+          <h3>Setting</h3>
+          <div class="bb-opts">
+            <button type="button" class="bb-opt" data-opt="setting" data-v="channel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V6 H15 V12 H29 V6 H38 V22 Z"/><circle cx="22" cy="12" r="5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Channel<small>Stones sit inside a groove</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="bezel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 H38 V22 Z"/><path d="M14 10 V4 H30 V10 Z"/><circle cx="22" cy="6" r="5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Bezel<small>A collar of metal around each stone</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="prong" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 H38 V22 Z"/><path d="M12 10 V3 H15 V10 Z M29 10 V3 H32 V10 Z"/><circle cx="22" cy="7" r="5.5" fill="#fff" stroke="#18181B" stroke-width="1"/></svg>Prong<small>Shared prongs, most light</small></button>
+          </div>
+        </div>
 
-      <div class="bb-g">
-        <h3>Metal</h3>
-        <div class="bb-opts four">
-          <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#E6C67A"></span>14k Yellow</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#E8E8EA"></span>14k White</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#E6B0A0"></span>14k Rose</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#D8DADE"></span>Platinum</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#E0B85E"></span>18k Yellow</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#E0E0E4"></span>18k White</button>
-          <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#DFA08E"></span>18k Rose</button>
+        <div class="bb-g">
+          <h3>Stone size</h3>
+          <div class="bb-opts">
+            <button type="button" class="bb-opt" data-opt="stonesz" data-v="s" aria-pressed="false">Petite</button>
+            <button type="button" class="bb-opt" data-opt="stonesz" data-v="m" aria-pressed="false">Classic</button>
+            <button type="button" class="bb-opt" data-opt="stonesz" data-v="l" aria-pressed="false">Bold</button>
+          </div>
+          <p class="bb-note" id="bbStoneSizeNote"></p>
         </div>
       </div>
 
-      <div class="bb-g">
-        <h3>Finish</h3>
-        <div class="bb-opts four">
-          <button type="button" class="bb-opt" data-opt="finish" data-v="polished" aria-pressed="false">Polished</button>
-          <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false">Satin</button>
-          <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false">Hammered</button>
-          <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false">Matte</button>
-        </div>
-      </div>
-
-      <div class="bb-g">
-        <h3>Diamonds</h3>
-        <div class="bb-opts">
-          <button type="button" class="bb-opt" data-opt="stones" data-v="none" aria-pressed="false">None</button>
-          <button type="button" class="bb-opt" data-opt="stones" data-v="half" aria-pressed="false">Half eternity<small>Channel set, front half</small></button>
-          <button type="button" class="bb-opt" data-opt="stones" data-v="full" aria-pressed="false">Full eternity<small>Channel set, all around</small></button>
-        </div>
-        <p class="bb-note" id="bbStoneNote" hidden>Channel-set diamonds need a band at least 2.5 mm wide.</p>
-      </div>
-
-      <div class="bb-g">
-        <h3>Size</h3>
-        <div class="bb-field">
-          <select id="bbSize" aria-label="US ring size">
-            <option value="4">US 4</option><option value="4.5">US 4½</option><option value="5">US 5</option><option value="5.5">US 5½</option>
-            <option value="6">US 6</option><option value="6.5">US 6½</option><option value="7">US 7</option><option value="7.5">US 7½</option>
-            <option value="8">US 8</option><option value="8.5">US 8½</option><option value="9">US 9</option><option value="9.5">US 9½</option>
-            <option value="10">US 10</option><option value="10.5">US 10½</option><option value="11">US 11</option><option value="11.5">US 11½</option>
-            <option value="12">US 12</option><option value="12.5">US 12½</option><option value="13">US 13</option>
-          </select>
-        </div>
-        <p class="bb-note">Not sure? Use our <a href="ring-size.html">ring size guide</a> — we confirm every size before a ring goes into production.</p>
-      </div>
-
-      <div class="bb-g">
-        <h3>Inside engraving <span id="bbEngraveCount">0/30</span></h3>
-        <div class="bb-field">
-          <input type="text" id="bbEngrave" maxlength="30" placeholder="A date, initials, a few words…" aria-label="Engraving text">
-          <select id="bbFont" aria-label="Engraving style"><option value="script">Script</option><option value="serif">Serif</option><option value="sans">Modern</option></select>
+      <div class="bb-pane" data-pane="engrave" role="tabpanel" hidden>
+        <div class="bb-g">
+          <h3>Inside engraving <span id="bbEngraveCount">0/30</span></h3>
+          <div class="bb-field">
+            <input type="text" id="bbEngrave" maxlength="30" placeholder="A date, initials, a few words…" aria-label="Engraving text">
+            <select id="bbFont" aria-label="Engraving style"><option value="script">Script</option><option value="serif">Serif</option><option value="sans">Modern</option></select>
+          </div>
+          <p class="bb-note">Hand-engraved on the inside of the band. Up to 30 characters — in a pair, each band has its own.</p>
         </div>
       </div>
 
@@ -209,7 +370,7 @@
         <div id="bbSummary"></div>
         <div class="bb-cta">
           <button type="button" class="btn-fill" id="bbRequest">Request this band</button>
-          <p>Your design goes straight into the commission request. A designer replies within one business day — making a matching pair? Just say so.</p>
+          <p>Your design goes straight into the commission request. A designer replies within one business day.</p>
         </div>
       </div>
     </aside>
@@ -244,7 +405,7 @@
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=10"></script>
+<script type="module" src="band-builder.js?v=17"></script>
 <script src="/analytics.js" defer></script>
 </body>
 </html>

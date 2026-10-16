@@ -85,6 +85,38 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
   the real swept volume (no prices — inquiry-only stays locked). Share link = URL hash; "Save image" = PNG; "Request this band"
   writes the spec into `azoir_wiz` localStorage and opens `commission.html` on step 2 with "Wedding bands" + metal preselected.
   "Wedding Bands" tab added to every page's nav (after Gallery) and a "Wedding bands" footer link; sitemap updated.
+- **Band builder v2 (iJewel feature parity) — same two files, branch `claude/band-builder-v2-766095`:**
+  - **His & Hers pair:** "One band / His & Hers pair" toggle; two rings side by side; "Linked" shares profile, interior, edges,
+    zones, metals and finish, while width, depth, size, diamonds and engraving stay per band; "Independent" shares nothing.
+    Summary, spec sheet and the commission hand-off list both bands. Band B lives in the hash as `b_*` keys (only when `pair=1`).
+  - **Colour zones:** 1–3 zones across the width, each with its own metal + finish (`zones`, `metal2/finish2`, `metal3/finish3`).
+    Zones are material groups on one lathe geometry, split by y, so the weight estimate is per zone (a two-tone band really is
+    two rings soldered side by side). Stones straddle the centre zone.
+  - **Settings & spans:** channel / bezel (instanced collars) / prong (shared prongs between stones); span none / full / half /
+    ⅓ / ¼ (`stones` keeps its v1 values and gains `third`, `quarter`); stone size petite / classic / bold (`stonesz`); the note
+    under it shows the mm each gives at the current width.
+  - **Edges per side** (`edgel`, `edger`: rounded / bevel / sharp) — the outer polyline is trimmed by the fillet/chamfer
+    distance before the corner is shaped, and sharp corners / chamfers split the lathe "runs" so shading stays crisp.
+    New profiles: concave, full round (round ignores interior + edges).
+  - **Sizes:** US (same chart as `ring-size.html`), EU (ISO circumference) and UK letters (H = US 3¾, one letter = ½ US size);
+    `size` stays a US number in the hash, `sizesys` remembers the picker. Summary shows all three + inside Ø.
+  - **Tabs** (Shape & Size · Metals & Design · Diamonds · Engraving) and a **Spec sheet** button: an in-page print view
+    (`.bb-sheet`, appended to `<body>`, `@media print` hides everything else) with logo, reference code (FNV hash of the share
+    link → `AZB-XXXXXX`, stable for the same design), 3D snapshot, per-band cross-section SVG with mm dimensions and zone
+    colours, size in all systems, metal per zone, stone count/carats, engraving, est. weight. "Print / save PDF" = `window.print()`.
+  - **Rendering pass (same session, after a side-by-side with iJewel's demo):** `NeutralToneMapping` (ACES bleached bright
+    gold to white); metal `color` = each alloy's true F0 reflectance; a high-key studio of feathered softboxes with two black
+    flags (the dark bands in the reflections are what makes metal read as metal); a real cast shadow via a near-zero
+    `DirectionalLight` + `ShadowMaterial` ground at `GROUND_Y`, every ring stood on it; finishes are generated height fields at
+    true mm scale → normal maps (hammered = overlapping dimples with ridges, matte = sandblast grit, satin = brush lines + a
+    roughness map, since brushed metal reads as streaks of sheen more than as grooves); diamonds are transmissive with dispersion.
+  - **Beyond iJewel:** two-tone split slider (`zsplit`, left share) and three-tone centre width (`zmid`); milgrain edge
+    (`edgel`/`edger` = `milgrain`: a rounded edge plus a row of instanced beads in that edge's metal, counted in the weight).
+  - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
+  - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
+    The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.
+  - Testing in the Claude browser pane: hash-only navigation does not reload the module (use `location.reload()`), and the
+    pane lays the page out wider than its screenshot; for a true 375 px test drop the page in a 375 px iframe and measure there.
 - Gotchas: `express.static` caches 1h, so bump `band-builder.js?v=N` in the HTML when the JS changes. Lit by a custom studio
   environment only — a directional light on polished metal tone-maps the whole band white. Mobile nav is still missing site-wide
   (the tab is only visible ≥900px), per the 2026-08-20 audit.

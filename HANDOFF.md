@@ -112,6 +112,13 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     roughness map, since brushed metal reads as streaks of sheen more than as grooves); diamonds are transmissive with dispersion.
   - **Beyond iJewel:** two-tone split slider (`zsplit`, left share) and three-tone centre width (`zmid`); milgrain edge
     (`edgel`/`edger` = `milgrain`: a rounded edge plus a row of instanced beads in that edge's metal, counted in the weight).
+  - **UI pass (branch `claude/band-builder-ui`):** the page is now a full-height studio — viewer fills the left (sticky, warm
+    radial backdrop, floating icon tools with tooltips, intro copy top-left, chip bottom-left), a 460 px stepper panel on the
+    right (pair controls → numbered tabs → scrolling options with "Continue to …" buttons → collapsible full spec → sticky
+    action bar with the design title, key numbers and the request CTA). Profile icons are generated from the real
+    `outerRadius`/`innerRadius` math. Page-local tokens (`--bb-*`, warm neutrals, ink selection, a gold kicker) deliberately
+    diverge from the site's blue. Phone: viewer sticky at 46dvh, panel slides over it, action bar sticks to the bottom.
+    ⚠ Don't use a `<nav>` inside the builder — azoir.css pins every `nav` to the top of the page.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

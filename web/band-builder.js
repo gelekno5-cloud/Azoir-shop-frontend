@@ -759,9 +759,11 @@ function fitView() {
   const ros = [views[0].metrics.outer, ui.pair ? views[1].metrics.outer : 0];
   const half = ui.pair ? ros[0] + ros[1] + PAIR_GAP / 2 : ros[0];
   const vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
-  const dist = Math.max(half * 1.25 / Math.tan(hf / 2), Math.max(...ros) * 1.25 / Math.tan(vf / 2)) + 6;
+  const dist = Math.max(half * 1.45 / Math.tan(hf / 2), Math.max(...ros) * 1.6 / Math.tan(vf / 2)) + 6;
   const dir = camera.position.clone().sub(controls.target).normalize();
-  camera.position.copy(dir.multiplyScalar(dist));
+  // on a wide stage, sit the ring right of centre so the intro copy has room
+  controls.target.set(camera.aspect > 1.25 ? -0.22 * half : 0, -0.8, 0);
+  camera.position.copy(controls.target).add(dir.multiplyScalar(dist));
   controls.minDistance = dist * 0.5; controls.maxDistance = dist * 2.2;
 }
 function resize() {
@@ -797,6 +799,20 @@ function bandText(b, v) {
     weight,
   };
 }
+// Profile icons are the real cross-sections (same functions that cut the band).
+function profileIconPath(key) {
+  const b = { profile: key, width: 4, depth: 1.8, interior: "comfort" }, ri = 5, N = 40;
+  const X = (y) => 10 + (y + 2) / 4 * 44, Y = (r) => 6 + (ri + 1.8 - r) / 1.8 * 24;
+  const pts = [];
+  for (let i = 0; i <= N; i++) { const y = -2 + 4 * i / N; pts.push(`${X(y).toFixed(1)} ${Y(outerRadius(b, ri, y)).toFixed(1)}`); }
+  for (let i = 0; i <= N; i++) { const y = 2 - 4 * i / N; pts.push(`${X(y).toFixed(1)} ${Y(innerRadius(b, ri, y)).toFixed(1)}`); }
+  return "M" + pts.join("L") + "Z";
+}
+document.querySelectorAll('#bbProfiles [data-opt="profile"] svg').forEach((svg) => {
+  svg.innerHTML = `<path d="${profileIconPath(svg.parentElement.dataset.v)}"/>`;
+});
+const setRange = (el, v) => { el.value = v; el.style.setProperty("--p", `${(v - el.min) / (el.max - el.min) * 100}%`); };
+
 const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", diamonds: "Diamonds", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
 
 function syncUI() {
@@ -816,8 +832,8 @@ function syncUI() {
   $("bbPairRow").hidden = !ui.pair; $("bbPairNote").hidden = !ui.pair;
   $("bbEditing").hidden = !ui.pair; $("bbEditing").textContent = `Editing ${BAND_NAMES[ui.active]}`;
 
-  $("bbWidth").value = b.width; $("bbWidthV").textContent = fmt(b.width) + " mm";
-  $("bbDepth").value = b.depth; $("bbDepthV").textContent = fmt(b.depth) + " mm";
+  setRange($("bbWidth"), b.width); $("bbWidthV").textContent = fmt(b.width) + " mm";
+  setRange($("bbDepth"), b.depth); $("bbDepthV").textContent = fmt(b.depth) + " mm";
   // size: rebuild the list for the chosen system, pick the nearest entry
   const sel = $("bbSize"), opts = sizeOptions(ui.sizesys);
   const key = ui.sizesys + ":" + opts.length;
@@ -840,8 +856,8 @@ function syncUI() {
   seg.hidden = b.zones === 1;
   seg.innerHTML = zn.map((n, i) => `<button type="button" class="bb-segb${i === ui.zone ? " on" : ""}" data-zone="${i}" aria-pressed="${i === ui.zone}"><span class="sw" style="background:${METALS[b.metals[i]].sw}"></span>${n}</button>`).join("");
   $("bbSplitG").hidden = b.zones !== 2; $("bbMidG").hidden = b.zones !== 3;
-  $("bbSplit").value = Math.round(b.zsplit * 100); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
-  $("bbMid").value = Math.round(b.zmid * 100); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
+  setRange($("bbSplit"), Math.round(b.zsplit * 100)); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
+  setRange($("bbMid"), Math.round(b.zmid * 100)); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
   $("bbMetalH").textContent = b.zones === 1 ? "Metal" : `Metal · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbFinishH").textContent = b.zones === 1 ? "Finish" : `Finish · ${zn[ui.zone].toLowerCase()} zone`;
   $("bbStoneSizeNote").textContent = sizeNoteText(b);
@@ -853,6 +869,19 @@ function syncUI() {
     const rows = Object.keys(ROW_LABELS).map((k) => `<div class="bb-row"><span>${ROW_LABELS[k]}</span><b>${esc(t[k])}</b></div>`).join("");
     return (ui.pair ? `<div class="bb-sumh">${BAND_NAMES[i]}</div>` : "") + rows;
   }).join("");
+  // action bar
+  const b0 = bands[0], m0 = views[0].metrics;
+  if (ui.pair) {
+    const m1 = views[1].metrics;
+    $("bbBarTitle").textContent = `${BAND_NAMES[0]} ${fmt(b0.width)} mm · ${BAND_NAMES[1]} ${fmt(bands[1].width)} mm`;
+    $("bbBarSub").textContent = `US ${usLabel(b0.size)} / ${usLabel(bands[1].size)} · ≈ ${fmt(m0.grams + m1.grams)} g together`;
+  } else {
+    const short = (k) => METALS[k].name.replace(" Gold", "").replace(" 950", "");
+    $("bbBarTitle").textContent = `${PROFILES[b0.profile].name} · ${short(b0.metals[0])}${b0.zones > 1 ? " + " + (b0.zones - 1) : ""}`;
+    $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""}`;
+  }
+  $("bbRequest").textContent = ui.pair ? "Request this pair" : "Request this band";
+  $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
 }
@@ -895,7 +924,12 @@ panel.addEventListener("click", (e) => {
     else if (k === "link") { ui.link = v === "1"; update(); }
     else if (k === "sizesys") { ui.sizesys = v; update(false); }
   } else if (el.dataset.band != null) { ui.active = Number(el.dataset.band); update(false); }
-  else if (el.dataset.tab) { ui.tab = el.dataset.tab; syncUI(); }
+  else if (el.dataset.tab) {
+    ui.tab = el.dataset.tab; syncUI();
+    const sc = $("bbScroll");
+    if (getComputedStyle(sc).overflowY === "auto") sc.scrollTo({ top: 0, behavior: "smooth" });
+    else panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   else if (el.dataset.zone != null) { ui.zone = Number(el.dataset.zone); syncUI(); }
 });
 $("bbWidth").addEventListener("input", (e) => { const b = active(); b.width = parseFloat(e.target.value); if (b.width < MIN_STONE_WIDTH) b.stones = "none"; update(); });

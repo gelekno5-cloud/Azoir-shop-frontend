@@ -119,6 +119,12 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     `outerRadius`/`innerRadius` math. Page-local tokens (`--bb-*`, warm neutrals, ink selection, a gold kicker) deliberately
     diverge from the site's blue. Phone: viewer sticky at 46dvh, panel slides over it, action bar sticks to the bottom.
     ⚠ Don't use a `<nav>` inside the builder — azoir.css pins every `nav` to the top of the page.
+  - **Cobalt palette (branch `claude/band-builder-cobalt`):** page-local tokens are now white / cool grey / ink `#14161C` with
+    one accent `#2B4DFF` (tint `#DCE2FF`) used only for selection, the active step, slider fill and the CTA. Sliders are
+    tick-rail sliders (a `.bb-rail` of mm ticks behind the input, `--ticks` per slider) with a cobalt value bubble that follows
+    the thumb (`--pf`); the request CTA is a cobalt pill with a white arrow puck that rotates on hover. Tools are a white pill
+    cluster at the bottom centre of the stage. ⚠ Deploy gotcha: `npx @railway/cli up` uploads the *git root*, so from a
+    worktree it ships the main checkout — pull `main` there first.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

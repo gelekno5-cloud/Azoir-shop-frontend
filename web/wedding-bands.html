@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wedding Band Builder — Azoir & Co.</title>
+<meta name="description" content="Design your wedding band in 3D — profile, width, metal, finish, diamonds and engraving — then send it to our New York atelier to be made by hand.">
+<link rel="canonical" href="https://azoir.co/wedding-bands.html">
+<meta name="theme-color" content="#5B7FD4">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Azoir &amp; Co.">
+<meta property="og:title" content="Wedding Band Builder — Azoir &amp; Co."><meta property="og:description" content="Design your wedding band in 3D — profile, width, metal, finish, diamonds and engraving — then have it made by hand in New York.">
+<meta property="og:url" content="https://azoir.co/wedding-bands.html"><meta property="og:image" content="https://azoir.co/media/og-image.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wedding Band Builder — Azoir &amp; Co."><meta name="twitter:description" content="Design your wedding band in 3D, then have it made by hand in New York."><meta name="twitter:image" content="https://azoir.co/media/og-image.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="azoir.css?v=2">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
+</script>
+<style>
+.bb-hero{padding:140px 0 26px}
+.bb-hero h1{max-width:20ch}
+.bb-sec{padding:20px 0 90px}
+.bb{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,440px);gap:32px;align-items:start}
+.bb-stage{position:sticky;top:96px}
+.bb-viewer{position:relative;background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden;
+  aspect-ratio:1/1;max-height:calc(100vh - 190px);box-shadow:0 20px 50px rgba(15,23,42,.08);touch-action:none}
+.bb-viewer canvas{display:block;width:100%!important;height:100%!important}
+.bb-chip{position:absolute;left:18px;top:16px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:99px;padding:7px 12px;pointer-events:none;max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bb-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);pointer-events:none}
+.bb-stagebar{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.bb-panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px 30px 26px;box-shadow:0 20px 50px rgba(15,23,42,.06)}
+.bb-g{padding:18px 0;border-top:1px solid var(--line)}
+.bb-g:first-child{border-top:0;padding-top:0}
+.bb-g h3{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
+.bb-g h3 span{font-family:'DM Sans',sans-serif;letter-spacing:0;text-transform:none;font-size:13px;color:var(--ink);font-weight:600}
+.bb-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bb-opts.two{grid-template-columns:1fr 1fr}
+.bb-opts.four{grid-template-columns:repeat(4,1fr)}
+.bb-opt{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 8px 9px;border:1px solid var(--line);border-radius:12px;background:var(--soft);
+  font-family:inherit;font-size:12.5px;color:var(--ink);cursor:pointer;transition:.12s ease;font-weight:500;text-align:center;line-height:1.2}
+.bb-opt:hover{border-color:var(--blue);background:var(--blue-tint)}
+.bb-opt.on{border-color:var(--blue);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--blue)}
+.bb-opt:disabled{opacity:.4;cursor:not-allowed}
+.bb-opt svg{width:44px;height:28px;display:block}
+.bb-opt svg path{fill:#D6DBEA;stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.bb-opt.on svg path{fill:#C9D5F3;stroke:var(--blue)}
+.bb-opt .sw{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,0,0,.12);box-shadow:inset -4px -5px 8px rgba(0,0,0,.12),inset 3px 4px 6px rgba(255,255,255,.7)}
+.bb-opt small{display:block;color:var(--faint);font-weight:400;font-size:11px}
+.bb-range{display:flex;align-items:center;gap:14px}
+.bb-range input[type=range]{flex:1;accent-color:var(--blue);height:28px}
+.bb-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:2px}
+.bb-field{display:flex;gap:10px}
+.bb-field input,.bb-field select{background:var(--soft);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-family:inherit;font-size:14.5px;padding:12px 14px;outline:none;transition:border-color .12s;min-width:0}
+.bb-field input{flex:1}
+.bb-field input:focus,.bb-field select:focus{border-color:var(--blue)}
+.bb-note{font-size:12.5px;color:var(--faint);margin-top:10px;line-height:1.5}
+.bb-note a{color:var(--blue);text-decoration:underline}
+.bb-summary{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
+.bb-row{display:flex;justify-content:space-between;gap:16px;font-size:13.5px;padding:5px 0;color:var(--body)}
+.bb-row b{color:var(--ink);font-weight:600;text-align:right}
+.bb-cta{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.bb-cta .btn-fill{text-align:center;width:100%}
+.bb-cta p{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5}
+.bb-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:40px}
+.bb-steps h4{font-size:18px;font-weight:600;margin:12px 0 8px}
+.bb-steps p{font-size:14px;line-height:1.65;color:var(--body)}
+@media(max-width:1000px){
+  .bb{grid-template-columns:1fr}
+  .bb-stage{position:static}
+  .bb-viewer{aspect-ratio:4/3;max-height:70vh}
+  .bb-steps{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .bb-hero{padding-top:120px}
+  .bb-panel{padding:22px 18px}
+  .bb-opts,.bb-opts.four{grid-template-columns:repeat(3,1fr)}
+  .bb-opt{font-size:12px;padding:9px 6px 8px}
+  .bb-viewer{border-radius:16px;aspect-ratio:1/1}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."></a>
+  <div class="navlinks">
+    <a href="how.html">How it Works</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="wedding-bands.html" class="active">Wedding Bands</a>
+    <a href="about.html">About</a>
+    <a href="commission.html" class="btn-fill sm">Begin a Commission</a>
+  </div>
+</nav>
+
+<header class="page-hero bb-hero">
+  <span class="eyebrow">Wedding Band Builder</span>
+  <h1 class="serif">Design your band, <em>live</em> in 3D.</h1>
+  <p>Choose the profile, width, metal and finish, add diamonds or an engraving, and watch your ring take shape. When it's right, send it to our atelier to be made by hand in New York.</p>
+</header>
+
+<section class="bb-sec">
+  <div class="wrap bb">
+    <div class="bb-stage">
+      <div class="bb-viewer" id="bbViewer">
+        <span class="bb-chip" id="bbChip"></span>
+        <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
+      </div>
+      <div class="bb-stagebar">
+        <button type="button" class="btn-outline sm" id="bbSave">Save image</button>
+        <button type="button" class="btn-outline sm" id="bbCopy">Copy link</button>
+        <button type="button" class="btn-outline sm" id="bbReset">Start over</button>
+      </div>
+    </div>
+
+    <aside class="bb-panel" aria-label="Band options">
+      <div class="bb-g">
+        <h3>Profile</h3>
+        <div class="bb-opts">
+          <button type="button" class="bb-opt" data-opt="profile" data-v="court" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V10 Q22 2 38 10 V22 Z"/></svg>Court</button>
+          <button type="button" class="bb-opt" data-opt="profile" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat</button>
+          <button type="button" class="bb-opt" data-opt="profile" data-v="dshape" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V15 A16 12 0 0 1 38 15 V22 Z"/></svg>D-shape</button>
+          <button type="button" class="bb-opt" data-opt="profile" data-v="knife" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V13 L22 4 L38 13 V22 Z"/></svg>Knife edge</button>
+          <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 22 V12 L12 6 H32 L38 12 V22 Z"/></svg>Bevelled</button>
+        </div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Interior</h3>
+        <div class="bb-opts two">
+          <button type="button" class="bb-opt" data-opt="interior" data-v="comfort" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V17 Q22 25 6 17 Z"/></svg>Comfort fit<small>Rounded inside, slips on easily</small></button>
+          <button type="button" class="bb-opt" data-opt="interior" data-v="flat" aria-pressed="false"><svg viewBox="0 0 44 28"><path d="M6 6 H38 V22 H6 Z"/></svg>Flat<small>Traditional, sits flush</small></button>
+        </div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Width <span id="bbWidthV">4 mm</span></h3>
+        <div class="bb-range"><input type="range" id="bbWidth" min="2" max="8" step="0.5" value="4" aria-label="Band width in millimetres"></div>
+        <div class="bb-ticks"><span>2 mm · delicate</span><span>8 mm · bold</span></div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Depth <span id="bbDepthV">1.8 mm</span></h3>
+        <div class="bb-range"><input type="range" id="bbDepth" min="1.2" max="2.6" step="0.1" value="1.8" aria-label="Band depth in millimetres"></div>
+        <div class="bb-ticks"><span>1.2 mm · light</span><span>2.6 mm · substantial</span></div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Metal</h3>
+        <div class="bb-opts four">
+          <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#E6C67A"></span>14k Yellow</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#E8E8EA"></span>14k White</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#E6B0A0"></span>14k Rose</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#D8DADE"></span>Platinum</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#E0B85E"></span>18k Yellow</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#E0E0E4"></span>18k White</button>
+          <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#DFA08E"></span>18k Rose</button>
+        </div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Finish</h3>
+        <div class="bb-opts four">
+          <button type="button" class="bb-opt" data-opt="finish" data-v="polished" aria-pressed="false">Polished</button>
+          <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false">Satin</button>
+          <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false">Hammered</button>
+          <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false">Matte</button>
+        </div>
+      </div>
+
+      <div class="bb-g">
+        <h3>Diamonds</h3>
+        <div class="bb-opts">
+          <button type="button" class="bb-opt" data-opt="stones" data-v="none" aria-pressed="false">None</button>
+          <button type="button" class="bb-opt" data-opt="stones" data-v="half" aria-pressed="false">Half eternity<small>Channel set, front half</small></button>
+          <button type="button" class="bb-opt" data-opt="stones" data-v="full" aria-pressed="false">Full eternity<small>Channel set, all around</small></button>
+        </div>
+        <p class="bb-note" id="bbStoneNote" hidden>Channel-set diamonds need a band at least 2.5 mm wide.</p>
+      </div>
+
+      <div class="bb-g">
+        <h3>Size</h3>
+        <div class="bb-field">
+          <select id="bbSize" aria-label="US ring size">
+            <option value="4">US 4</option><option value="4.5">US 4½</option><option value="5">US 5</option><option value="5.5">US 5½</option>
+            <option value="6">US 6</option><option value="6.5">US 6½</option><option value="7">US 7</option><option value="7.5">US 7½</option>
+            <option value="8">US 8</option><option value="8.5">US 8½</option><option value="9">US 9</option><option value="9.5">US 9½</option>
+            <option value="10">US 10</option><option value="10.5">US 10½</option><option value="11">US 11</option><option value="11.5">US 11½</option>
+            <option value="12">US 12</option><option value="12.5">US 12½</option><option value="13">US 13</option>
+          </select>
+        </div>
+        <p class="bb-note">Not sure? Use our <a href="ring-size.html">ring size guide</a> — we confirm every size before a ring goes into production.</p>
+      </div>
+
+      <div class="bb-g">
+        <h3>Inside engraving <span id="bbEngraveCount">0/30</span></h3>
+        <div class="bb-field">
+          <input type="text" id="bbEngrave" maxlength="30" placeholder="A date, initials, a few words…" aria-label="Engraving text">
+          <select id="bbFont" aria-label="Engraving style"><option value="script">Script</option><option value="serif">Serif</option><option value="sans">Modern</option></select>
+        </div>
+      </div>
+
+      <div class="bb-summary">
+        <div id="bbSummary"></div>
+        <div class="bb-cta">
+          <button type="button" class="btn-fill" id="bbRequest">Request this band</button>
+          <p>Your design goes straight into the commission request. A designer replies within one business day — making a matching pair? Just say so.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="wrap">
+    <div class="bb-steps">
+      <div><span class="eyebrow">01</span><h4>Design it here</h4><p>Everything you see is real geometry — the width, profile and channel you choose are what we cut, down to the millimetre.</p></div>
+      <div><span class="eyebrow">02</span><h4>We refine it with you</h4><p>A designer reviews your band, confirms size and comfort, and sends a hand-finished 3D render before anything is made.</p></div>
+      <div><span class="eyebrow">03</span><h4>Made in New York</h4><p>Cast, set and polished by hand in our atelier, in your chosen metal, with diamonds that are ethically sourced.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <span class="eyebrow">Something more bespoke?</span>
+    <h2 class="serif" style="margin-top:16px">Start from a blank page.</h2>
+    <p>Two-tone bands, a stone of your own, a pattern that means something — begin a commission and we'll design it with you.</p>
+    <a href="commission.html" class="btn-fill">Begin a commission</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><a href="index.html" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co."></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="commission.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="commission.html">Heirloom redesign</a></div>
+      <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a></div>
+      <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
+    </div>
+    <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
+  </div>
+</footer>
+<script type="module" src="band-builder.js?v=10"></script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

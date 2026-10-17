@@ -134,3 +134,10 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
   environment only — a directional light on polished metal tone-maps the whole band white. Mobile nav is still missing site-wide
   (the tab is only visible ≥900px), per the 2026-08-20 audit.
 
+
+## Mobile menu (Oct 2026)
+- Below 900px the nav shows a hamburger (`.nav-toggle`, 44px, `aria-expanded`/`aria-controls="navlinks"`) that opens the existing `.navlinks` block as a full-width panel under the bar. Same five links, so the `active` class works as on desktop.
+- `web/nav.js` (vanilla) toggles `nav.open` + `body.nav-open` (scroll lock); closes on link tap, Escape, outside tap, or crossing 900px. CSS is the "Mobile menu" block at the end of `web/azoir.css`.
+- Every page in `web/` (16 html files) has the button markup, `nav.js?v=1` before `</body>`, and `azoir.css?v=5`. **New pages must copy this nav markup + script.** Bump `?v` when editing the css/js.
+- Also fixed: `.page-hero` decorative glow made commission.html scroll sideways on phones (`overflow-x:clip` under 900px).
+- Not deployed (`railway up` is manual).

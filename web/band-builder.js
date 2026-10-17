@@ -16,6 +16,7 @@ const PROFILES = {
   bevel:   { name: "Bevelled",    desc: "Flat top, chamfered edges" },
   concave: { name: "Concave",     desc: "Scooped centre, raised edges" },
   round:   { name: "Full round",  desc: "Fully rounded, like a polished wire" },
+  custom:  { name: "Custom",      desc: "Imported cross-section" },
 };
 const INTERIORS = { comfort: "Comfort fit", flat: "Flat" };
 // Base colour = sRGB of the metal's reflectance; density in g/cm³.
@@ -36,6 +37,10 @@ const FINISHES = {
   satin:    { name: "Satin",     roughness: 0.3, anisotropy: 0.85, map: "satin", tile: 2.5, scale: 0.8 },
   hammered: { name: "Hammered",  roughness: 0.1, map: "hammered", tile: 7, scale: 1.0 },
   matte:    { name: "Matte",     roughness: 0.55, map: "matte", tile: 1.2, scale: 0.45, env: 0.9 },
+  brushed:  { name: "Brushed",   roughness: 0.3, anisotropy: 0.85, anisoRot: 0, map: "brushed", tile: 2.5, scale: 0.8 },
+  sandblast:{ name: "Sandblast", roughness: 0.7, map: "sandblast", tile: 0.8, scale: 0.9, env: 0.85 },
+  ice:      { name: "Ice",       roughness: 0.22, map: "ice", tile: 2.2, scale: 1.0 },
+  bark:     { name: "Bark",      roughness: 0.38, map: "bark", tile: 5, scale: 1.1 },
 };
 // `stones` keeps its original values (none / half / full) and gains two spans.
 const SPANS = { none: "None", full: "Full eternity", half: "Half eternity", third: "⅓ eternity", quarter: "¼ eternity" };
@@ -51,12 +56,13 @@ const ZONE_NAMES = { 1: ["Metal"], 2: ["Left", "Right"], 3: ["Left", "Centre", "
 const SIZE_SYS = { us: "US", eu: "EU", uk: "UK" };
 const BAND_NAMES = ["Hers", "His"];
 // What a linked pair shares. Width, depth, size, diamonds and engraving stay per band.
-const LINKED = ["profile", "interior", "zones", "zsplit", "zmid", "metals", "finishes", "edgel", "edger"];
+const LINKED = ["profile", "interior", "zones", "zsplit", "zmid", "metals", "finishes", "edgel", "edger", "wave", "wavef", "wavemode"];
 
 // ── Ring sizes (US chart = web/ring-size.html; EU = ISO circumference; UK letters) ──
-const usToDiameter = (us) => 11.66 + 0.811 * us;
+let SIZE_A = 11.66, SIZE_B = 0.811; // US size → inside diameter (mm), same chart as ring-size.html
+const usToDiameter = (us) => SIZE_A + SIZE_B * us;
 const usToEU = (us) => Math.PI * usToDiameter(us);
-const euToUS = (eu) => (eu / Math.PI - 11.66) / 0.811;
+const euToUS = (eu) => (eu / Math.PI - SIZE_A) / SIZE_B;
 const UK = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ukToUS = (idx, half) => 3.75 + (idx - 7) * 0.5 + (half ? 0.25 : 0); // UK H = US 3¾, each letter = ½ US size
 function usToUK(us) {
@@ -77,12 +83,16 @@ function sizeOptions(sys) {
 const sizeText = (us) => `US ${usLabel(us)} · EU ${Math.round(usToEU(us))} · UK ${usToUK(us)}`;
 
 // ── State ────────────────────────────────────────────────────────────────────
+let DEFAULTS = {}; // overridden by band-catalog.json
+const WAVE_MODES = { groove: "Groove", split: "Split line", both: "Both" };
 const defaultBand = (i) => ({
   profile: "court", interior: "comfort", width: i ? 6 : 4, depth: i ? 2 : 1.8,
   metals: ["18y", "18y", "18y"], finishes: ["polished", "polished", "polished"], zones: 1, zsplit: 0.5, zmid: 0.34,
   edgel: "rounded", edger: "rounded",
+  wave: 0, wavef: 8, wavemode: "groove",
   stones: "none", shape: "round", setting: "channel", stonesz: "m",
   size: i ? 10 : 7, engraving: "", font: "script",
+  ...(DEFAULTS[i ? "his" : "band"] || {}),
 });
 const bands = [defaultBand(0), defaultBand(1)];
 const ui = { pair: false, link: true, active: 0, zone: 0, sizesys: "us", tab: "shape" };
@@ -97,10 +107,13 @@ function readBand(q, p, b) {
   pick("finish", FINISHES, (v) => (b.finishes[0] = v)); pick("finish2", FINISHES, (v) => (b.finishes[1] = v)); pick("finish3", FINISHES, (v) => (b.finishes[2] = v));
   pick("stones", SPANS, (v) => (b.stones = v)); pick("shape", SHAPES, (v) => (b.shape = v)); pick("setting", SETTINGS, (v) => (b.setting = v)); pick("stonesz", STONE_SIZES, (v) => (b.stonesz = v));
   pick("edgel", EDGES, (v) => (b.edgel = v)); pick("edger", EDGES, (v) => (b.edger = v)); pick("font", FONTS, (v) => (b.font = v));
+  pick("wavemode", WAVE_MODES, (v) => (b.wavemode = v));
+  if (b.profile === "custom" && !CUSTOM) b.profile = "court"; // the imported section lives in this browser only
   const num = (k, lo, hi, set) => { const v = parseFloat(g(k)); if (Number.isFinite(v)) set(Math.min(hi, Math.max(lo, v))); };
   num("width", 2, 8, (v) => (b.width = v)); num("depth", 1.2, 2.6, (v) => (b.depth = v));
   num("size", 3.75, 13, (v) => (b.size = Math.round(v * 4) / 4)); num("zones", 1, 3, (v) => (b.zones = Math.round(v)));
   num("zsplit", 0.2, 0.8, (v) => (b.zsplit = v)); num("zmid", 0.2, 0.7, (v) => (b.zmid = v));
+  num("wave", 0, 0.4, (v) => (b.wave = v)); num("wavef", 1, 20, (v) => (b.wavef = Math.round(v)));
   const e = g("engraving"); if (e != null) b.engraving = e.slice(0, 30);
 }
 function readHash() {
@@ -118,6 +131,7 @@ function writeBand(q, p, b) {
   if (b.zones > 2) { q.set(p + "metal3", b.metals[2]); q.set(p + "finish3", b.finishes[2]); if (b.zmid !== 0.34) q.set(p + "zmid", b.zmid); }
   q.set(p + "stones", b.stones);
   if (b.stones !== "none") { q.set(p + "shape", b.shape); q.set(p + "setting", b.setting); q.set(p + "stonesz", b.stonesz); }
+  if (b.wave > 0) { q.set(p + "wave", b.wave); q.set(p + "wavef", b.wavef); q.set(p + "wavemode", b.wavemode); }
   if (b.edgel !== "rounded") q.set(p + "edgel", b.edgel);
   if (b.edger !== "rounded") q.set(p + "edger", b.edger);
   q.set(p + "size", b.size); q.set(p + "font", b.font);
@@ -260,7 +274,8 @@ function stoneRules(b, shape = b.shape, setting = b.setting, stonesz = b.stonesz
   const hp = dm.D - dm.hc;
   const seat = st.raised ? hp + 0.27 : dm.D + 0.37; // pavilion + 0.3 mm floor (+ crown when the table sits flush)
   let issue = null;
-  if (!st.shapes.includes(shape)) issue = `${st.name}: ${st.shapes.map((k) => SHAPES[k].name.toLowerCase()).join(", ")} only`;
+  if (b.profile === "custom") issue = "imported cross-sections can't take stones yet";
+  else if (!st.shapes.includes(shape)) issue = `${st.name}: ${st.shapes.map((k) => SHAPES[k].name.toLowerCase()).join(", ")} only`;
   else if (b.width + 1e-6 < minWidth) issue = `${sh.name} ${dimsText(shape, dm)} in ${st.name.toLowerCase()} needs a band ≥ ${fmt(Math.ceil(minWidth * 10) / 10)} mm wide`;
   else if (seat > b.depth + 1e-6) issue = `${sh.name} ${dimsText(shape, dm)} needs a deeper band (seat ${fmt(seat)} mm, band ${fmt(b.depth)} mm)`;
   else if (st.min && (dm.s < st.min || dm.s > st.max)) issue = `${st.name} suits ${st.min}–${st.max} mm stones`;
@@ -302,17 +317,18 @@ function stoneSpec(b) {
 const dedupe = (arr) => arr.filter((y, i) => i === 0 || Math.abs(y - arr[i - 1]) > 1e-6);
 function buildSection(b) {
   const ri = usToDiameter(b.size) / 2;
+  if (b.profile === "custom" && CUSTOM) return customSection(b, ri);
   const w = b.width, hw = w / 2;
   const st = stoneSpec(b);
   const cw = st && st.channel ? st.channelW / 2 : 0;
   const zoneBounds = zoneBoundsOf(b);
   // outer samples, including the channel edges and zone boundaries exactly
-  const ys = []; const N = 40;
+  const ys = []; const N = b.wave > 0 ? 96 : 40;
   for (let i = 0; i <= N; i++) ys.push(-hw + w * i / N);
   if (cw) ys.push(-cw, cw);
   ys.push(...zoneBounds);
   ys.sort((a, c) => a - c);
-  let outer = dedupe(ys).map((y) => ({ x: outerRadius(b, ri, y), y }));
+  let outer = dedupe(ys).map((y) => ({ x: outerRadius(b, ri, y), y, o: true }));
   // inner samples (y falling)
   const M = b.interior === "comfort" || b.profile === "round" ? 24 : 1;
   const iys = []; for (let i = 0; i <= M; i++) iys.push(hw - w * i / M);
@@ -336,7 +352,44 @@ function buildSection(b) {
     const mid = Math.floor(inner.length / 2); // start the loop on the inner surface so every corner is interior
     poly = shapeCorners([...inner.slice(mid), ...outer, ...inner.slice(0, mid)], fillet, true);
   }
-  return { ri, hw, runs: splitRuns(poly), floor, stone: st, zoneBounds, centerOuter: outerRadius(b, ri, 0) };
+  return { ri, hw, runs: splitRuns(poly), floor, stone: st, zoneBounds, centerOuter: outerRadius(b, ri, 0), wave: waveSpec(b, zoneBounds, hw, st) };
+}
+// Decorative wave: a shallow groove meandering around the band, and/or a two-tone seam that follows it.
+function waveSpec(b, zoneBounds, hw, st) {
+  if (!(b.wave > 0) || b.profile === "custom") return null;
+  const split = (b.wavemode === "split" || b.wavemode === "both") && b.zones === 2;
+  const groove = b.wavemode === "groove" || b.wavemode === "both";
+  const A = Math.min(b.wave, split ? 0.4 * minZoneWidth(b) : b.wave), f = b.wavef;
+  const yb = split ? zoneBounds[0] : 0;
+  const gc = groove ? (b.wavemode === "both" && b.zones === 2 ? zoneBounds[0] : 0) : 0;
+  return { A, f, split, groove, yb, gc, hw, gw: 0.6, gd: Math.min(0.18, 0.12 * b.depth), cw: st && st.channel ? st.channelW / 2 : 0 };
+}
+// The section at one angle: channel floor depth, then the wave applied to the outer surface / the seam.
+function sectionAt(sec, depth, th) {
+  const runs = sectionRuns(sec, depth), wv = sec.wave;
+  if (!wv) return runs;
+  const off = wv.A * Math.sin(wv.f * th);
+  const fade = (y) => { const d = y > wv.yb ? (y - wv.yb) / (wv.hw - wv.yb) : (wv.yb - y) / (wv.hw + wv.yb); return Math.max(0, 1 - d * d); };
+  return runs.map((r) => r.map((p) => {
+    let x = p.x, y = p.y;
+    if (wv.groove && p.o && !(wv.cw && Math.abs(y) < wv.cw + 0.05)) { const u = (y - (wv.gc + off)) / (wv.gw / 2); if (Math.abs(u) < 1) x -= wv.gd * (1 - u * u); }
+    if (wv.split) y += off * fade(p.y);
+    return { x, y };
+  }));
+}
+// Imported cross-section: the polygon is the whole section; x = radial offset from the inside, y along the axis.
+function customSection(b, ri) {
+  const pts = CUSTOM.pts.map((p) => ({ x: ri + p.x, y: p.y }));
+  const n = pts.length, poly = [];
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i - 1 + n) % n], p = pts[i], q = pts[(i + 1) % n];
+    const ang = Math.abs(Math.atan2(q.y - p.y, q.x - p.x) - Math.atan2(p.y - a.y, p.x - a.x));
+    const turn = Math.min(ang, Math.PI * 2 - ang);
+    poly.push({ x: p.x, y: p.y, split: turn > 0.5 });
+  }
+  poly.push({ x: poly[0].x, y: poly[0].y });
+  let outer = ri; for (const p of pts) if (Math.abs(p.y) < 0.25) outer = Math.max(outer, p.x);
+  return { ri, hw: CUSTOM.width / 2, runs: splitRuns(poly), floor: null, stone: null, zoneBounds: zoneBoundsOf(b), centerOuter: outer, wave: null, custom: true };
 }
 function sectionRuns(sec, depth) {
   if (!sec.floor) return sec.runs;
@@ -376,7 +429,7 @@ const SEG = 192;
 const TOP = Math.PI / 2; // lathe angle that ends up at the top of the standing ring
 function buildRingGeometry(sec, b) {
   const depthAt = channelDepthFn(sec, b);
-  const runs0 = sectionRuns(sec, 0);
+  const runs0 = sectionAt(sec, 0, 0);
   const counts = runs0.map((r) => r.length);
   const total = counts.reduce((a, c) => a + c, 0);
   const pos = new Float32Array((SEG + 1) * total * 3);
@@ -389,7 +442,8 @@ function buildRingGeometry(sec, b) {
   for (let sIdx = 0; sIdx <= SEG; sIdx++) {
     const th = sIdx / SEG * Math.PI * 2;
     const c = Math.cos(th), sn = Math.sin(th);
-    const runs = sectionRuns(sec, depthAt(th));
+    const runs = sectionAt(sec, depthAt(th), th);
+    const bOff = sec.wave && sec.wave.split ? sec.wave.A * Math.sin(sec.wave.f * th) : 0;
     let vi = sIdx * total, acc = 0;
     const loop = [];
     for (const r of runs) {
@@ -410,7 +464,7 @@ function buildRingGeometry(sec, b) {
     if (sIdx < SEG) {
       if (b.zones === 1) volumes[0] += wedgeVolume(loop, dTheta);
       else for (let z = 0; z < b.zones; z++) {
-        const y0 = z === 0 ? -1e9 : sec.zoneBounds[z - 1], y1 = z === b.zones - 1 ? 1e9 : sec.zoneBounds[z];
+        const y0 = z === 0 ? -1e9 : sec.zoneBounds[z - 1] + bOff, y1 = z === b.zones - 1 ? 1e9 : sec.zoneBounds[z] + bOff;
         volumes[z] += wedgeVolume(clipY(loop, y0, y1), dTheta);
       }
     }
@@ -429,7 +483,7 @@ function buildRingGeometry(sec, b) {
   }
   const idx = [];
   const g = new THREE.BufferGeometry();
-  byZone.forEach((arr, z) => { g.addGroup(idx.length, arr.length, z); idx.push(...arr); });
+  byZone.forEach((arr, z) => { g.addGroup(idx.length, arr.length, z); for (let i = 0; i < arr.length; i++) idx.push(arr[i]); });
   g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   g.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
   g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
@@ -653,6 +707,39 @@ function matteHeight(n) {
   }
   return h;
 }
+// Brushed-linear: the satin lines turned across the band.
+function brushedHeight(n) { const h = satinHeight(n), t = new Float32Array(n * n); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) t[y * n + x] = h[x * n + y]; return t; }
+// Sandblast: coarse grit — clustered white noise with occasional deeper pits.
+function sandblastHeight(n) {
+  const h = matteHeight(n);
+  for (let i = 0; i < 2600; i++) { const cx = (rnd() * n) | 0, cy = (rnd() * n) | 0, r = 1 + (rnd() * 2) | 0, d = 0.5 + rnd() * 0.5;
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r) { const i2 = ((cy + y + n) % n) * n + (cx + x + n) % n; h[i2] = Math.max(0, h[i2] - d * (1 - (x * x + y * y) / (r * r + 1))); } }
+  return h;
+}
+// Ice: fine crystalline facets — each pixel's height is set by its nearest seed, so cells meet in crisp ridges.
+function iceHeight(n) {
+  const seeds = Array.from({ length: 160 }, () => ({ x: rnd() * n, y: rnd() * n, h: rnd(), t: rnd() * 6.28 }));
+  const h = new Float32Array(n * n);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    let best = 1e9, s = seeds[0];
+    for (const q of seeds) { let dx = Math.abs(x - q.x), dy = Math.abs(y - q.y); dx = Math.min(dx, n - dx); dy = Math.min(dy, n - dy); const d = dx * dx + dy * dy; if (d < best) { best = d; s = q; } }
+    // a flat tilted facet per cell
+    let ex = x - s.x, ey = y - s.y; if (ex > n / 2) ex -= n; if (ex < -n / 2) ex += n; if (ey > n / 2) ey -= n; if (ey < -n / 2) ey += n;
+    h[y * n + x] = 0.5 + 0.25 * (s.h - 0.5) + 0.004 * (ex * Math.cos(s.t) + ey * Math.sin(s.t));
+  }
+  return h;
+}
+// Bark: long wandering ridges along the band with fine grain, like tree bark or a mokume texture.
+function barkHeight(n) {
+  const h = new Float32Array(n * n);
+  const k1 = Array.from({ length: 8 }, rnd), k2 = Array.from({ length: 8 }, rnd);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const u = x / n * Math.PI * 2, v = y / n * Math.PI * 2;
+    let r = 0; for (let i = 0; i < 8; i++) r += Math.sin(v * (3 + i) + Math.sin(u * (1 + (i % 3)) + k1[i] * 6.28) * 1.4 + k2[i] * 6.28) / (1 + i * 0.6);
+    h[y * n + x] = 0.5 + 0.22 * Math.tanh(r) + (rnd() - 0.5) * 0.06;
+  }
+  return h;
+}
 // Brushed metal reads as streaks of changing sheen more than as grooves, so
 // satin also gets a roughness map (green channel) from the same lines.
 function heightToRoughness(h, n, lo, hi) {
@@ -668,6 +755,10 @@ function finishMap(key) {
     if (key === "satin") { const h = satinHeight(TEX); FINISH_MAPS.satin = heightToNormal(h, TEX, 3.2); FINISH_MAPS.satinRough = heightToRoughness(h, TEX, 0.12, 0.5); }
     else if (key === "hammered") FINISH_MAPS.hammered = heightToNormal(hammeredHeight(TEX), TEX, 2.0);
     else if (key === "matte") FINISH_MAPS.matte = heightToNormal(matteHeight(TEX), TEX, 1.6);
+    else if (key === "brushed") { const h = brushedHeight(TEX); FINISH_MAPS.brushed = heightToNormal(h, TEX, 3.2); FINISH_MAPS.brushedRough = heightToRoughness(h, TEX, 0.12, 0.5); }
+    else if (key === "sandblast") FINISH_MAPS.sandblast = heightToNormal(sandblastHeight(TEX), TEX, 2.2);
+    else if (key === "ice") FINISH_MAPS.ice = heightToNormal(iceHeight(TEX), TEX, 3.0);
+    else if (key === "bark") FINISH_MAPS.bark = heightToNormal(barkHeight(TEX), TEX, 2.4);
   }
   return FINISH_MAPS[key];
 }
@@ -874,7 +965,7 @@ class BandView {
     }
     this.metrics.setting = setDetail; this.metrics.limits = setLimits;
     // Milgrain: a row of tiny beads along the edge, in that edge's metal.
-    if (b.profile !== "round") for (const side of [-1, 1]) {
+    if (b.profile !== "round" && b.profile !== "custom") for (const side of [-1, 1]) {
       if ((side < 0 ? b.edgel : b.edger) !== "milgrain") continue;
       const hw = b.width / 2, rb = Math.min(0.16, Math.max(0.1, 0.075 * b.depth));
       const y = side * (hw - rb * 0.8), ringR = outerRadius(b, sec.ri, side * hw) - rb * 0.45;
@@ -917,15 +1008,15 @@ class BandView {
       mat.roughness = fin.roughness;
       mat.envMapIntensity = fin.env || 1;
       mat.anisotropy = fin.anisotropy || 0;
-      mat.anisotropyRotation = Math.PI / 2;
+      mat.anisotropyRotation = fin.anisoRot != null ? fin.anisoRot : Math.PI / 2;
       if (fin.map) {
         let t = this.maps[z][fin.map];
         if (!t) { t = this.maps[z][fin.map] = finishMap(fin.map).clone(); t.needsUpdate = true; }
         t.repeat.set(this.metrics.circumference / fin.tile, this.metrics.loopLen / fin.tile); // tile = real mm
         mat.normalMap = t; mat.normalScale.set(fin.scale, fin.scale);
-        if (fin.map === "satin") {
-          let r = this.maps[z].satinRough;
-          if (!r) { finishMap("satin"); r = this.maps[z].satinRough = FINISH_MAPS.satinRough.clone(); r.needsUpdate = true; }
+        if (fin.map === "satin" || fin.map === "brushed") {
+          const rk = fin.map + "Rough"; let r = this.maps[z][rk];
+          if (!r) { finishMap(fin.map); r = this.maps[z][rk] = FINISH_MAPS[rk].clone(); r.needsUpdate = true; }
           r.repeat.copy(t.repeat); mat.roughnessMap = r; mat.roughness = 1;
         } else mat.roughnessMap = null;
       } else { mat.normalMap = null; mat.roughnessMap = null; }
@@ -958,7 +1049,8 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
 }
-new ResizeObserver(resize).observe(viewer);
+new ResizeObserver(() => { resize(); requestAnimationFrame(chipCheck); setTimeout(chipCheck, 150); }).observe(viewer);
+window.addEventListener("resize", () => setTimeout(chipCheck, 250));
 resize();
 renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
 
@@ -972,12 +1064,13 @@ const optValue = (b, opt) => opt === "metal" ? b.metals[ui.zone] : opt === "fini
 function bandText(b, v) {
   const zn = ZONE_NAMES[b.zones];
   const per = (table, arr) => b.zones === 1 ? table[arr[0]].name : zn.map((n, i) => `${n}: ${table[arr[i]].name}`).join(" · ");
-  const edges = b.profile === "round" ? "—" : b.edgel === b.edger ? EDGES[b.edgel] : `${EDGES[b.edgel]} / ${EDGES[b.edger]} (L / R)`;
+  const edges = b.profile === "round" || b.profile === "custom" ? "—" : b.edgel === b.edger ? EDGES[b.edgel] : `${EDGES[b.edgel]} / ${EDGES[b.edger]} (L / R)`;
   const m = v.metrics;
   const weight = `≈ ${fmt(m.grams)} g` + (b.zones > 1 ? ` (${m.zoneGrams.map((g, i) => `${zn[i].toLowerCase()} ${fmt(g)} g`).join(", ")})` : "");
   return {
-    profile: `${PROFILES[b.profile].name} · ${b.profile === "round" ? "round interior" : INTERIORS[b.interior]}`,
+    profile: b.profile === "custom" ? `Custom section (${CUSTOM ? CUSTOM.name : "imported"})` : `${PROFILES[b.profile].name} · ${b.profile === "round" ? "round interior" : INTERIORS[b.interior]}`,
     edges, width: `${fmt(b.width)} mm`, depth: `${fmt(b.depth)} mm`,
+    wave: b.wave > 0 && b.profile !== "custom" ? `${WAVE_MODES[b.wavemode]} · ${fmt(b.wave, 2)} mm × ${b.wavef} around` : "—",
     metal: per(METALS, b.metals), finish: per(FINISHES, b.finishes),
     diamonds: m.stones ? `${m.stones} × ${SHAPES[b.shape].name.toLowerCase()} ${m.stoneDims} · ${SETTINGS[b.setting].name} · ${SPANS[b.stones]} (≈ ${fmt(m.carats, 2)} ct tw)` : "None",
     setting: m.stones ? m.setting : "—",
@@ -996,7 +1089,7 @@ function profileIconPath(key) {
   for (let i = 0; i <= N; i++) { const y = 2 - 4 * i / N; pts.push(`${X(y).toFixed(1)} ${Y(innerRadius(b, ri, y)).toFixed(1)}`); }
   return "M" + pts.join("L") + "Z";
 }
-document.querySelectorAll('#bbProfiles [data-opt="profile"] svg').forEach((svg) => {
+document.querySelectorAll('#bbProfiles [data-opt="profile"]:not([data-v="custom"]) svg').forEach((svg) => {
   svg.innerHTML = `<path d="${profileIconPath(svg.parentElement.dataset.v)}"/>`;
 });
 const setRange = (el, v, label) => {
@@ -1006,7 +1099,7 @@ const setRange = (el, v, label) => {
   const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
 };
 
-const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
+const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
 
 function syncUI() {
   const b = active();
@@ -1046,7 +1139,7 @@ function syncUI() {
   $("bbRuleNote").hidden = !reasons.length;
   $("bbStoneNote").textContent = b.stoneNote || ""; $("bbStoneNote").hidden = !b.stoneNote;
   const isRound = b.profile === "round";
-  panel.querySelectorAll('[data-opt="interior"],[data-opt="edgel"],[data-opt="edger"]').forEach((el) => { el.disabled = isRound; });
+  panel.querySelectorAll('[data-opt="interior"],[data-opt="edgel"],[data-opt="edger"]').forEach((el) => { el.disabled = isRound || b.profile === "custom"; });
   $("bbRoundNote").hidden = !isRound;
   // zones
   const zn = ZONE_NAMES[b.zones];
@@ -1055,6 +1148,14 @@ function syncUI() {
   seg.hidden = b.zones === 1;
   seg.innerHTML = zn.map((n, i) => `<button type="button" class="bb-segb${i === ui.zone ? " on" : ""}" data-zone="${i}" aria-pressed="${i === ui.zone}"><span class="sw" style="background:${METALS[b.metals[i]].sw}"></span>${n}</button>`).join("");
   $("bbSplitG").hidden = b.zones !== 2; $("bbMidG").hidden = b.zones !== 3;
+  const isCustom = b.profile === "custom";
+  setRange($("bbWave"), b.wave, b.wave > 0 ? fmt(b.wave, 2) + " mm" : "Off"); setRange($("bbWaveF"), b.wavef, `${b.wavef} ×`);
+  $("bbWaveFG").hidden = !(b.wave > 0); $("bbWaveModeG").hidden = !(b.wave > 0);
+  panel.querySelectorAll('[data-opt="wavemode"]').forEach((el) => { el.disabled = isCustom || (el.dataset.v !== "groove" && b.zones !== 2); });
+  $("bbWaveNote").textContent = isCustom ? "Waves don't apply to an imported section." : b.zones !== 2 && b.wavemode !== "groove" ? "A wavy split needs exactly two colour zones; the groove still applies." : "";
+  $("bbCustomBtn").disabled = !CUSTOM; $("bbCustomBtn").querySelector("small").textContent = CUSTOM ? CUSTOM.name : "Import a section below";
+  $("bbWidth").disabled = isCustom; $("bbDepth").disabled = isCustom;
+  $("bbCustomNote").hidden = !isCustom;
   setRange($("bbSplit"), Math.round(b.zsplit * 100), `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`); $("bbSplitV").textContent = `${Math.round(b.zsplit * 100)} / ${100 - Math.round(b.zsplit * 100)}`;
   setRange($("bbMid"), Math.round(b.zmid * 100), `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`); $("bbMidV").textContent = `${Math.round((1 - b.zmid) * 50)} / ${Math.round(b.zmid * 100)} / ${Math.round((1 - b.zmid) * 50)}`;
   $("bbMetalH").textContent = b.zones === 1 ? "Metal" : `Metal · ${zn[ui.zone].toLowerCase()} zone`;
@@ -1083,6 +1184,7 @@ function syncUI() {
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
+  requestAnimationFrame(chipCheck); setTimeout(chipCheck, 120);
 }
 function sizeNoteText(b) {
   return Object.keys(STONE_SIZES).map((k) => { const r = stoneRules(b, b.shape, b.setting, k); return `${STONE_SIZES[k].name} ${dimsText(b.shape, r)}${r.issue ? " ✕" : ""}`; }).join(" · ") + ` ${SHAPES[b.shape].name.toLowerCase()} at this width`;
@@ -1134,6 +1236,8 @@ $("bbWidth").addEventListener("input", (e) => { active().width = parseFloat(e.ta
 $("bbDepth").addEventListener("input", (e) => { active().depth = parseFloat(e.target.value); update(); });
 $("bbSplit").addEventListener("input", (e) => { active().zsplit = parseInt(e.target.value, 10) / 100; update(); });
 $("bbMid").addEventListener("input", (e) => { active().zmid = parseInt(e.target.value, 10) / 100; update(); });
+$("bbWave").addEventListener("input", (e) => { active().wave = Math.round(parseFloat(e.target.value) * 100) / 100; update(); });
+$("bbWaveF").addEventListener("input", (e) => { active().wavef = parseInt(e.target.value, 10); update(); });
 $("bbSize").addEventListener("change", (e) => { active().size = clampSize(parseFloat(e.target.value)); update(); });
 $("bbEngrave").addEventListener("input", (e) => { active().engraving = e.target.value.slice(0, 30); update(); });
 $("bbFont").addEventListener("change", (e) => { active().font = e.target.value; update(); });
@@ -1169,7 +1273,7 @@ function refCode() {
 }
 function sectionSVG(b, v) {
   const sec = v.sec, lay = v.layout;
-  const loop = sectionRuns(sec, sec.stone && sec.stone.channel ? sec.stone.channelD : 0).flat();
+  const loop = sectionAt(sec, sec.stone && sec.stone.channel ? sec.stone.channelD : 0, TOP).flat();
   const xs = loop.map((p) => p.x), ys = loop.map((p) => p.y);
   let xmin = Math.min(...xs), xmax = Math.max(...xs), ymin = Math.min(...ys), ymax = Math.max(...ys);
   if (lay) xmax = Math.max(xmax, lay.rg + sec.stone.hc + 0.1);
@@ -1209,6 +1313,7 @@ function openSheet() {
     document.body.appendChild(sheet);
     sheet.addEventListener("click", (e) => {
       if (e.target.closest("[data-print]")) window.print();
+      else if (e.target.closest("[data-json]")) downloadSpec();
       else if (e.target.closest("[data-close]")) sheet.classList.remove("open");
     });
   }
@@ -1226,7 +1331,7 @@ function openSheet() {
     </section>`;
   };
   sheet.innerHTML = `
-    <div class="bb-sheet-bar"><button type="button" class="btn-outline sm" data-close>Close</button><button type="button" class="btn-fill sm" data-print>Print / save PDF</button></div>
+    <div class="bb-sheet-bar"><button type="button" class="btn-outline sm" data-close>Close</button><button type="button" class="btn-outline sm" data-json>Download spec (JSON)</button><button type="button" class="btn-fill sm" data-print>Print / save PDF</button></div>
     <div class="bb-doc">
       <div class="bb-doc-head">
         <div><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."><div class="bb-doc-sub">Wedding band specification${ui.pair ? " · His &amp; Hers pair" + (ui.link ? " (linked)" : "") : ""}</div></div>
@@ -1266,14 +1371,254 @@ $("bbRequest").addEventListener("click", () => {
   saved.metal = METALS[bands[0].metals[0]].wizard;
   if (anyStones && !saved.stone) saved.stone = "";
   else if (!anyStones) saved.stone = "No stone";
-  saved.message = spec + (saved.message && !/from the builder/.test(saved.message) ? "\n\n" + saved.message : "");
+  saved.message = spec + "\n\n--- spec.json ---\n" + JSON.stringify(specJSON()) + (saved.message && !/from the builder/.test(saved.message) ? "\n\n" + saved.message : "");
   saved.step = 2;
   try { localStorage.setItem("azoir_wiz", JSON.stringify(saved)); } catch {}
   location.href = "commission.html?from=band-builder";
 });
 
-readHash();
-update();
-fitView();
-document.fonts?.ready.then(() => { if (bands.some((b) => b.engraving.trim())) update(); });
-window.__bandBuilder = { bands, ui, views, state: bands[0], metrics: views[0].metrics, scene, renderer, camera, rebuild: update, fitView, openSheet };
+
+// ── Custom cross-section import (SVG path, DXF polyline, Rhino .3dm) ─────────
+// The file describes the section in mm: y along the band axis, x radial. We
+// resample it, check it is closed, simple and never thinner than 0.8 mm, then
+// use it as the whole profile (stones, edges and interior options switch off).
+let CUSTOM = null;
+try { CUSTOM = JSON.parse(localStorage.getItem("azoir_band_profile") || "null"); } catch {}
+function parseSvgPath(d) {
+  const tok = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e[-+]?\d+)?/g) || [];
+  const pts = []; let cmd = "", i = 0, cx = 0, cy = 0, sx = 0, sy = 0, px = 0, py = 0;
+  const num = () => parseFloat(tok[i++]);
+  const bez = (x1, y1, x2, y2, x3, y3) => { for (let k = 1; k <= 8; k++) { const t = k / 8, u = 1 - t;
+    pts.push([u * u * u * cx + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3, u * u * u * cy + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3]); } px = x2; py = y2; cx = x3; cy = y3; };
+  const quad = (x1, y1, x2, y2) => { for (let k = 1; k <= 8; k++) { const t = k / 8, u = 1 - t; pts.push([u * u * cx + 2 * u * t * x1 + t * t * x2, u * u * cy + 2 * u * t * y1 + t * t * y2]); } px = x1; py = y1; cx = x2; cy = y2; };
+  while (i < tok.length) {
+    if (/[a-zA-Z]/.test(tok[i])) cmd = tok[i++];
+    const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase();
+    const ox = rel ? cx : 0, oy = rel ? cy : 0;
+    if (C === "M") { cx = ox + num(); cy = oy + num(); sx = cx; sy = cy; pts.push([cx, cy]); cmd = rel ? "l" : "L"; }
+    else if (C === "L") { cx = ox + num(); cy = oy + num(); pts.push([cx, cy]); }
+    else if (C === "H") { cx = ox + num(); pts.push([cx, cy]); }
+    else if (C === "V") { cy = oy + num(); pts.push([cx, cy]); }
+    else if (C === "C") { const x1 = ox + num(), y1 = oy + num(), x2 = ox + num(), y2 = oy + num(), x3 = ox + num(), y3 = oy + num(); bez(x1, y1, x2, y2, x3, y3); }
+    else if (C === "S") { const x2 = ox + num(), y2 = oy + num(), x3 = ox + num(), y3 = oy + num(); bez(2 * cx - px, 2 * cy - py, x2, y2, x3, y3); }
+    else if (C === "Q") { const x1 = ox + num(), y1 = oy + num(), x2 = ox + num(), y2 = oy + num(); quad(x1, y1, x2, y2); }
+    else if (C === "T") { const x2 = ox + num(), y2 = oy + num(); quad(2 * cx - px, 2 * cy - py, x2, y2); }
+    else if (C === "Z") { cx = sx; cy = sy; break; }
+    else if (C === "A") { i += 5; cx = ox + num(); cy = oy + num(); pts.push([cx, cy]); } // arcs: chord only
+    else throw new Error("unsupported path command " + cmd);
+  }
+  return pts;
+}
+function parseDxf(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  let i = 0, pts = [], inPoly = false, best = null;
+  const flush = () => { if (pts.length >= 3 && (!best || pts.length > best.length)) best = pts; pts = []; };
+  while (i < lines.length - 1) {
+    const code = lines[i], val = lines[i + 1]; i += 2;
+    if (code === "0") { if (inPoly) { flush(); inPoly = false; } if (val === "LWPOLYLINE" || val === "POLYLINE") inPoly = true; continue; }
+    if (!inPoly) continue;
+    if (code === "10") { const x = parseFloat(val); const y = lines[i] === "20" ? parseFloat(lines[i + 1]) : 0; pts.push([x, y]); }
+  }
+  if (inPoly) flush();
+  if (!best) throw new Error("no polyline found in the DXF");
+  return best;
+}
+async function parse3dm(buf) {
+  if (!window.rhino3dm) await new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/rhino3dm@8.4.0/rhino3dm.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("could not load the 3dm reader")); document.head.appendChild(sc); });
+  const rhino = await window.rhino3dm();
+  const doc = rhino.File3dm.fromByteArray(new Uint8Array(buf));
+  if (!doc) throw new Error("not a readable .3dm file");
+  const objs = doc.objects();
+  for (let k = 0; k < objs.count; k++) {
+    const g = objs.get(k).geometry();
+    if (!g || g.objectType !== rhino.ObjectType.Curve || !g.isClosed) continue;
+    const pl = g.tryGetPolyline ? g.tryGetPolyline() : null;
+    const pts = [];
+    if (pl && pl.count) { for (let j = 0; j < pl.count; j++) { const q = pl.get(j); pts.push([q[0], q[1]]); } }
+    else { const [t0, t1] = g.domain; for (let j = 0; j < 160; j++) { const q = g.pointAt(t0 + (t1 - t0) * j / 160); pts.push([q[0], q[1]]); } }
+    return pts;
+  }
+  throw new Error("no closed curve found in the .3dm");
+}
+function segIntersect(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b) && o(a, b, c) !== 0 && o(c, d, a) !== 0;
+}
+// Validate + normalise: returns {pts:[{x,y}], width, depth} or throws with the reason.
+function prepareCustom(raw, name) {
+  let pts = raw.filter((p, i) => i === 0 || Math.hypot(p[0] - raw[i - 1][0], p[1] - raw[i - 1][1]) > 1e-4);
+  if (pts.length < 3) throw new Error("fewer than three points");
+  if (Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) < 1e-4) pts.pop();
+  // x radial, y along the axis: centre y, put the inside of the ring at x = 0
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const xmin = Math.min(...xs), xmax = Math.max(...xs), ymin = Math.min(...ys), ymax = Math.max(...ys);
+  const width = ymax - ymin, depth = xmax - xmin;
+  if (width < 1.5 || width > 12) throw new Error(`section is ${fmt(width)} mm wide along the axis; expected 1.5–12 mm (units must be mm)`);
+  if (depth < 0.8 || depth > 5) throw new Error(`section is ${fmt(depth)} mm deep; expected 0.8–5 mm (units must be mm)`);
+  pts = pts.map((p) => [p[0] - xmin, p[1] - (ymin + ymax) / 2]);
+  // resample long edges so the sweep is smooth
+  const out = [];
+  for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length], l = Math.hypot(b[0] - a[0], b[1] - a[1]), k = Math.max(1, Math.ceil(l / 0.12)); for (let j = 0; j < k; j++) out.push([a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k]); }
+  if (out.length > 600) throw new Error("section is too detailed (over 600 points after resampling)");
+  // simple polygon?
+  for (let i = 0; i < out.length; i++) for (let j = i + 2; j < out.length; j++) {
+    if (i === 0 && j === out.length - 1) continue;
+    if (segIntersect(out[i], out[(i + 1) % out.length], out[j], out[(j + 1) % out.length])) throw new Error("the outline crosses itself");
+  }
+  // winding: outer surface traversed with y rising (positive signed area in x,y)
+  let A = 0; for (let i = 0; i < out.length; i++) { const a = out[i], b = out[(i + 1) % out.length]; A += a[0] * b[1] - b[0] * a[1]; }
+  if (A < 0) out.reverse();
+  // wall thickness: scan horizontal lines, every solid span must be ≥ 0.8 mm
+  for (let k = 1; k < 24; k++) {
+    const y = -width / 2 + width * k / 24, hits = [];
+    for (let i = 0; i < out.length; i++) { const a = out[i], b = out[(i + 1) % out.length]; if ((a[1] <= y) !== (b[1] <= y)) hits.push(a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1])); }
+    hits.sort((p, q) => p - q);
+    for (let i = 0; i + 1 < hits.length; i += 2) if (hits[i + 1] - hits[i] < 0.8 - 1e-6) throw new Error(`wall is only ${fmt(hits[i + 1] - hits[i], 2)} mm at ${fmt(y)} mm across — minimum 0.8 mm`);
+  }
+  return { name, pts: out.map(([x, y]) => ({ x, y })), width: Math.round(width * 10) / 10, depth: Math.round(depth * 10) / 10 };
+}
+async function importProfile(file) {
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  let raw;
+  if (ext === "svg") { const t = await file.text(); const m = t.match(/\sd="([^"]+)"/) || t.match(/\sd='([^']+)'/); if (!m) throw new Error("no <path d> in the SVG"); raw = parseSvgPath(m[1]); }
+  else if (ext === "dxf") raw = parseDxf(await file.text());
+  else if (ext === "3dm") raw = await parse3dm(await file.arrayBuffer());
+  else throw new Error("use an .svg, .dxf or .3dm file");
+  const c = prepareCustom(raw, file.name);
+  CUSTOM = c;
+  try { localStorage.setItem("azoir_band_profile", JSON.stringify(c)); } catch {}
+  const b = active();
+  b.profile = "custom"; b.width = c.width; b.depth = c.depth; b.stones = "none"; b.wave = 0;
+  update(); fitView();
+}
+$("bbProfileFile").addEventListener("change", async (e) => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const note = $("bbImportNote"); note.hidden = false; note.textContent = "Reading " + f.name + "…";
+  try { await importProfile(f); note.textContent = `Imported ${f.name}: ${fmt(CUSTOM.width)} × ${fmt(CUSTOM.depth)} mm, ${CUSTOM.pts.length} points.`; }
+  catch (err) { note.textContent = "Not usable: " + err.message + "."; }
+  e.target.value = "";
+});
+
+// ── Spec JSON ────────────────────────────────────────────────────────────────
+function specJSON() {
+  const list = ui.pair ? [0, 1] : [0];
+  const r2 = (v) => Math.round(v * 100) / 100;
+  return {
+    version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined, prices: "inquiry only",
+    bands: list.map((i) => {
+      const b = bands[i], v = views[i], m = v.metrics, st = v.sec && v.sec.stone, zb = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
+      return {
+        label: ui.pair ? BAND_NAMES[i] : "Band",
+        profile: { key: b.profile, name: PROFILES[b.profile].name, interior: b.profile === "round" ? "round" : b.interior, edges: { left: b.edgel, right: b.edger } },
+        widthMm: b.width, depthMm: b.depth,
+        size: { us: b.size, eu: Math.round(usToEU(b.size)), uk: usToUK(b.size), innerDiameterMm: r2(usToDiameter(b.size)), circumferenceMm: r2(usToEU(b.size)) },
+        zones: Array.from({ length: b.zones }, (_, z) => ({ fromMm: r2(zb[z]), toMm: r2(zb[z + 1]), metal: b.metals[z], metalName: METALS[b.metals[z]].name, densityGcm3: METALS[b.metals[z]].density, finish: b.finishes[z], finishName: FINISHES[b.finishes[z]].name, weightG: r2(m.zoneGrams[z]) })),
+        wave: b.wave > 0 ? { amplitudeMm: b.wave, frequency: b.wavef, mode: b.wavemode } : null,
+        stones: m.stones ? { count: m.stones, shape: b.shape, shapeName: SHAPES[b.shape].name, span: b.stones, sizeKey: b.stonesz, shortMm: r2(st.s), acrossBandMm: r2(st.W), alongBandMm: r2(st.Lx), depthMm: r2(st.D), caratsTotal: r2(m.carats), setting: b.setting, settingName: SETTINGS[b.setting].name, detail: m.setting, fitRules: m.limits, grooveWidthMm: r2(st.channelW), grooveDepthMm: r2(st.channelD) } : null,
+        engraving: b.engraving.trim() ? { text: b.engraving.trim(), style: b.font } : null,
+        weightG: r2(m.grams),
+        customProfile: b.profile === "custom" && CUSTOM ? { name: CUSTOM.name, points: CUSTOM.pts.map((p) => [r2(p.x), r2(p.y)]) } : undefined,
+      };
+    }),
+  };
+}
+function downloadSpec() {
+  writeHash();
+  const blob = new Blob([JSON.stringify(specJSON(), null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `azoir-band-${refCode()}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+// ── Try it on: export the band as GLB (mm, axis +Y, centred) and hand it to the try-on page ──
+const TRYON_ORIGIN = "https://jewel-tryon.pages.dev";
+let tryFrameReady = false, tryPending = null;
+async function exportGLB(view) {
+  const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js");
+  const plain = (mat) => new THREE.MeshStandardMaterial({ color: mat.color.clone(), metalness: mat.metalness, roughness: Math.max(0.03, mat.roughness === 1 ? 0.3 : mat.roughness), transparent: mat.transmission > 0, opacity: mat.transmission > 0 ? 0.85 : 1 });
+  const g = new THREE.Group();
+  for (const p of view.parts) {
+    if (p.material === view.engraveMat) continue;
+    if (p.isInstancedMesh) {
+      const geos = [], m = new THREE.Matrix4();
+      for (let i = 0; i < p.count; i++) { const gg = p.geometry.clone(); p.getMatrixAt(i, m); gg.applyMatrix4(m); geos.push(gg); }
+      g.add(new THREE.Mesh(mergeGeometries(geos, false), plain(p.material)));
+    } else g.add(new THREE.Mesh(p.geometry, Array.isArray(p.material) ? p.material.map(plain) : plain(p.material)));
+  }
+  return new Promise((res, rej) => new GLTFExporter().parse(g, res, rej, { binary: true }));
+}
+function tryonConfig(model) {
+  const b = bands[ui.active];
+  const metal = { "14y": "yellow", "18y": "yellow", "14w": "white", "18w": "white", "14r": "rose", "18r": "rose", pt: "platinum" }[b.metals[0]] || "yellow";
+  return { type: "tryon:set", config: { type: "ring", metal, model, units: "mm", innerDiameterMm: Math.round(usToDiameter(b.size) * 100) / 100 } };
+}
+function postTryon() {
+  if (!tryFrameReady || !tryPending) return;
+  const frame = $("bbTryFrame"), model = tryPending; tryPending = null;
+  frame.contentWindow.postMessage(tryonConfig(model), TRYON_ORIGIN, [model]);
+}
+window.addEventListener("message", (e) => {
+  if (e.origin !== TRYON_ORIGIN || !e.data || e.data.type !== "tryon:ready") return;
+  tryFrameReady = true; postTryon();
+});
+async function openTryon() {
+  const modal = $("bbTry"), frame = $("bbTryFrame"), status = $("bbTryStatus");
+  modal.hidden = false; $("bbQrWrap").hidden = true;
+  if (!frame.src) { tryFrameReady = false; frame.src = TRYON_ORIGIN + "/?type=ring&embed=1"; }
+  status.textContent = "Preparing your band…";
+  try {
+    const buf = await exportGLB(views[ui.active]);
+    tryPending = buf; status.textContent = `${ui.pair ? BAND_NAMES[ui.active] + " band" : "Your band"} sent to the try-on (${Math.round(buf.byteLength / 1024)} KB). Allow the camera when asked.`;
+    postTryon();
+  } catch (err) { status.textContent = "Couldn't export the band: " + err.message; }
+}
+async function showQr() {
+  writeHash();
+  const wrap = $("bbQrWrap"), box = $("bbQr"); wrap.hidden = false; box.textContent = "";
+  if (!window.qrcode) await new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("QR library failed to load")); document.head.appendChild(sc); }).catch((e) => { box.textContent = e.message; });
+  if (!window.qrcode) return;
+  const qr = window.qrcode(0, "M"); qr.addData(location.href); qr.make();
+  box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+}
+$("bbTryBtn").addEventListener("click", openTryon);
+$("bbTryClose").addEventListener("click", () => { $("bbTry").hidden = true; });
+$("bbTry").addEventListener("click", (e) => { if (e.target === $("bbTry")) $("bbTry").hidden = true; });
+$("bbQrBtn").addEventListener("click", showQr);
+
+// ── Chip vs toolbar: hide the chip when they would overlap ───────────────────
+function chipCheck() {
+  const chip = $("bbChip"), tools = document.querySelector(".bb-tools");
+  if (!chip || !tools) return;
+  chip.classList.remove("bb-chip-hide");
+  const c = chip.getBoundingClientRect(), t = tools.getBoundingClientRect();
+  const overlap = c.right > t.left - 8 && c.left < t.right + 8 && c.bottom > t.top - 6 && c.top < t.bottom + 6;
+  chip.classList.toggle("bb-chip-hide", overlap);
+}
+
+// ── Catalogue: the atelier's option tables, loaded over the baked-in defaults ──
+function applyCatalog(c) {
+  const merge = (table, src) => { if (!src) return; for (const k of Object.keys(src)) table[k] = Object.assign(table[k] || {}, src[k]); };
+  merge(PROFILES, c.profiles); merge(METALS, c.metals); merge(FINISHES, c.finishes); merge(SETTINGS, c.settings); merge(SHAPES, c.shapes); merge(STONE_SIZES, c.stoneSizes);
+  if (c.edges) Object.assign(EDGES, c.edges);
+  if (c.sizes && c.sizes.usToDiameter) { SIZE_A = c.sizes.usToDiameter.a; SIZE_B = c.sizes.usToDiameter.b; }
+  if (c.defaults) DEFAULTS = c.defaults;
+  const hide = (opt, keys, table) => { for (const k of keys || []) { delete table[k]; panel.querySelectorAll(`[data-opt="${opt}"][data-v="${k}"]`).forEach((el) => el.remove()); } };
+  if (c.hidden) { hide("profile", c.hidden.profiles, PROFILES); hide("metal", c.hidden.metals, METALS); hide("finish", c.hidden.finishes, FINISHES); hide("setting", c.hidden.settings, SETTINGS); hide("shape", c.hidden.shapes, SHAPES); }
+  // swatches/names from the catalogue
+  panel.querySelectorAll('[data-opt="metal"]').forEach((el) => { const met = METALS[el.dataset.v]; if (!met) return; const sw = el.querySelector(".sw"); if (sw && met.sw) sw.style.background = met.sw; });
+}
+async function loadCatalog() {
+  try {
+    const r = await fetch("band-catalog.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    applyCatalog(await r.json());
+  } catch (e) { /* baked-in tables stay in force */ }
+}
+
+loadCatalog().then(() => {
+  Object.assign(bands[0], defaultBand(0)); Object.assign(bands[1], defaultBand(1)); // catalogue defaults
+  readHash();
+  update();
+  fitView();
+  document.fonts?.ready.then(() => { if (bands.some((b) => b.engraving.trim())) update(); });
+  window.__bandBuilder = { bands, ui, views, state: bands[0], metrics: views[0].metrics, scene, renderer, camera, rebuild: update, fitView, openSheet, specJSON, exportGLB, importProfile, prepareCustom, CUSTOM: () => CUSTOM };
+});

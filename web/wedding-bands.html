@@ -128,6 +128,31 @@
 .bb-seg-sm .bb-segb{padding:8px 12px}
 .bb-g-in{padding:14px 0 2px}
 .bb-zoneseg{margin-top:10px}
+.bb-chip.bb-chip-hide{opacity:0;pointer-events:none}
+.bb-import{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px dashed var(--bb-line2);border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--bb-ink);transition:.18s ease}
+.bb-import:hover{border-color:var(--bb-acc);background:var(--bb-tint2)}
+.bb-import input{position:absolute;width:1px;height:1px;opacity:0}
+.bb-import span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bb-import svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bb-import em{display:block;font-style:normal;font-size:11.5px;color:var(--bb-mute);flex:1 1 100%}
+.sw-brushed{background:repeating-linear-gradient(0deg,#d9d5cd 0 1px,#eceae5 1px 3px)}
+.sw-sandblast{background:#d6d3cc;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.sw-ice{background:conic-gradient(from 20deg,#f1f3f6,#cfd4dc,#f6f7f9,#d6dae1,#eef0f3,#cdd2da,#f1f3f6)}
+.sw-bark{background:repeating-linear-gradient(90deg,#c9c2b4 0 2px,#e2dcd0 2px 5px,#d3cdc0 5px 7px)}
+.bb-modal[hidden],.bb-modal [hidden]{display:none!important}
+.bb-modal{position:fixed;inset:0;z-index:900;background:rgba(20,22,28,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.bb-modal-card{width:min(760px,100%);max-height:92dvh;display:flex;flex-direction:column;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(20,22,40,.35)}
+.bb-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 18px;border-bottom:1px solid var(--bb-line)}
+.bb-modal-head b{font-size:15px;font-weight:600}
+.bb-modal-head>div{display:flex;align-items:center;gap:8px}
+.bb-modal-head .bb-segb{flex:none;background:var(--bb-soft);color:var(--bb-ink)}
+.bb-modal-x{width:36px;height:36px;border:0;border-radius:50%;background:var(--bb-soft);font-size:20px;cursor:pointer;color:var(--bb-ink)}
+.bb-modal-status{margin:0;padding:8px 18px;font-size:12.5px;color:var(--bb-ink2);border-bottom:1px solid var(--bb-line);min-height:34px}
+.bb-modal-body{position:relative;flex:1;min-height:420px;background:#0f1115}
+.bb-modal-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0f1115}
+.bb-qr{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+.bb-qr svg{width:min(260px,70vw);height:auto}
+.bb-qr p{margin:0;font-size:13px;color:var(--bb-ink2);max-width:32ch}
 .bb-next{margin:26px 0 6px}
 .bb-nextbtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bb-line2);background:var(--bb-paper);color:var(--bb-ink);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease}
 .bb-nextbtn:hover{background:var(--bb-tint2);border-color:var(--bb-acc);color:var(--bb-acc-deep)}
@@ -208,6 +233,9 @@
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
   .bb-doc-band{grid-template-columns:1fr}
+  .bb-modal{padding:0;align-items:flex-end}
+  .bb-modal-card{border-radius:16px 16px 0 0;max-height:94dvh}
+  .bb-modal-body{min-height:60dvh}
   .bb-steps{grid-template-columns:1fr;gap:26px}
   .bb-after{padding:50px 0 40px}
 }
@@ -244,6 +272,7 @@
     <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
     <div class="bb-tools" role="toolbar" aria-label="Design tools">
       <button type="button" class="bb-tool primary" id="bbSheetBtn" aria-label="Spec sheet"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/></svg><span>Spec sheet</span></button>
+      <button type="button" class="bb-tool" id="bbTryBtn" aria-label="Try it on"><svg viewBox="0 0 24 24"><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 9h16l-1 11H5z"/><circle cx="12" cy="14" r="2.5"/></svg><span>Try it on</span></button>
       <button type="button" class="bb-tool" id="bbSave" aria-label="Save image"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="14" rx="2.5"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8.5 5.5l1-2h5l1 2"/></svg><span>Save image</span></button>
       <button type="button" class="bb-tool" id="bbCopy" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg><span>Copy link</span></button>
       <button type="button" class="bb-tool" id="bbReset" aria-label="Start over"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></svg><span>Start over</span></button>
@@ -289,7 +318,14 @@
             <button type="button" class="bb-opt" data-opt="profile" data-v="bevel" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Bevelled</button>
             <button type="button" class="bb-opt" data-opt="profile" data-v="concave" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Concave</button>
             <button type="button" class="bb-opt" data-opt="profile" data-v="round" aria-pressed="false"><svg viewBox="0 0 64 36"></svg>Full round</button>
+            <button type="button" class="bb-opt" data-opt="profile" data-v="custom" id="bbCustomBtn" aria-pressed="false" disabled><svg viewBox="0 0 64 36"><path d="M12 28 V12 L20 6 L32 9 L44 5 L52 12 V28 Z" stroke-dasharray="3 2"/></svg>Custom<small>Import a section below</small></button>
           </div>
+          <label class="bb-import">
+            <input type="file" id="bbProfileFile" accept=".svg,.dxf,.3dm">
+            <span><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 17v3h16v-3"/></svg>Import a cross-section <em>SVG path, DXF polyline or Rhino .3dm, in mm: y along the band, x radial</em></span>
+          </label>
+          <p class="bb-note" id="bbImportNote" hidden></p>
+          <p class="bb-note" id="bbCustomNote" hidden>Width and depth come from the imported section. Stones, edges and interior options are off for custom sections.</p>
           <p class="bb-note" id="bbRoundNote" hidden>A full-round band is round inside too, so interior and edge options don't apply.</p>
         </div>
 
@@ -387,6 +423,28 @@
             <button type="button" class="bb-opt" data-opt="finish" data-v="satin" aria-pressed="false"><span class="sw sw-satin"></span>Satin</button>
             <button type="button" class="bb-opt" data-opt="finish" data-v="hammered" aria-pressed="false"><span class="sw sw-hammered"></span>Hammered</button>
             <button type="button" class="bb-opt" data-opt="finish" data-v="matte" aria-pressed="false"><span class="sw sw-matte"></span>Matte</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="brushed" aria-pressed="false"><span class="sw sw-brushed"></span>Brushed<small>Lines across</small></button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="sandblast" aria-pressed="false"><span class="sw sw-sandblast"></span>Sandblast</button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="ice" aria-pressed="false"><span class="sw sw-ice"></span>Ice<small>Crystalline</small></button>
+            <button type="button" class="bb-opt" data-opt="finish" data-v="bark" aria-pressed="false"><span class="sw sw-bark"></span>Bark<small>Nature texture</small></button>
+          </div>
+        </div>
+        <div class="bb-g">
+          <h3>Wave <span id="bbWaveV" class="bb-vhide">Off</span></h3>
+          <div class="bb-range" style="--ticks:8"><span class="bb-rail" aria-hidden="true"></span><input type="range" id="bbWave" min="0" max="0.4" step="0.05" value="0" aria-label="Wave amplitude in millimetres"><output class="bb-bubble" aria-hidden="true"></output></div>
+          <div class="bb-ticks"><span>Off</span><span>0.4 mm · bold</span></div>
+          <div class="bb-g bb-g-in" id="bbWaveFG" hidden>
+            <h3>Waves around the ring <span id="bbWaveFV" class="bb-vhide">8</span></h3>
+            <div class="bb-range" style="--ticks:19"><span class="bb-rail" aria-hidden="true"></span><input type="range" id="bbWaveF" min="1" max="20" step="1" value="8" aria-label="Number of waves around the ring"><output class="bb-bubble" aria-hidden="true"></output></div>
+            <div class="bb-ticks"><span>1 · one long sweep</span><span>20 · ripple</span></div>
+          </div>
+          <div class="bb-g bb-g-in" id="bbWaveModeG" hidden>
+            <div class="bb-opts">
+              <button type="button" class="bb-opt" data-opt="wavemode" data-v="groove" aria-pressed="false">Groove<small>A fine line meanders</small></button>
+              <button type="button" class="bb-opt" data-opt="wavemode" data-v="split" aria-pressed="false">Split line<small>Two-tone seam waves</small></button>
+              <button type="button" class="bb-opt" data-opt="wavemode" data-v="both" aria-pressed="false">Both<small>Groove on the seam</small></button>
+            </div>
+            <p class="bb-note" id="bbWaveNote"></p>
           </div>
         </div>
         <div class="bb-next"><button type="button" class="bb-nextbtn" data-tab="stones">Continue to diamonds <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
@@ -464,6 +522,16 @@
       <button type="button" class="bb-cta" id="bbRequest"><em id="bbRequestLabel" style="font-style:normal">Request this band</em><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></i></button>
     </footer>
   </aside>
+  <div class="bb-modal" id="bbTry" hidden>
+    <div class="bb-modal-card" role="dialog" aria-label="Try it on">
+      <div class="bb-modal-head"><b>Try it on</b><div><button type="button" class="bb-segb" id="bbQrBtn">Open on your phone</button><button type="button" class="bb-modal-x" id="bbTryClose" aria-label="Close">×</button></div></div>
+      <p class="bb-modal-status" id="bbTryStatus"></p>
+      <div class="bb-modal-body">
+        <iframe id="bbTryFrame" title="Virtual try-on" allow="camera; microphone" referrerpolicy="origin"></iframe>
+        <div class="bb-qr" id="bbQrWrap" hidden><div id="bbQr"></div><p>Scan to open this exact design on your phone and try it on there.</p></div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <section class="bb-after">
@@ -496,7 +564,7 @@
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=21"></script>
+<script type="module" src="band-builder.js?v=28"></script>
 <script src="/analytics.js" defer></script>
 </body>
 </html>

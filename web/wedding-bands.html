@@ -68,8 +68,6 @@
 .bb-note{font-size:12.5px;color:var(--bb-mute);margin:10px 0 0;line-height:1.55}
 .bb-note a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px}
 .bb-notice{margin:14px 0 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-ink);border-radius:10px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
-.bb-pricing{margin:14px 0 4px;font-size:12.5px;color:var(--bb-mute);line-height:1.55}
-.bb-pricing a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .bb-tabs{display:flex;margin:16px 26px 0;border-bottom:1px solid var(--bb-line);overflow-x:auto;scrollbar-width:none;gap:4px;justify-content:space-between}
 .bb-tabs::-webkit-scrollbar{display:none}
 .bb-tabs button{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font-size:12.5px;font-weight:500;color:var(--bb-mute);padding:12px 6px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s ease}
@@ -132,6 +130,25 @@
 .bb-g-in{padding:14px 0 2px}
 .bb-zoneseg{margin-top:10px}
 .bb-chip.bb-chip-hide{opacity:0;pointer-events:none}
+.bb-viewseg{position:absolute;top:28px;right:28px;z-index:4;background:#fff;border:1px solid var(--bb-line);box-shadow:var(--bb-shadow)}
+.bb-viewseg .bb-segb{padding:8px 14px}
+.bb-tryon-frame{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:2;background:#fff;visibility:hidden}
+.bb-stage.tryon .bb-tryon-frame{visibility:visible}
+.bb-stage.tryon .bb-intro,.bb-stage.tryon .bb-chip,.bb-stage.tryon .bb-hint{display:none}
+.bb-tool.onlytry{display:none}
+.bb-stage.tryon .bb-tool.only3d{display:none}
+.bb-stage.tryon .bb-tool.onlytry{display:grid}
+.bb-trypill{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:4;background:var(--bb-ink);color:#fff;font-size:12.5px;padding:8px 14px;border-radius:99px;box-shadow:var(--bb-shadow);max-width:calc(100% - 40px);text-align:center}
+.bb-trypill[hidden],.bb-qr[hidden],.bb-tryon-frame[hidden]{display:none}
+.bb-qr{position:absolute;inset:0;z-index:6;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+.bb-qr svg{width:min(260px,70vw);height:auto}
+.bb-qr p{margin:0;font-size:13px;color:var(--bb-ink2);max-width:32ch}
+.bb-qr .bb-modal-x{position:absolute;top:16px;right:16px}
+.bb-trybar{display:none;align-items:center;justify-content:space-between;gap:8px;position:absolute;top:0;left:0;right:0;height:48px;padding:0 8px 0 4px;z-index:5;background:#fff;border-bottom:1px solid var(--bb-line)}
+.bb-trybar>div{display:flex;gap:4px;align-items:center}
+.bb-trybtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--bb-ink);padding:8px 10px;border-radius:8px;cursor:pointer}
+.bb-trybtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+body.tryon-lock{overflow:hidden}
 .bb-import{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px dashed var(--bb-line2);border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--bb-ink);transition:.18s ease}
 .bb-import:hover{border-color:var(--bb-acc);background:var(--bb-tint2)}
 .bb-import input{position:absolute;width:1px;height:1px;opacity:0}
@@ -142,20 +159,7 @@
 .sw-sandblast{background:#d6d3cc;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
 .sw-ice{background:conic-gradient(from 20deg,#f1f3f6,#cfd4dc,#f6f7f9,#d6dae1,#eef0f3,#cdd2da,#f1f3f6)}
 .sw-bark{background:repeating-linear-gradient(90deg,#c9c2b4 0 2px,#e2dcd0 2px 5px,#d3cdc0 5px 7px)}
-.bb-modal[hidden],.bb-modal [hidden]{display:none!important}
-.bb-modal{position:fixed;inset:0;z-index:900;background:rgba(20,22,28,.55);display:flex;align-items:center;justify-content:center;padding:16px}
-.bb-modal-card{width:min(760px,100%);max-height:92dvh;display:flex;flex-direction:column;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(20,22,40,.35)}
-.bb-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 12px 12px 18px;border-bottom:1px solid var(--bb-line)}
-.bb-modal-head b{font-size:15px;font-weight:600}
-.bb-modal-head>div{display:flex;align-items:center;gap:8px}
-.bb-modal-head .bb-segb{flex:none;background:var(--bb-soft);color:var(--bb-ink)}
 .bb-modal-x{width:36px;height:36px;border:0;border-radius:50%;background:var(--bb-soft);font-size:20px;cursor:pointer;color:var(--bb-ink)}
-.bb-modal-status{margin:0;padding:8px 18px;font-size:12.5px;color:var(--bb-ink2);border-bottom:1px solid var(--bb-line);min-height:34px}
-.bb-modal-body{position:relative;flex:1;min-height:420px;background:#0f1115}
-.bb-modal-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0f1115}
-.bb-qr{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
-.bb-qr svg{width:min(260px,70vw);height:auto}
-.bb-qr p{margin:0;font-size:13px;color:var(--bb-ink2);max-width:32ch}
 .bb-next{margin:26px 0 6px}
 .bb-nextbtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bb-line2);background:var(--bb-paper);color:var(--bb-ink);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease}
 .bb-nextbtn:hover{background:var(--bb-tint2);border-color:var(--bb-acc);color:var(--bb-acc-deep)}
@@ -236,9 +240,13 @@
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
   .bb-doc-band{grid-template-columns:1fr}
-  .bb-modal{padding:0;align-items:flex-end}
-  .bb-modal-card{border-radius:16px 16px 0 0;max-height:94dvh}
-  .bb-modal-body{min-height:60dvh}
+  .bb-viewseg{top:10px;right:auto;left:50%;transform:translateX(-50%)}
+  .bb-app.tryon-full .bb-stage{position:fixed;inset:0;height:100dvh;min-height:0;z-index:70;box-shadow:none}
+  .bb-app.tryon-full .bb-viewseg{display:none}
+  .bb-app.tryon-full .bb-trybar{display:flex}
+  .bb-app.tryon-full .bb-tryon-frame{top:48px;height:calc(100% - 48px)}
+  .bb-app.tryon-full .bb-trypill{top:60px}
+  .bb-app.tryon-full .bb-qr{top:48px}
   .bb-steps{grid-template-columns:1fr;gap:26px}
   .bb-after{padding:50px 0 40px}
 }
@@ -270,17 +278,31 @@
     <div class="bb-intro">
       <span class="bb-kicker">Wedding band builder</span>
       <h1>Design your band, <em>live</em> in 3D.</h1>
-      <p>Every option is cut into real geometry, weighed and priced. When it's right, order it — or send it to our New York atelier for a quote.</p>
+      <p>Every option is cut into real geometry and weighed. When it's right, print the spec sheet or send it to our New York atelier.</p>
     </div>
     <span class="bb-chip" id="bbChip"></span>
     <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
     <div class="bb-tools" role="toolbar" aria-label="Design tools">
-      <button type="button" class="bb-tool primary" id="bbSheetBtn" aria-label="Spec sheet"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/></svg><span>Spec sheet</span></button>
-      <button type="button" class="bb-tool" id="bbTryBtn" aria-label="Try it on"><svg viewBox="0 0 24 24"><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 9h16l-1 11H5z"/><circle cx="12" cy="14" r="2.5"/></svg><span>Try it on</span></button>
-      <button type="button" class="bb-tool" id="bbSave" aria-label="Save image"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="14" rx="2.5"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8.5 5.5l1-2h5l1 2"/></svg><span>Save image</span></button>
-      <button type="button" class="bb-tool" id="bbCopy" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg><span>Copy link</span></button>
-      <button type="button" class="bb-tool" id="bbReset" aria-label="Start over"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></svg><span>Start over</span></button>
+      <button type="button" class="bb-tool primary only3d" id="bbSheetBtn" aria-label="Spec sheet"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/></svg><span>Spec sheet</span></button>
+      <button type="button" class="bb-tool only3d" id="bbSave" aria-label="Save image"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="14" rx="2.5"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8.5 5.5l1-2h5l1 2"/></svg><span>Save image</span></button>
+      <button type="button" class="bb-tool only3d" id="bbCopy" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg><span>Copy link</span></button>
+      <button type="button" class="bb-tool only3d" id="bbReset" aria-label="Start over"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></svg><span>Start over</span></button>
+      <button type="button" class="bb-tool onlytry" id="bbTryBack" aria-label="Back to 3D"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Back to 3D</span></button>
+      <button type="button" class="bb-tool primary onlytry" id="bbTryPhoto" aria-label="Save photo"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="14" rx="2.5"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8.5 5.5l1-2h5l1 2"/></svg><span>Save photo</span></button>
+      <button type="button" class="bb-tool onlytry" id="bbQrBtn" aria-label="Open on your phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg><span>Open on your phone</span></button>
     </div>
+    <div class="bb-seg bb-viewseg" id="bbViewSeg" role="group" aria-label="View">
+      <button type="button" class="bb-segb on" data-view="3d" aria-pressed="true">3D view</button>
+      <button type="button" class="bb-segb" data-view="try" aria-pressed="false">Try it on</button>
+    </div>
+    <iframe id="bbTryFrame" class="bb-tryon-frame" title="Virtual try-on" allow="camera; microphone" referrerpolicy="origin" hidden></iframe>
+    <div class="bb-trybar">
+      <button type="button" class="bb-trybtn" id="bbTryBackBar"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back to design</button>
+      <div class="bb-seg bb-seg-sm" id="bbTryBands" hidden><button type="button" class="bb-segb" data-band="0">Hers</button><button type="button" class="bb-segb" data-band="1">His</button></div>
+      <div><button type="button" class="bb-trybtn" id="bbQrBtnBar" aria-label="Open on your phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg></button><button type="button" class="bb-trybtn" id="bbTryCloseBar" aria-label="Close try-on">×</button></div>
+    </div>
+    <div class="bb-trypill" id="bbTryPill" hidden></div>
+    <div class="bb-qr" id="bbTryQr" hidden><button type="button" class="bb-modal-x" id="bbQrClose" aria-label="Close">×</button><div id="bbQr"></div><p>Scan to open this exact design on your phone and try it on there.</p></div>
   </section>
 
   <aside class="bb-panel" aria-label="Band options">
@@ -300,7 +322,6 @@
         </div>
       </div>
       <p class="bb-note" id="bbPairNote" hidden>Linked bands share profile, interior, edges, metals and finish. Width, depth, size, diamonds and engraving are set per band.</p>
-      <p class="bb-notice" id="bbNotice" role="status" hidden></p>
     </header>
 
     <div class="bb-tabs" role="tablist" aria-label="Design steps">
@@ -520,7 +541,6 @@
         <summary>Full specification <span id="bbSumHint"></span></summary>
         <div id="bbSummary"></div>
       </details>
-      <p class="bb-pricing">Priced by weight: 14k gold at $120 per gram, 18k by its gold content, plus $100 of labour per band; insured shipping included. Diamonds and platinum are quoted individually. Paid by card at checkout; a designer confirms the specification with you before we begin. <a id="bbQuoteLink" href="commission.html" hidden>Prefer to talk to a designer first? Request a quote</a></p>
     </div>
 
     <footer class="bb-bar">
@@ -528,22 +548,6 @@
       <button type="button" class="bb-cta" id="bbRequest"><em id="bbRequestLabel" style="font-style:normal">Request this band</em><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></i></button>
     </footer>
   </aside>
-  <!-- real form, populated + submitted by band-builder.js (placeOrder) -->
-  <form id="bbOrderForm" method="POST" action="/band-order" hidden>
-    <input name="spec"><input name="spec_text"><input name="hash">
-    <input type="hidden" name="fg_ts" value="">
-    <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
-  </form>
-  <div class="bb-modal" id="bbTry" hidden>
-    <div class="bb-modal-card" role="dialog" aria-label="Try it on">
-      <div class="bb-modal-head"><b>Try it on</b><div><button type="button" class="bb-segb" id="bbQrBtn">Open on your phone</button><button type="button" class="bb-modal-x" id="bbTryClose" aria-label="Close">×</button></div></div>
-      <p class="bb-modal-status" id="bbTryStatus"></p>
-      <div class="bb-modal-body">
-        <iframe id="bbTryFrame" title="Virtual try-on" allow="camera; microphone" referrerpolicy="origin"></iframe>
-        <div class="bb-qr" id="bbQrWrap" hidden><div id="bbQr"></div><p>Scan to open this exact design on your phone and try it on there.</p></div>
-      </div>
-    </div>
-  </div>
 </main>
 
 <section class="bb-after">
@@ -576,7 +580,7 @@
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=30"></script>
+<script type="module" src="band-builder.js?v=31"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 </body>

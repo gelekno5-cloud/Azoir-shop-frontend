@@ -125,6 +125,19 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     the thumb (`--pf`); the request CTA is a cobalt pill with a white arrow puck that rotates on hover. Tools are a white pill
     cluster at the bottom centre of the stage. ⚠ Deploy gotcha: `npx @railway/cli up` uploads the *git root*, so from a
     worktree it ships the main checkout — pull `main` there first.
+  - **Stone shapes & settings to manufacturing rules (branch `claude/band-builder-settings`):** `SHAPES` (round, princess,
+    cushion, emerald, baguette — real low-poly cut stones from `stoneGeometry`: table, crown steps, girdle, pavilion to a
+    point or a keel; emerald/baguette run across the band) and `SETTINGS` (channel, bar, bezel, shared prong, split prong,
+    fishtail, U-prong — all real metal attached to the band via `Mesher`/instanced parts, seated in a groove cut into the
+    lathe). `stoneRules()` is the single source of truth: allowed shapes per setting, min band width (stone + 2×wall/rim, or
+    stone + 0.6/0.9 for prong families), seat depth (pavilion + 0.3 mm floor, + crown when the table sits flush) ≤ band depth,
+    fishtail 1.3–2.5 mm. The UI disables what fails and prints the reason (`#bbRuleNote`); `coerceStones()` steps the size
+    down or drops the stones when the band changes under them (`#bbStoneNote`). Shared prongs are placed so each touches both
+    neighbours (pitch solved from prong Ø and the ±zp offset). Prong Ø 0.55 (0.6 on platinum). Weight = lathe volume (groove
+    already cut) + setting metal. Hash: `shape` added; old `setting` values are unchanged names. Spec sheet/summary gain
+    "Setting" and "Fit rules" rows and draw the stone section. Known approximations: prong-family seats are a continuous
+    shallow groove (real rings drill per stone); bezel rows are flush rims with metal bridges between; fishtail points are
+    an hourglass prism + 4 beads.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

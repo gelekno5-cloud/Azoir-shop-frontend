@@ -5,6 +5,7 @@
    rendered volume — per metal zone. One band, or a His & Hers pair. */
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 // ── Catalogue ────────────────────────────────────────────────────────────────
 const PROFILES = {
@@ -39,7 +40,6 @@ const FINISHES = {
 // `stones` keeps its original values (none / half / full) and gains two spans.
 const SPANS = { none: "None", full: "Full eternity", half: "Half eternity", third: "⅓ eternity", quarter: "¼ eternity" };
 const SPAN_ANGLE = { full: Math.PI * 2, half: Math.PI, third: Math.PI * 2 / 3, quarter: Math.PI / 2 };
-const SETTINGS = { channel: "Channel set", bezel: "Bezel set", prong: "Prong set" };
 const STONE_SIZES = { s: { name: "Petite", k: 0.75 }, m: { name: "Classic", k: 1 }, l: { name: "Bold", k: 1.3 } };
 const EDGES = { rounded: "Rounded", bevel: "Bevelled", sharp: "Sharp", milgrain: "Milgrain" };
 const FONTS = {
@@ -52,7 +52,6 @@ const SIZE_SYS = { us: "US", eu: "EU", uk: "UK" };
 const BAND_NAMES = ["Hers", "His"];
 // What a linked pair shares. Width, depth, size, diamonds and engraving stay per band.
 const LINKED = ["profile", "interior", "zones", "zsplit", "zmid", "metals", "finishes", "edgel", "edger"];
-const MIN_STONE_WIDTH = 2.5;
 
 // ── Ring sizes (US chart = web/ring-size.html; EU = ISO circumference; UK letters) ──
 const usToDiameter = (us) => 11.66 + 0.811 * us;
@@ -82,7 +81,7 @@ const defaultBand = (i) => ({
   profile: "court", interior: "comfort", width: i ? 6 : 4, depth: i ? 2 : 1.8,
   metals: ["18y", "18y", "18y"], finishes: ["polished", "polished", "polished"], zones: 1, zsplit: 0.5, zmid: 0.34,
   edgel: "rounded", edger: "rounded",
-  stones: "none", setting: "channel", stonesz: "m",
+  stones: "none", shape: "round", setting: "channel", stonesz: "m",
   size: i ? 10 : 7, engraving: "", font: "script",
 });
 const bands = [defaultBand(0), defaultBand(1)];
@@ -96,7 +95,7 @@ function readBand(q, p, b) {
   pick("profile", PROFILES, (v) => (b.profile = v)); pick("interior", INTERIORS, (v) => (b.interior = v));
   pick("metal", METALS, (v) => (b.metals[0] = v)); pick("metal2", METALS, (v) => (b.metals[1] = v)); pick("metal3", METALS, (v) => (b.metals[2] = v));
   pick("finish", FINISHES, (v) => (b.finishes[0] = v)); pick("finish2", FINISHES, (v) => (b.finishes[1] = v)); pick("finish3", FINISHES, (v) => (b.finishes[2] = v));
-  pick("stones", SPANS, (v) => (b.stones = v)); pick("setting", SETTINGS, (v) => (b.setting = v)); pick("stonesz", STONE_SIZES, (v) => (b.stonesz = v));
+  pick("stones", SPANS, (v) => (b.stones = v)); pick("shape", SHAPES, (v) => (b.shape = v)); pick("setting", SETTINGS, (v) => (b.setting = v)); pick("stonesz", STONE_SIZES, (v) => (b.stonesz = v));
   pick("edgel", EDGES, (v) => (b.edgel = v)); pick("edger", EDGES, (v) => (b.edger = v)); pick("font", FONTS, (v) => (b.font = v));
   const num = (k, lo, hi, set) => { const v = parseFloat(g(k)); if (Number.isFinite(v)) set(Math.min(hi, Math.max(lo, v))); };
   num("width", 2, 8, (v) => (b.width = v)); num("depth", 1.2, 2.6, (v) => (b.depth = v));
@@ -118,7 +117,7 @@ function writeBand(q, p, b) {
   if (b.zones === 2 && b.zsplit !== 0.5) q.set(p + "zsplit", b.zsplit);
   if (b.zones > 2) { q.set(p + "metal3", b.metals[2]); q.set(p + "finish3", b.finishes[2]); if (b.zmid !== 0.34) q.set(p + "zmid", b.zmid); }
   q.set(p + "stones", b.stones);
-  if (b.stones !== "none") { q.set(p + "setting", b.setting); q.set(p + "stonesz", b.stonesz); }
+  if (b.stones !== "none") { q.set(p + "shape", b.shape); q.set(p + "setting", b.setting); q.set(p + "stonesz", b.stonesz); }
   if (b.edgel !== "rounded") q.set(p + "edgel", b.edgel);
   if (b.edger !== "rounded") q.set(p + "edger", b.edger);
   q.set(p + "size", b.size); q.set(p + "font", b.font);
@@ -225,20 +224,80 @@ function splitRuns(poly) {
   runs.push(cur);
   return runs;
 }
+// ── Stones & settings: manufacturing rules ───────────────────────────────────
+// Dimensions in mm. `s` is the stone's short side (the size the customer
+// picks), W its extent across the band, Lx along it. Every rule below is what
+// a setter needs to actually hold the stone, and the UI only offers what passes.
+const SHAPES = {
+  round:    { name: "Round brilliant", ratio: 1,    depth: 0.60, crown: 0.16, fit: 1,    k: 0.0061 },
+  princess: { name: "Princess",        ratio: 1,    depth: 0.70, crown: 0.12, fit: 1,    k: 0.0083 },
+  cushion:  { name: "Cushion",         ratio: 1.05, depth: 0.65, crown: 0.14, fit: 1,    k: 0.0081, along: true },
+  emerald:  { name: "Emerald",         ratio: 1.4,  depth: 0.65, crown: 0.15, fit: 0.72, k: 0.0092 },
+  baguette: { name: "Baguette",        ratio: 2,    depth: 0.60, crown: 0.12, fit: 0.55, k: 0.0092 },
+};
+const SETTINGS = {
+  channel:  { name: "Channel",      shapes: ["round", "princess", "baguette", "emerald"], wall: 0.45, gap: 0.15 },
+  bar:      { name: "Bar set",      shapes: ["baguette", "emerald", "princess"], wall: 0.45, bar: 0.5, gap: 0.1 },
+  bezel:    { name: "Bezel",        shapes: ["round", "princess", "cushion", "emerald", "baguette"], rim: 0.4, gap: 0.4 },
+  prong:    { name: "Shared prong", shapes: ["round", "cushion"], prong: 0.55, side: 0.6, raised: true },
+  split:    { name: "Split prong",  shapes: ["round"], prong: 0.45, side: 0.6, raised: true, split: true },
+  fishtail: { name: "Fishtail",     shapes: ["round"], side: 0.6, gap: 0.15, min: 1.3, max: 2.5 },
+  uprong:   { name: "U-prong",      shapes: ["round"], prong: 0.55, side: 0.9, raised: true, scoop: true },
+};
+const r1 = (v) => Math.round(v * 10) / 10;
+const stoneBase = (width, stonesz) => { const base = Math.min(Math.max(r1((width - 1.4) * 0.6), 1.2), 2.4); return Math.max(1.0, Math.min(3.2, r1(base * STONE_SIZES[stonesz].k))); };
+function stoneDims(shape, d) {
+  const sh = SHAPES[shape], s = r1(d * sh.fit), long = r1(s * sh.ratio);
+  return { s, W: sh.along ? s : long, Lx: sh.along ? long : s, D: sh.depth * s, hc: sh.crown * s };
+}
+const zoneAtY = (b, y) => { let z = 0; for (const yb of zoneBoundsOf(b)) if (y > yb) z++; return z; };
+const dimsText = (shape, dm) => shape === "round" || shape === "princess" ? `${fmt(dm.s)} mm` : `${fmt(dm.Lx)} × ${fmt(dm.W)} mm`;
+// The rules. Returns {issue} (a one-line reason, or null) plus the numbers behind it.
+function stoneRules(b, shape = b.shape, setting = b.setting, stonesz = b.stonesz) {
+  const st = SETTINGS[setting], sh = SHAPES[shape];
+  const d = stoneBase(b.width, stonesz), dm = stoneDims(shape, d);
+  const minWidth = st.wall != null ? dm.W + 2 * (st.wall + 0.05) : st.rim ? dm.W + 2 * st.rim + 0.1 : dm.W + st.side;
+  const hp = dm.D - dm.hc;
+  const seat = st.raised ? hp + 0.27 : dm.D + 0.37; // pavilion + 0.3 mm floor (+ crown when the table sits flush)
+  let issue = null;
+  if (!st.shapes.includes(shape)) issue = `${st.name}: ${st.shapes.map((k) => SHAPES[k].name.toLowerCase()).join(", ")} only`;
+  else if (b.width + 1e-6 < minWidth) issue = `${sh.name} ${dimsText(shape, dm)} in ${st.name.toLowerCase()} needs a band ≥ ${fmt(Math.ceil(minWidth * 10) / 10)} mm wide`;
+  else if (seat > b.depth + 1e-6) issue = `${sh.name} ${dimsText(shape, dm)} needs a deeper band (seat ${fmt(seat)} mm, band ${fmt(b.depth)} mm)`;
+  else if (st.min && (dm.s < st.min || dm.s > st.max)) issue = `${st.name} suits ${st.min}–${st.max} mm stones`;
+  return { issue, minWidth, seat, d, hp, ...dm };
+}
+// If the band changed under a stone choice, step the size down; failing that, drop the stones. Never render an unsettable band.
+function coerceStones(b) {
+  b.stoneNote = "";
+  if (b.stones === "none") return;
+  const bad = stoneRules(b).issue;
+  if (!bad) return;
+  for (const k of ["m", "s"]) if (STONE_SIZES[k].k < STONE_SIZES[b.stonesz].k && !stoneRules(b, b.shape, b.setting, k).issue) {
+    b.stoneNote = `Stone size reduced to ${STONE_SIZES[k].name.toLowerCase()}: ${bad}`; b.stonesz = k; return;
+  }
+  b.stoneNote = `Diamonds removed: ${bad}`; b.stones = "none";
+}
 function stoneSpec(b) {
-  if (b.stones === "none" || b.width < MIN_STONE_WIDTH) return null;
-  const r1 = (v) => Math.round(v * 10) / 10;
-  const base = Math.min(Math.max(r1((b.width - 1.4) * 0.6), 1.2), 2.4);
-  const maxD = b.setting === "bezel" ? b.width - 1.3 : b.width - 1.1;
-  const d = Math.max(1.0, Math.min(3.2, maxD, r1(base * STONE_SIZES[b.stonesz].k)));
-  const set = b.setting;
-  return {
-    d, setting: set, channel: set !== "bezel",
-    channelW: d + 0.14,
-    channelD: set === "channel" ? 0.5 * d + 0.05 : set === "prong" ? 0.3 * d : 0,
-    pitch: set === "channel" ? d + 0.16 : set === "bezel" ? d + 0.6 : d + 0.34,
-    wall: 0.22,
-  };
+  if (b.stones === "none") return null;
+  const r = stoneRules(b);
+  if (r.issue) return null;
+  const st = SETTINGS[b.setting];
+  const prong = st.prong ? (b.metals[zoneAtY(b, 0)] === "pt" ? Math.max(st.prong, 0.6) : st.prong) : 0;
+  const rp = prong / 2;
+  const girdleBelow = st.raised ? -0.05 : r.hc + 0.05; // girdle just over the surface (prongs) or table flush with it
+  const channelD = girdleBelow + r.hp + 0.02;          // groove floor just under the pavilion tip; 0.3 mm of metal stays beneath
+  const channelW = st.rim ? r.W + 2 * st.rim + 0.1 : st.scoop ? r.W + 0.5 : st.raised ? r.W + 0.2 : r.W + 0.1;
+  let pitch, zp = 0, endPad;
+  if (st.prong) {
+    // a shared prong touches both neighbours: sit it at ±zp across the band and space the stones so the geometry closes
+    zp = Math.min(0.3 * r.W, b.width / 2 - rp - 0.1);
+    const reach = r.Lx / 2 + rp + (st.split ? 0.1 : 0);
+    pitch = 2 * Math.sqrt(Math.max(0.05, reach * reach - zp * zp));
+    endPad = 0.3 + rp;
+  } else if (st.bar) { pitch = r.Lx + st.bar + 2 * st.gap; endPad = st.bar + st.gap + 0.1; }
+  else if (st.rim) { pitch = r.Lx + 2 * st.rim + st.gap; endPad = st.rim + 0.05; }
+  else { pitch = r.Lx + st.gap; endPad = b.setting === "fishtail" ? 0.55 : 0.2; }
+  return { ...r, shape: b.shape, setting: b.setting, st, channel: true, channelW, channelD, pitch, prong, rp, zp, girdleBelow, endPad, outline: stoneOutline(b.shape, r) };
 }
 const dedupe = (arr) => arr.filter((y, i) => i === 0 || Math.abs(y - arr[i - 1]) > 1e-6);
 function buildSection(b) {
@@ -387,20 +446,21 @@ function buildRingGeometry(sec, b) {
 function stoneLayout(sec, b) {
   const st = sec.stone;
   if (!st) return null;
-  const rg = st.channel ? sec.centerOuter - st.channelD + 0.40 * st.d : sec.centerOuter + 0.1; // girdle radius
+  const rg = sec.centerOuter - st.girdleBelow; // girdle radius
   const pitchAng = st.pitch / rg;
   const full = b.stones === "full";
   let n, start, ang;
   if (full) { n = Math.max(1, Math.floor(2 * Math.PI / pitchAng)); ang = 2 * Math.PI / n; start = 0; }
   else { n = Math.max(1, Math.floor(SPAN_ANGLE[b.stones] / pitchAng)); ang = pitchAng; start = TOP - (n - 1) / 2 * ang; }
-  return { n, rg, d: st.d, full, ang, angles: Array.from({ length: n }, (_, i) => start + i * ang), pitchAng, halfSpan: full ? Math.PI : (n - 1) / 2 * ang };
+  return { n, rg, full, ang, angles: Array.from({ length: n }, (_, i) => start + i * ang), pitchAng, halfSpan: full ? Math.PI : (n - 1) / 2 * ang,
+    floor: sec.centerOuter - st.channelD, surface: sec.centerOuter, Lx: st.Lx, W: st.W, s: st.s };
 }
 function channelDepthFn(sec, b) {
   const st = sec.stone;
   if (!st || !st.channel) return () => 0;
   if (b.stones === "full") return () => st.channelD;
   const lay = stoneLayout(sec, b);
-  const end = lay.halfSpan + 0.72 * lay.pitchAng, ramp = 0.55 * lay.pitchAng;
+  const end = lay.halfSpan + (st.Lx / 2 + st.endPad) / lay.rg, ramp = 0.35 / lay.rg;
   return (th) => {
     let a = ((th - TOP + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
     a = Math.abs(a);
@@ -410,31 +470,123 @@ function channelDepthFn(sec, b) {
     return st.channelD * u * u * (3 - 2 * u);
   };
 }
-function brilliantGeometry(d) {
-  const r = d / 2;
-  const pts = [
-    new THREE.Vector2(0, 0.16 * d), new THREE.Vector2(0.56 * r, 0.16 * d), new THREE.Vector2(r, 0.02 * d),
-    new THREE.Vector2(r, -0.02 * d), new THREE.Vector2(0.02 * r, -0.43 * d), new THREE.Vector2(0, -0.43 * d),
-  ];
-  const g = new THREE.LatheGeometry(pts, 16).toNonIndexed();
-  g.computeVertexNormals();
-  return g;
+
+// ── Low-poly mesher for stones and setting metal ─────────────────────────────
+// Local frame of every part: X along the band, Y radial (up = out of the ring),
+// Z across the band. Faces are oriented away from `ref` (a point inside the solid).
+class Mesher {
+  constructor() { this.pos = []; }
+  tri(a, b, c, ref, inv) {
+    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const dot = nx * ((a[0] + b[0] + c[0]) / 3 - ref[0]) + ny * ((a[1] + b[1] + c[1]) / 3 - ref[1]) + nz * ((a[2] + b[2] + c[2]) / 3 - ref[2]);
+    if ((dot < 0) !== !!inv) { const t = b; b = c; c = t; }
+    this.pos.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+  }
+  quad(a, b, c, d, ref, inv) { this.tri(a, b, c, ref, inv); this.tri(a, c, d, ref, inv); }
+  geometry() {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(this.pos.length / 3 * 2), 2));
+    g.computeVertexNormals();
+    return g;
+  }
 }
-// Bezel collar: a short tube with a folded lip, its base sunk into the band.
-function bezelGeometry(d, wall) {
-  const rIn = d / 2 + 0.04, rOut = rIn + wall;
-  const pts = [[rIn - 0.07, 0.10 * d], [rOut, 0.10 * d], [rOut, -0.5 * d], [rIn, -0.5 * d], [rIn, 0], [rIn - 0.07, 0.10 * d]].map(([x, y]) => new THREE.Vector2(x, y));
-  const g = new THREE.LatheGeometry(pts, 28);
-  g.computeVertexNormals();
-  return { geometry: g, volume: Math.PI * (rOut * rOut - rIn * rIn) * 0.6 * d };
+const polyArea = (p) => { let A = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; A += a[0] * b[1] - b[0] * a[1]; } return Math.abs(A) / 2; };
+const ellipsePoly = (n, a, b, p = 2) => Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2, c = Math.cos(t), s = Math.sin(t);
+  return [a * Math.sign(c) * Math.pow(Math.abs(c), 2 / p), b * Math.sign(s) * Math.pow(Math.abs(s), 2 / p)]; });
+const rectPoly = (hx, hz, cut) => cut > 0
+  ? [[-hx + cut, -hz], [hx - cut, -hz], [hx, -hz + cut], [hx, hz - cut], [hx - cut, hz], [-hx + cut, hz], [-hx, hz - cut], [-hx, -hz + cut]]
+  : [[-hx, -hz], [hx, -hz], [hx, hz], [-hx, hz]];
+// Push a convex outline out by `off` (what a bezel rim does around a stone).
+function offsetPolygon(pts, off) {
+  const n = pts.length, out = [];
+  const cx = pts.reduce((a, p) => a + p[0], 0) / n, cz = pts.reduce((a, p) => a + p[1], 0) / n;
+  const norm = (p, q) => { let dx = q[0] - p[0], dz = q[1] - p[1]; const l = Math.hypot(dx, dz); let nx = dz / l, nz = -dx / l;
+    if (nx * (p[0] - cx) + nz * (p[1] - cz) < 0) { nx = -nx; nz = -nz; } return [nx, nz]; };
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i - 1 + n) % n], p = pts[i], b = pts[(i + 1) % n];
+    const n1 = norm(a, p), n2 = norm(p, b);
+    let bx = n1[0] + n2[0], bz = n1[1] + n2[1]; const l = Math.hypot(bx, bz) || 1; bx /= l; bz /= l;
+    const k = off / Math.max(0.5, bx * n1[0] + bz * n1[1]);
+    out.push([p[0] + bx * k, p[1] + bz * k]);
+  }
+  return out;
 }
-// Shared prong: a small post from the seat to just above the girdle, domed.
-function prongGeometry(d) {
-  const rp = Math.min(0.2, Math.max(0.12, 0.09 * d)), y0 = -0.4 * d - 0.1;
-  const pts = [[0, y0], [rp, y0], [rp, 0.09 * d], [0.65 * rp, 0.15 * d], [0, 0.18 * d]].map(([x, y]) => new THREE.Vector2(x, y));
-  const g = new THREE.LatheGeometry(pts, 12);
-  g.computeVertexNormals();
-  return { geometry: g, volume: Math.PI * rp * rp * (0.5 * d + 0.1), rp };
+function stoneOutline(shape, dm) {
+  const s = dm.s, W = dm.W, Lx = dm.Lx;
+  switch (shape) {
+    case "princess": return rectPoly(s / 2, s / 2, 0.08 * s);
+    case "cushion":  return ellipsePoly(24, Lx / 2, W / 2, 3.2);
+    case "emerald":  return rectPoly(Lx / 2, W / 2, 0.18 * s);
+    case "baguette": return rectPoly(Lx / 2, W / 2, 0);
+    default:         return ellipsePoly(16, s / 2, s / 2);
+  }
+}
+// A cut stone: table, crown steps, a girdle with thickness, pavilion steps and
+// either a point (brilliants) or a keel line (step cuts).
+function stoneGeometry(shape, dm) {
+  const s = dm.s, outline = stoneOutline(shape, dm);
+  const P = {
+    round:    { crown: [[0.82, 0.06], [0.56, 0.16]], pav: [[0.6, -0.22]], apex: -0.44 },
+    princess: { crown: [[0.8, 0.06], [0.62, 0.12]], pav: [[0.55, -0.3]], apex: -0.58 },
+    cushion:  { crown: [[0.85, 0.06], [0.58, 0.14]], pav: [[0.5, -0.26]], apex: -0.51 },
+    emerald:  { crown: [[0.88, 0.05], [0.74, 0.10], [0.6, 0.15]], pav: [[0.8, -0.15], [0.55, -0.32]], apex: -0.5, keel: 0.25 * dm.W },
+    baguette: { crown: [[0.8, 0.06], [0.6, 0.12]], pav: [[0.6, -0.25]], apex: -0.48, keel: 0.3 * dm.W },
+  }[shape];
+  const M = new Mesher(), ref = [0, (P.crown[P.crown.length - 1][1] + P.apex) / 2 * s, 0];
+  const ring = (sc, y) => outline.map(([x, z]) => [x * sc, y, z * sc]);
+  const gt = 0.015 * s;
+  const rings = [...[...P.crown].reverse().map(([sc, y]) => ring(sc, y * s)), ring(1, gt), ring(1, -gt), ...P.pav.map(([sc, y]) => ring(sc, y * s))];
+  const n = outline.length, top = rings[0];
+  for (let i = 1; i < n - 1; i++) M.tri(top[0], top[i], top[i + 1], ref);
+  for (let k = 0; k < rings.length - 1; k++) { const A = rings[k], B = rings[k + 1]; for (let i = 0; i < n; i++) M.quad(A[i], A[(i + 1) % n], B[(i + 1) % n], B[i], ref); }
+  const last = rings[rings.length - 1], ay = P.apex * s;
+  if (!P.keel) { const X = [0, ay, 0]; for (let i = 0; i < n; i++) M.tri(last[i], last[(i + 1) % n], X, ref); }
+  else {
+    const K1 = [0, ay, -P.keel], K2 = [0, ay, P.keel], kp = (p) => (p[2] < 0 ? K1 : K2);
+    for (let i = 0; i < n; i++) { const a = last[i], b = last[(i + 1) % n]; M.tri(a, b, kp(a), ref); if (kp(a) !== kp(b)) M.tri(b, kp(b), kp(a), ref); }
+  }
+  return M.geometry();
+}
+// Solid prism between radii y0..y1 (star-shaped outline, fan caps).
+function prismGeometry(outline, y0, y1) {
+  const M = new Mesher(), ref = [0, (y0 + y1) / 2, 0], n = outline.length;
+  const lo = outline.map(([x, z]) => [x, y0, z]), hi = outline.map(([x, z]) => [x, y1, z]);
+  for (let i = 0; i < n; i++) { M.quad(lo[i], lo[(i + 1) % n], hi[(i + 1) % n], hi[i], ref); M.tri([0, y1, 0], hi[i], hi[(i + 1) % n], ref); M.tri([0, y0, 0], lo[i], lo[(i + 1) % n], ref); }
+  return M.geometry();
+}
+// Ring of metal (bezel rim) between two outlines, radii y0..y1.
+function annulusGeometry(outer, inner, y0, y1) {
+  const M = new Mesher(), ref = [0, (y0 + y1) / 2, 0], n = outer.length;
+  const O0 = outer.map(([x, z]) => [x, y0, z]), O1 = outer.map(([x, z]) => [x, y1, z]), I0 = inner.map(([x, z]) => [x, y0, z]), I1 = inner.map(([x, z]) => [x, y1, z]);
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    M.quad(O0[i], O0[j], O1[j], O1[i], ref);
+    M.quad(I0[i], I0[j], I1[j], I1[i], ref, true);
+    M.quad(O1[i], O1[j], I1[j], I1[i], [0, y0 - 10, 0]);
+    M.quad(O0[i], O0[j], I0[j], I0[i], [0, y1 + 10, 0]);
+  }
+  return M.geometry();
+}
+// Prong: a post from `base` to a domed tip at `tip`, radius rp.
+function prongGeometry(rp, base, tip) {
+  const pts = [[0, base], [rp, base], [rp, tip - rp], [0.6 * rp, tip - 0.3 * rp], [0, tip]].map(([x, y]) => new THREE.Vector2(x, y));
+  const g = new THREE.LatheGeometry(pts, 12); g.computeVertexNormals();
+  return { geometry: g, volume: Math.PI * rp * rp * (tip - base) };
+}
+// Split prong: two thinner posts from one base, opening into a V along the band.
+function splitProngGeometry(rp, base, tip, spread) {
+  const parts = [];
+  for (const sgn of [-1, 1]) {
+    const dx = sgn * spread, dy = tip - base, len = Math.hypot(dx, dy);
+    const cyl = new THREE.CylinderGeometry(rp, rp * 0.9, len, 10);
+    cyl.translate(0, len / 2, 0); cyl.rotateZ(-Math.atan2(dx, dy)); cyl.translate(0, base, 0);
+    const dome = new THREE.SphereGeometry(rp, 10, 8); dome.translate(dx, tip, 0);
+    parts.push(cyl, dome);
+  }
+  const g = mergeGeometries(parts);
+  return { geometry: g, volume: 2 * Math.PI * rp * rp * Math.hypot(spread, tip - base) };
 }
 
 // ── Finish textures ──────────────────────────────────────────────────────────
@@ -656,39 +808,71 @@ class BandView {
     const lay = this.layout = stoneLayout(sec, b);
     const partsVol = Array.from({ length: b.zones }, () => 0);
     const zc = zoneOfY(sec, 0);
-    const radial = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion(), m = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1);
-    const place = (mesh, i, th, r, yOff) => {
-      radial.set(Math.cos(th), 0, -Math.sin(th));
-      q.setFromUnitVectors(up, radial);
-      m.compose(radial.clone().multiplyScalar(r).setY(yOff), q, one);
-      mesh.setMatrixAt(i, m);
+    const m = new THREE.Matrix4(), tv = new THREE.Vector3(), rv = new THREE.Vector3(), av = new THREE.Vector3(0, -1, 0), sv = new THREE.Vector3();
+    // Part frame at angle th: local X along the band, Y radial (out), Z across the band (world −y).
+    const at = (th, r, xOff = 0, zOff = 0, sx = 1, sy = 1, sz = 1) => {
+      const c = Math.cos(th), s = Math.sin(th);
+      tv.set(-s, 0, -c); rv.set(c, 0, -s);
+      m.makeBasis(tv, rv, av);
+      m.setPosition(rv.x * r + tv.x * xOff, -zOff, rv.z * r + tv.z * xOff);
+      if (sx !== 1 || sy !== 1 || sz !== 1) m.scale(sv.set(sx, sy, sz));
+      return m;
     };
+    const inst = (geom, mat, count, fill, vol, zone) => {
+      if (count <= 0) return;
+      const im = new THREE.InstancedMesh(geom, mat, count);
+      fill(im); im.instanceMatrix.needsUpdate = true; im.castShadow = true;
+      this.group.add(im); this.parts.push(im);
+      partsVol[zone] += vol * count;
+    };
+    let setDetail = "", setLimits = "";
     if (lay) {
-      const stones = new THREE.InstancedMesh(brilliantGeometry(lay.d), stoneMat, lay.n);
-      lay.angles.forEach((th, i) => place(stones, i, th, lay.rg, 0));
-      stones.instanceMatrix.needsUpdate = true; stones.castShadow = true;
-      this.group.add(stones); this.parts.push(stones);
-      if (sec.stone.setting === "bezel") {
-        const bz = bezelGeometry(lay.d, sec.stone.wall);
-        const cups = new THREE.InstancedMesh(bz.geometry, this.mats[zc], lay.n);
-        lay.angles.forEach((th, i) => place(cups, i, th, lay.rg, 0));
-        cups.instanceMatrix.needsUpdate = true; cups.castShadow = true;
-        this.group.add(cups); this.parts.push(cups);
-        partsVol[zc] += bz.volume * lay.n;
-      } else if (sec.stone.setting === "prong") {
-        const pg = prongGeometry(lay.d);
-        const gaps = lay.full ? lay.n : lay.n + 1;
-        const yOff = 0.42 * lay.d;
-        for (const side of [-1, 1]) {
-          const z = zoneOfY(sec, side * yOff);
-          const prongs = new THREE.InstancedMesh(pg.geometry, this.mats[z], gaps);
-          for (let k = 0; k < gaps; k++) place(prongs, k, lay.angles[0] - lay.ang / 2 + k * lay.ang, lay.rg, side * yOff);
-          prongs.instanceMatrix.needsUpdate = true; prongs.castShadow = true;
-          this.group.add(prongs); this.parts.push(prongs);
-          partsVol[z] += pg.volume * gaps;
+      const st = sec.stone, n = lay.n, H = st.channelD + 0.02, floor = lay.floor - 0.01, mid = floor + H / 2, surf = lay.surface;
+      const gapAngles = Array.from({ length: lay.full ? n : n + 1 }, (_, k) => lay.angles[0] - lay.ang / 2 + k * lay.ang); // between stones, plus the row ends
+      const between = lay.full ? gapAngles : gapAngles.slice(1, -1), ends = lay.full ? [] : [gapAngles[0], gapAngles[gapAngles.length - 1]];
+      const gw = st.channelW + 0.02, box = new THREE.BoxGeometry(1, 1, 1);
+      inst(stoneGeometry(st.shape, st), stoneMat, n, (im) => lay.angles.forEach((th, i) => im.setMatrixAt(i, at(th, lay.rg))), 0, zc);
+      const prongCount = gapAngles.length * 2;
+      if (st.setting === "channel") {
+        setDetail = `walls ${fmt((b.width - st.channelW) / 2, 2)} mm each · gap ${st.st.gap} mm · seat ${fmt(st.channelD + 0.3, 2)} mm deep`;
+      } else if (st.setting === "bar") {
+        const t = st.st.bar;
+        inst(box, this.mats[zc], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, t, H, gw))), t * H * gw, zc);
+        setDetail = `${gapAngles.length} bars ${t} mm across the band · gap ${st.st.gap} mm each side`;
+      } else if (st.setting === "bezel") {
+        const inner = offsetPolygon(st.outline, 0.03), outer = offsetPolygon(st.outline, st.st.rim + 0.03);
+        const rimH = surf + 0.02 - floor;
+        inst(annulusGeometry(outer, inner, floor, surf + 0.02), this.mats[zc], n, (im) => lay.angles.forEach((th, i) => im.setMatrixAt(i, at(th, 0))), (polyArea(outer) - polyArea(inner)) * rimH, zc);
+        const bw = st.pitch - st.Lx - 2 * st.st.rim + 0.06;
+        inst(box, this.mats[zc], between.length, (im) => between.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, bw, H, gw))), bw * H * gw, zc);
+        setDetail = `rim ${st.st.rim} mm follows the ${SHAPES[st.shape].name.toLowerCase()} outline · stones ${st.st.gap} mm apart`;
+      } else if (st.setting === "fishtail") {
+        // between each pair: an hourglass of metal whose four corners are the points pushed over the stones
+        const gap = st.pitch - st.Lx, hx = gap / 2 + 0.22, hz = 0.72 * st.W / 2;
+        const hour = [[-hx, -hz], [hx, -hz], [0.06, 0], [hx, hz], [-hx, hz], [-0.06, 0]];
+        inst(prismGeometry(hour, floor, surf + 0.12), this.mats[zc], between.length, (im) => between.forEach((th, k) => im.setMatrixAt(k, at(th, 0))), polyArea(hour) * (surf + 0.12 - floor), zc);
+        const bead = new THREE.SphereGeometry(0.13, 8, 6);
+        inst(bead, this.mats[zc], between.length * 4, (im) => { let k = 0; for (const th of between) for (const sx of [-1, 1]) for (const sz of [-1, 1]) im.setMatrixAt(k++, at(th, surf + 0.1, sx * (hx - 0.1), sz * (hz - 0.06))); }, 4 / 3 * Math.PI * 0.13 ** 3 * 0.5, zc);
+        inst(box, this.mats[zc], ends.length, (im) => ends.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, 0.5, H, gw))), 0.5 * H * gw, zc);
+        setDetail = `4 points per stone, bead-set · stones ${st.st.gap} mm apart`;
+      } else if (st.st.prong) {
+        const rp = st.rp, tip = lay.rg + 0.3 + rp;
+        let base = floor;
+        if (st.setting === "uprong") {
+          const sx = st.pitch - st.Lx + 0.1;
+          inst(box, this.mats[zc], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, sx, H, gw))), sx * H * gw, zc);
+          base = surf - 0.25;
         }
+        const pg = st.st.split ? splitProngGeometry(rp, base, tip, 0.2) : prongGeometry(rp, base, tip);
+        for (const side of [-1, 1]) {
+          const z = zoneOfY(sec, -side * st.zp);
+          inst(pg.geometry, this.mats[z], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, 0, 0, side * st.zp))), pg.volume, z);
+        }
+        setDetail = `${prongCount} ${st.st.split ? "split prongs (V pairs), each" : "shared prongs"} Ø ${fmt(st.prong, 2)} mm · tips 0.3 mm over the girdle` + (st.setting === "uprong" ? " · U cut-outs between stones" : "");
       }
+      setLimits = `min width ${fmt(Math.ceil(st.minWidth * 10) / 10)} mm · seat ${fmt(st.seat, 2)} mm of ${fmt(b.depth)} mm depth`;
     }
+    this.metrics.setting = setDetail; this.metrics.limits = setLimits;
     // Milgrain: a row of tiny beads along the edge, in that edge's metal.
     if (b.profile !== "round") for (const side of [-1, 1]) {
       if ((side < 0 ? b.edgel : b.edger) !== "milgrain") continue;
@@ -717,12 +901,14 @@ class BandView {
     this.shadow.scale.set(ro * 2.6, ro * 2.6 * Math.abs(Math.cos(LEAN)) + b.width * 1.6, 1);
 
     // metrics — per zone, so a two-tone band reports the metal of each
-    const stoneVol = lay ? lay.n * 0.5 * (4 / 3) * Math.PI * Math.pow(lay.d / 2, 3) : 0; // seat the metal doesn't fill
-    this.metrics.zoneGrams = built.volumes.map((v, z) => (v - (z === zc ? stoneVol * 0.4 : 0) + partsVol[z]) / 1000 * METALS[b.metals[z]].density);
+    // the groove (seat) is already cut out of the lathe volume; the setting metal is added back
+    this.metrics.zoneGrams = built.volumes.map((v, z) => (v + partsVol[z]) / 1000 * METALS[b.metals[z]].density);
     this.metrics.grams = this.metrics.zoneGrams.reduce((a, c) => a + c, 0);
     this.metrics.stones = lay ? lay.n : 0;
-    this.metrics.carats = lay ? lay.n * Math.pow(lay.d / 6.5, 3) : 0;
-    this.metrics.stoneMm = lay ? lay.d : 0;
+    const st = sec.stone;
+    this.metrics.carats = lay ? lay.n * (st.shape === "round" ? Math.pow(st.s, 3) * SHAPES.round.k : st.Lx * st.W * st.D * SHAPES[st.shape].k) : 0;
+    this.metrics.stoneMm = lay ? st.s : 0;
+    this.metrics.stoneDims = lay ? dimsText(st.shape, st) : "";
   }
   applyMaterials(b) {
     for (let z = 0; z < 3; z++) {
@@ -793,7 +979,9 @@ function bandText(b, v) {
     profile: `${PROFILES[b.profile].name} · ${b.profile === "round" ? "round interior" : INTERIORS[b.interior]}`,
     edges, width: `${fmt(b.width)} mm`, depth: `${fmt(b.depth)} mm`,
     metal: per(METALS, b.metals), finish: per(FINISHES, b.finishes),
-    diamonds: m.stones ? `${SETTINGS[b.setting]} · ${SPANS[b.stones]} · ${m.stones} × ${fmt(m.stoneMm)} mm (≈ ${fmt(m.carats, 2)} ct tw)` : "None",
+    diamonds: m.stones ? `${m.stones} × ${SHAPES[b.shape].name.toLowerCase()} ${m.stoneDims} · ${SETTINGS[b.setting].name} · ${SPANS[b.stones]} (≈ ${fmt(m.carats, 2)} ct tw)` : "None",
+    setting: m.stones ? m.setting : "—",
+    limits: m.stones ? m.limits : "—",
     size: `${sizeText(b.size)} · ${fmt(usToDiameter(b.size))} mm inside`,
     engraving: b.engraving.trim() ? `“${b.engraving.trim()}” (${{ script: "script", serif: "serif", sans: "modern" }[b.font]})` : "—",
     weight,
@@ -818,7 +1006,7 @@ const setRange = (el, v, label) => {
   const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
 };
 
-const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", diamonds: "Diamonds", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
+const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
 
 function syncUI() {
   const b = active();
@@ -848,9 +1036,15 @@ function syncUI() {
   $("bbSizeAll").textContent = sizeText(b.size) + ` · ${fmt(usToDiameter(b.size))} mm inside`;
   $("bbEngrave").value = b.engraving; $("bbFont").value = b.font;
   $("bbEngraveCount").textContent = `${b.engraving.length}/30`;
-  const stonesOk = b.width >= MIN_STONE_WIDTH;
-  $("bbStoneNote").hidden = stonesOk;
-  panel.querySelectorAll('[data-opt="stones"]').forEach((el) => { if (el.dataset.v !== "none") el.disabled = !stonesOk; });
+  // manufacturing rules: disable what can't be set, say why in one line each
+  const reasons = [];
+  const gate = (el, issue) => { el.disabled = !!issue; el.title = issue || ""; if (issue && !reasons.includes(issue)) reasons.push(issue); };
+  panel.querySelectorAll('[data-opt="shape"]').forEach((el) => gate(el, stoneRules(b, el.dataset.v, b.setting, b.stonesz).issue));
+  panel.querySelectorAll('[data-opt="setting"]').forEach((el) => gate(el, stoneRules(b, b.shape, el.dataset.v, b.stonesz).issue));
+  panel.querySelectorAll('[data-opt="stonesz"]').forEach((el) => gate(el, stoneRules(b, b.shape, b.setting, el.dataset.v).issue));
+  $("bbRuleNote").innerHTML = reasons.slice(0, 5).map(esc).join("<br>");
+  $("bbRuleNote").hidden = !reasons.length;
+  $("bbStoneNote").textContent = b.stoneNote || ""; $("bbStoneNote").hidden = !b.stoneNote;
   const isRound = b.profile === "round";
   panel.querySelectorAll('[data-opt="interior"],[data-opt="edgel"],[data-opt="edger"]').forEach((el) => { el.disabled = isRound; });
   $("bbRoundNote").hidden = !isRound;
@@ -891,9 +1085,7 @@ function syncUI() {
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
 }
 function sizeNoteText(b) {
-  if (b.width < MIN_STONE_WIDTH) return "";
-  const probe = { ...b, stones: b.stones === "none" ? "half" : b.stones };
-  return Object.keys(STONE_SIZES).map((k) => `${STONE_SIZES[k].name} ${fmt(stoneSpec({ ...probe, stonesz: k }).d)} mm`).join(" · ") + " at this width";
+  return Object.keys(STONE_SIZES).map((k) => { const r = stoneRules(b, b.shape, b.setting, k); return `${STONE_SIZES[k].name} ${dimsText(b.shape, r)}${r.issue ? " ✕" : ""}`; }).join(" · ") + ` ${SHAPES[b.shape].name.toLowerCase()} at this width`;
 }
 function syncLink() {
   if (!ui.pair || !ui.link) return;
@@ -902,6 +1094,7 @@ function syncLink() {
 }
 function update(geom = true) {
   syncLink();
+  for (const bb of bands) coerceStones(bb);
   views[1].setVisible(ui.pair);
   for (const i of ui.pair ? [0, 1] : [0]) {
     if (geom) views[i].build(bands[i]);
@@ -937,7 +1130,7 @@ panel.addEventListener("click", (e) => {
   }
   else if (el.dataset.zone != null) { ui.zone = Number(el.dataset.zone); syncUI(); }
 });
-$("bbWidth").addEventListener("input", (e) => { const b = active(); b.width = parseFloat(e.target.value); if (b.width < MIN_STONE_WIDTH) b.stones = "none"; update(); });
+$("bbWidth").addEventListener("input", (e) => { active().width = parseFloat(e.target.value); update(); });
 $("bbDepth").addEventListener("input", (e) => { active().depth = parseFloat(e.target.value); update(); });
 $("bbSplit").addEventListener("input", (e) => { active().zsplit = parseInt(e.target.value, 10) / 100; update(); });
 $("bbMid").addEventListener("input", (e) => { active().zmid = parseInt(e.target.value, 10) / 100; update(); });
@@ -979,7 +1172,7 @@ function sectionSVG(b, v) {
   const loop = sectionRuns(sec, sec.stone && sec.stone.channel ? sec.stone.channelD : 0).flat();
   const xs = loop.map((p) => p.x), ys = loop.map((p) => p.y);
   let xmin = Math.min(...xs), xmax = Math.max(...xs), ymin = Math.min(...ys), ymax = Math.max(...ys);
-  if (lay) xmax = Math.max(xmax, lay.rg + 0.18 * lay.d);
+  if (lay) xmax = Math.max(xmax, lay.rg + sec.stone.hc + 0.1);
   const S = Math.min(48, 220 / (ymax - ymin)), pad = 34;
   const X = (y) => pad + (y - ymin) * S, Y = (x) => pad + (xmax - x) * S;
   const W = X(ymax) + pad + 30, H = Y(xmin) + pad + 10;
@@ -989,9 +1182,11 @@ function sectionSVG(b, v) {
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="DM Sans,system-ui,sans-serif" font-size="10" fill="#0f172a">`;
   zonePolys.forEach((pts, z) => { s += `<path d="${path(pts)}" fill="${METALS[b.metals[z]].sw}" stroke="#0f172a" stroke-width="1" stroke-linejoin="round"/>`; });
   if (lay) {
-    const r = lay.d / 2 * S, cy = Y(lay.rg);
-    s += `<circle cx="${X(0)}" cy="${cy}" r="${r}" fill="rgba(255,255,255,.7)" stroke="#0f172a" stroke-width=".8" stroke-dasharray="2 2"/>`;
-    s += `<text x="${X(0)}" y="${cy - r - 4}" text-anchor="middle" font-size="9">${fmt(lay.d)} mm</text>`;
+    const st = sec.stone, hw2 = st.W / 2, tw = hw2 * 0.6, P = (y, x) => `${X(y).toFixed(1)} ${Y(x).toFixed(1)}`;
+    const keel = st.shape === "emerald" || st.shape === "baguette" ? 0.25 * st.W : 0;
+    const d = `M${P(-hw2, lay.rg)} L${P(hw2, lay.rg)} L${P(tw, lay.rg + st.hc)} L${P(-tw, lay.rg + st.hc)} Z M${P(-hw2, lay.rg)} L${P(-keel, lay.rg - st.hp)} L${P(keel, lay.rg - st.hp)} L${P(hw2, lay.rg)}`;
+    s += `<path d="${d}" fill="rgba(255,255,255,.7)" stroke="#0f172a" stroke-width=".8" stroke-dasharray="2 2"/>`;
+    s += `<text x="${X(0)}" y="${Y(lay.rg + st.hc) - 4}" text-anchor="middle" font-size="9">${esc(dimsText(st.shape, st))}</text>`;
   }
   // width dimension (below)
   const dy = Y(xmin) + 16;
@@ -1057,6 +1252,8 @@ $("bbRequest").addEventListener("click", () => {
       `Width ${t.width} · depth ${t.depth} · size ${t.size}`,
       `Metal: ${t.metal} · finish: ${t.finish}`,
       `Diamonds: ${t.diamonds}`,
+      t.setting !== "—" ? `Setting: ${t.setting}` : "",
+      t.limits !== "—" ? `Fit rules: ${t.limits}` : "",
       b.engraving.trim() ? `Engraving: "${b.engraving.trim()}"` : "",
       `Estimated weight ${t.weight}`,
     ].filter(Boolean).join("\n");

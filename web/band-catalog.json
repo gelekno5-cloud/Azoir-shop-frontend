@@ -1,0 +1,229 @@
+{
+ "_comment": "Atelier catalogue for the wedding band builder. Edit names, colours, densities, defaults or hide options here; the builder keeps baked-in values if this file is missing. Keys must match the builder's option keys.",
+ "profiles": {
+  "court": {
+   "name": "Court"
+  },
+  "flat": {
+   "name": "Flat"
+  },
+  "dshape": {
+   "name": "D-shape"
+  },
+  "knife": {
+   "name": "Knife edge"
+  },
+  "bevel": {
+   "name": "Bevelled"
+  },
+  "concave": {
+   "name": "Concave"
+  },
+  "round": {
+   "name": "Full round"
+  }
+ },
+ "metals": {
+  "14y": {
+   "name": "14k Yellow Gold",
+   "wizard": "Yellow gold",
+   "color": "#F5D79C",
+   "sw": "#E9CB84",
+   "density": 13.1
+  },
+  "14w": {
+   "name": "14k White Gold",
+   "wizard": "White gold",
+   "color": "#F1F0EC",
+   "sw": "#E6E6E3",
+   "density": 12.7
+  },
+  "14r": {
+   "name": "14k Rose Gold",
+   "wizard": "Rose gold",
+   "color": "#F3C9B3",
+   "sw": "#E6B8A4",
+   "density": 13.0
+  },
+  "18y": {
+   "name": "18k Yellow Gold",
+   "wizard": "Yellow gold",
+   "color": "#F7D08A",
+   "sw": "#E8C06A",
+   "density": 15.5
+  },
+  "18w": {
+   "name": "18k White Gold",
+   "wizard": "White gold",
+   "color": "#EFEEEA",
+   "sw": "#E2E1DD",
+   "density": 15.1
+  },
+  "18r": {
+   "name": "18k Rose Gold",
+   "wizard": "Rose gold",
+   "color": "#F1BFA4",
+   "sw": "#E4AE96",
+   "density": 15.2
+  },
+  "pt": {
+   "name": "Platinum 950",
+   "wizard": "Platinum",
+   "color": "#E1DEDA",
+   "sw": "#D5D2CE",
+   "density": 20.6
+  }
+ },
+ "finishes": {
+  "polished": {
+   "name": "Polished"
+  },
+  "satin": {
+   "name": "Satin"
+  },
+  "hammered": {
+   "name": "Hammered"
+  },
+  "matte": {
+   "name": "Matte"
+  },
+  "brushed": {
+   "name": "Brushed"
+  },
+  "sandblast": {
+   "name": "Sandblast"
+  },
+  "ice": {
+   "name": "Ice"
+  },
+  "bark": {
+   "name": "Bark"
+  }
+ },
+ "settings": {
+  "channel": {
+   "name": "Channel",
+   "wall": 0.45,
+   "gap": 0.15
+  },
+  "bar": {
+   "name": "Bar set",
+   "wall": 0.45,
+   "bar": 0.5,
+   "gap": 0.1
+  },
+  "bezel": {
+   "name": "Bezel",
+   "rim": 0.4,
+   "gap": 0.4
+  },
+  "prong": {
+   "name": "Shared prong",
+   "prong": 0.55,
+   "side": 0.6
+  },
+  "split": {
+   "name": "Split prong",
+   "prong": 0.45,
+   "side": 0.6
+  },
+  "fishtail": {
+   "name": "Fishtail",
+   "side": 0.6,
+   "gap": 0.15,
+   "min": 1.3,
+   "max": 2.5
+  },
+  "uprong": {
+   "name": "U-prong",
+   "prong": 0.55,
+   "side": 0.9
+  }
+ },
+ "shapes": {
+  "round": {
+   "name": "Round brilliant"
+  },
+  "princess": {
+   "name": "Princess"
+  },
+  "cushion": {
+   "name": "Cushion"
+  },
+  "emerald": {
+   "name": "Emerald"
+  },
+  "baguette": {
+   "name": "Baguette"
+  }
+ },
+ "stoneSizes": {
+  "s": {
+   "name": "Petite",
+   "k": 0.75
+  },
+  "m": {
+   "name": "Classic",
+   "k": 1
+  },
+  "l": {
+   "name": "Bold",
+   "k": 1.3
+  }
+ },
+ "edges": {
+  "rounded": "Rounded",
+  "bevel": "Bevelled",
+  "sharp": "Sharp",
+  "milgrain": "Milgrain"
+ },
+ "sizes": {
+  "usToDiameter": {
+   "a": 11.66,
+   "b": 0.811
+  }
+ },
+ "defaults": {
+  "band": {
+   "profile": "court",
+   "interior": "comfort",
+   "width": 4,
+   "depth": 1.8,
+   "metals": [
+    "18y",
+    "18y",
+    "18y"
+   ],
+   "finishes": [
+    "polished",
+    "polished",
+    "polished"
+   ],
+   "size": 7
+  },
+  "his": {
+   "profile": "court",
+   "interior": "comfort",
+   "width": 6,
+   "depth": 2,
+   "metals": [
+    "18y",
+    "18y",
+    "18y"
+   ],
+   "finishes": [
+    "polished",
+    "polished",
+    "polished"
+   ],
+   "size": 10
+  }
+ },
+ "hidden": {
+  "profiles": [],
+  "metals": [],
+  "finishes": [],
+  "settings": [],
+  "shapes": []
+ }
+}

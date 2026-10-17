@@ -138,6 +138,22 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     "Setting" and "Fit rules" rows and draw the stone section. Known approximations: prong-family seats are a continuous
     shallow groove (real rings drill per stone); bezel rows are flush rims with metal bridges between; fishtail points are
     an hourglass prism + 4 beads.
+  - **Batch 2 (branch `claude/band-builder-batch2`, stacked on the stones PR):** "Try it on" tool → lazy `GLTFExporter`
+    bakes the active band (instances merged, plain PBR materials, mm, axis +Y, centred) to a GLB and posts
+    `{type:'tryon:set', config:{type:'ring', metal, model, units:'mm', innerDiameterMm}}` to an iframe of
+    `https://jewel-tryon.pages.dev/?type=ring&embed=1` once it sends `tryon:ready` (origin-checked both ways); "Open on your
+    phone" draws the share link as a QR (qrcode-generator 1.4.4 from cdnjs, lazy). **Wave** (`wave` amplitude, `wavef`,
+    `wavemode` groove/split/both): `sectionAt(sec, depth, th)` varies the section per angle — a 0.6 mm groove meanders on the
+    outer surface and/or the two-zone seam is warped (points move, zone groups stay fixed; per-angle clip bounds keep the
+    per-zone weight honest). Sampling goes to 96 outer points when a wave is on. **Finishes** +brushed (lines across, own
+    roughness map), sandblast, ice (Voronoi facets), bark (wandering ridges). **Custom section** (Shape step): SVG path /
+    DXF polyline / Rhino .3dm (rhino3dm 8.4.0 lazy from jsdelivr) → `prepareCustom()` resamples, requires closed, simple,
+    1.5–12 × 0.8–5 mm, every wall ≥ 0.8 mm (horizontal scan), stores in localStorage `azoir_band_profile`; `profile=custom`
+    in a link only works in the browser that imported it (falls back to court). Stones/edges/interior/wave are off for
+    custom sections. **Spec JSON**: `specJSON()` → "Download spec (JSON)" on the sheet bar and appended to the commission
+    hand-off message. **Catalogue**: `web/band-catalog.json` is fetched at start and merged over the baked-in tables
+    (names, colours, densities, setting numbers, defaults, size chart, `hidden` lists remove options); the JS tables are the
+    fallback. **Chip**: `chipCheck()` hides the stage chip when it would overlap the toolbar pill.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

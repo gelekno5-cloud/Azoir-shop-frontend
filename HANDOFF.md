@@ -167,6 +167,14 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     to the 3D PNG when the reply is `not-live`. PR #10's pricing/order UI is removed from the builder (no `$` anywhere, CTA
     is "Request this band/pair" → commission wizard step 2 with the spec text + spec.json); `server.js`'s `/band-order`
     route and `web/band-thanks.html` are left in place but nothing links to them.
+  - **Try-on consistency (branch `claude/band-builder-tryon-brand`):** the try-on iframe URL now carries `brand=Azoir & Co.`
+    (the try-on app reads it for its start card and tab title). `exportGLB` sends every stone as its own mesh in its own
+    frame (the try-on's gem shader traces the cut per mesh; a merged row rendered as one crystal) with a transmissive
+    "diamond" material, and metal parts keep their alloy colour and finish roughness so the try-on keeps a two-tone band
+    two-tone. Try-on side (`~/Documents/REA Jewle3D`, not a git repo, deployed with `npm run deploy`): `brand` param,
+    `.app.light{color:var(--text)}` (the start heading was near-white on white), stock metal colours moved to the builder's
+    F0 values at roughness 0.035, and uploaded parts with their own metallic colour get a per-colour clone of the shared
+    metal (`Materials.metalFor`) instead of the single selected metal.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

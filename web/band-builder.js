@@ -1556,21 +1556,32 @@ const tryon = { active: false, ready: false, pending: null, timer: 0, wait: 0, p
 const stage = document.querySelector(".bb-stage"), tryFrame = $("bbTryFrame"), tryPill = $("bbTryPill");
 const isPhone = () => matchMedia("(max-width:900px)").matches;
 function tryonSrc() {
-  let u = `${TRYON_ORIGIN}/?type=ring&embed=1&ui=host&theme=light&host=${encodeURIComponent(location.origin)}`;
+  let u = `${TRYON_ORIGIN}/?type=ring&embed=1&ui=host&theme=light&host=${encodeURIComponent(location.origin)}&brand=${encodeURIComponent("Azoir & Co.")}`;
   const photo = PAGE_Q.get("photo"); if (photo) u += `&photo=${encodeURIComponent(photo)}`; // dev: a still instead of the camera
   return u;
 }
 async function exportGLB(view) {
   const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js");
-  const plain = (mat) => new THREE.MeshStandardMaterial({ color: mat.color.clone(), metalness: mat.metalness, roughness: Math.max(0.03, mat.roughness === 1 ? 0.3 : mat.roughness), transparent: mat.transmission > 0, opacity: mat.transmission > 0 ? 0.85 : 1 });
+  // Metal keeps its alloy colour and finish roughness (the try-on reads them per part, so two-tone survives);
+  // every stone goes out as its own mesh in its own frame, which the try-on's gem shader needs to trace the cut.
+  const plain = (mat) => mat === stoneMat
+    ? new THREE.MeshPhysicalMaterial({ name: "diamond", color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, transmission: 0.3, thickness: 0.5 })
+    : new THREE.MeshStandardMaterial({ name: "metal", color: mat.color.clone(), metalness: 1, roughness: Math.max(0.03, mat.roughness === 1 ? 0.3 : mat.roughness) });
   const g = new THREE.Group();
   for (const p of view.parts) {
     if (p.material === view.engraveMat) continue;
-    if (p.isInstancedMesh) {
+    if (p.isInstancedMesh && p.material === stoneMat) {
+      const m = new THREE.Matrix4();
+      for (let i = 0; i < p.count; i++) {
+        const stone = new THREE.Mesh(p.geometry, plain(stoneMat)); stone.name = `diamond_${i + 1}`;
+        p.getMatrixAt(i, m); m.decompose(stone.position, stone.quaternion, stone.scale);
+        g.add(stone);
+      }
+    } else if (p.isInstancedMesh) {
       const geos = [], m = new THREE.Matrix4();
       for (let i = 0; i < p.count; i++) { const gg = p.geometry.clone(); p.getMatrixAt(i, m); gg.applyMatrix4(m); geos.push(gg); }
-      g.add(new THREE.Mesh(mergeGeometries(geos, false), plain(p.material)));
-    } else g.add(new THREE.Mesh(p.geometry, Array.isArray(p.material) ? p.material.map(plain) : plain(p.material)));
+      const mesh = new THREE.Mesh(mergeGeometries(geos, false), plain(p.material)); mesh.name = "setting"; g.add(mesh);
+    } else { const mesh = new THREE.Mesh(p.geometry, Array.isArray(p.material) ? p.material.map(plain) : plain(p.material)); mesh.name = "band"; g.add(mesh); }
   }
   return new Promise((res, rej) => new GLTFExporter().parse(g, res, rej, { binary: true }));
 }

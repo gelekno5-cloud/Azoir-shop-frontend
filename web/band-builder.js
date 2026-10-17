@@ -31,46 +31,6 @@ const METALS = {
   "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#F1BFA4", density: 15.2, sw: "#E4AE96" },
   "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#E1DEDA", density: 20.6, sw: "#D5D2CE" },
 };
-// ── Pricing (owner, 2026-10-17) ──────────────────────────────────────────────
-// Estimate = metal weight × the alloy's rate + flat labour per band. 14k is
-// $120/g; 18k scales by fine-gold content (0.750 / 0.585). A metal with no
-// rate (platinum, until the atelier sets one) makes the band "quoted
-// individually". Diamonds are never estimated here. Editable in
-// band-catalog.json under "pricing".
-let PRICING = {
-  laborCents: 10000,
-  perGramCents: { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null },
-};
-const usd = (cents) => "$" + Math.round(cents / 100).toLocaleString("en-US");
-// One band: metal per zone (its own rate) + labour. `unpriced` lists metals without a rate.
-function estimateBand(b, m) {
-  let metalCents = 0; const unpriced = [];
-  for (let z = 0; z < b.zones; z++) {
-    const rate = PRICING.perGramCents[b.metals[z]];
-    if (rate == null) { if (!unpriced.includes(METALS[b.metals[z]].name)) unpriced.push(METALS[b.metals[z]].name); continue; }
-    metalCents += m.zoneGrams[z] * rate;
-  }
-  metalCents = Math.round(metalCents);
-  const laborCents = PRICING.laborCents;
-  return { metalCents, laborCents, totalCents: unpriced.length ? null : metalCents + laborCents, unpriced, stones: m.stones > 0 };
-}
-// Every band in the current design, summed.
-function estimateAll() {
-  const list = ui.pair ? [0, 1] : [0];
-  const parts = list.map((i) => estimateBand(bands[i], views[i].metrics));
-  const unpriced = [...new Set(parts.flatMap((e) => e.unpriced))];
-  return {
-    parts, unpriced,
-    metalCents: parts.reduce((a, e) => a + e.metalCents, 0),
-    laborCents: parts.reduce((a, e) => a + e.laborCents, 0),
-    totalCents: unpriced.length ? null : parts.reduce((a, e) => a + e.totalCents, 0),
-    stones: parts.some((e) => e.stones),
-  };
-}
-function estimateText(e, short = false) {
-  if (e.totalCents == null) return short ? "Quoted individually" : `Quoted individually (${e.unpriced.join(", ")} has no set rate yet)`;
-  return `≈ ${usd(e.totalCents)}` + (e.stones ? (short ? " + diamonds" : " + diamonds, quoted separately") : "");
-}
 // Each finish is a real surface: a generated normal map at true scale (tile = mm).
 const FINISHES = {
   polished: { name: "Polished",  roughness: 0.035 },
@@ -162,6 +122,7 @@ function readHash() {
   ui.pair = q.get("pair") === "1";
   if (ui.pair) { ui.link = q.get("link") !== "0"; readBand(q, "b_", bands[1]); }
   const ss = q.get("sizesys"); if (ss && SIZE_SYS[ss]) ui.sizesys = ss;
+  ui.tryonStart = q.get("tryon") === "1"; // a QR-scanned link opens straight into try-on
 }
 function writeBand(q, p, b) {
   q.set(p + "profile", b.profile); q.set(p + "interior", b.interior); q.set(p + "width", b.width); q.set(p + "depth", b.depth);
@@ -1092,7 +1053,7 @@ function resize() {
 new ResizeObserver(() => { resize(); requestAnimationFrame(chipCheck); setTimeout(chipCheck, 150); }).observe(viewer);
 window.addEventListener("resize", () => setTimeout(chipCheck, 250));
 resize();
-renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+renderer.setAnimationLoop(() => { controls.update(); if (!tryon.active) renderer.render(scene, camera); }); // the try-on owns the stage while it's up
 
 // ── UI ───────────────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -1118,7 +1079,6 @@ function bandText(b, v) {
     size: `${sizeText(b.size)} · ${fmt(usToDiameter(b.size))} mm inside`,
     engraving: b.engraving.trim() ? `“${b.engraving.trim()}” (${{ script: "script", serif: "serif", sans: "modern" }[b.font]})` : "—",
     weight,
-    estimate: (() => { const e = estimateBand(b, m); return e.totalCents == null ? estimateText(e) : `${estimateText(e)} (metal ${usd(e.metalCents)} + labour ${usd(e.laborCents)})`; })(),
   };
 }
 // Profile icons are the real cross-sections (same functions that cut the band).
@@ -1140,7 +1100,7 @@ const setRange = (el, v, label) => {
   const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
 };
 
-const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight", estimate: "Est. price" };
+const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
 
 function syncUI() {
   const b = active();
@@ -1215,18 +1175,13 @@ function syncUI() {
   if (ui.pair) {
     const m1 = views[1].metrics;
     $("bbBarTitle").textContent = `${BAND_NAMES[0]} ${fmt(b0.width)} mm · ${BAND_NAMES[1]} ${fmt(bands[1].width)} mm`;
-    $("bbBarSub").textContent = `US ${usLabel(b0.size)} / ${usLabel(bands[1].size)} · ≈ ${fmt(m0.grams + m1.grams)} g together · ${estimateText(estimateAll(), true)}`;
+    $("bbBarSub").textContent = `US ${usLabel(b0.size)} / ${usLabel(bands[1].size)} · ≈ ${fmt(m0.grams + m1.grams)} g together`;
   } else {
     const short = (k) => METALS[k].name.replace(" Gold", "").replace(" 950", "");
     $("bbBarTitle").textContent = `${PROFILES[b0.profile].name} · ${short(b0.metals[0])}${b0.zones > 1 ? " + " + (b0.zones - 1) : ""}`;
-    $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""} · ${estimateText(estimateAll(), true)}`;
+    $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""}`;
   }
-  const est = estimateAll();
-  ui.canOrder = est.totalCents != null && !est.stones;
-  $("bbRequestLabel").textContent = ui.canOrder
-    ? `Order ${ui.pair ? "this pair" : "this band"} · ${usd(est.totalCents)}`
-    : `Request a quote${ui.pair ? " for this pair" : ""}`;
-  $("bbQuoteLink").hidden = !ui.canOrder;
+  $("bbRequestLabel").textContent = ui.pair ? "Request this pair" : "Request this band";
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
@@ -1251,6 +1206,7 @@ function update(geom = true) {
   layoutViews();
   syncUI();
   writeHash();
+  if (tryon.active) { syncTryUI(); scheduleResend(500); }
 }
 
 panel.addEventListener("click", (e) => {
@@ -1385,17 +1341,16 @@ function openSheet() {
       </div>
       <img class="bb-doc-snap" src="${snapshot()}" alt="3D preview">
       ${list.map(bandBlock).join("")}
-      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. Prices are estimates: metal by weight at the atelier's current rate plus labour per band; diamonds, and any metal without a set rate, are quoted individually. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
+      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. No prices are shown: every design is quoted individually by the atelier. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
     </div>`;
   sheet.classList.add("open");
   sheet.scrollTop = 0;
 }
 $("bbSheetBtn").addEventListener("click", openSheet);
 
-// The spec as the atelier reads it — the same text goes into the order and into a quote request.
+// The spec as the atelier reads it — this text goes into the commission request.
 function specText() {
   const list = ui.pair ? [0, 1] : [0];
-  const est = estimateAll();
   const blocks = list.map((i) => {
     const b = bands[i], t = bandText(b, views[i]);
     return [
@@ -1409,18 +1364,17 @@ function specText() {
       t.limits !== "—" ? `Fit rules: ${t.limits}` : "",
       b.engraving.trim() ? `Engraving: "${b.engraving.trim()}"` : "",
       `Estimated weight ${t.weight}`,
-      `Estimated price: ${t.estimate}`,
     ].filter(Boolean).join("\n");
   });
   return [
     `Wedding band${ui.pair ? "s (His & Hers pair" + (ui.link ? ", linked)" : ")") : ""} — ref ${refCode()}\n${location.href}`,
     ...blocks,
-    `Estimate for the ${ui.pair ? "pair" : "band"}: ${estimateText(est)} — metal by weight (14k $120/g, 18k by gold content) plus $100 labour per band; diamonds quoted separately.`,
+    "Inquiry only — every design is quoted individually by the atelier.",
   ].join("\n\n");
 }
 
-// Quote path: hand the design to the commission wizard (same localStorage it
-// reads), which takes the $60 design fee and sends the brief to the atelier.
+// Hand the design to the commission wizard (same localStorage it reads), which
+// sends the brief to the atelier. No prices anywhere: the site is inquiry-only.
 function requestQuote() {
   writeHash();
   const list = ui.pair ? [0, 1] : [0];
@@ -1432,52 +1386,13 @@ function requestQuote() {
   if (anyStones && !saved.stone) saved.stone = "";
   else if (!anyStones) saved.stone = "No stone";
   const own = (saved.message || "").split("\n\n--- your notes ---\n")[1] || (saved.message && !/from the builder|— ref AZB-/.test(saved.message) ? saved.message : "");
-  saved.message = specText() + (own ? "\n\n--- your notes ---\n" + own : "");
+  saved.message = specText() + "\n\n--- spec.json ---\n" + JSON.stringify(specJSON()) + (own ? "\n\n--- your notes ---\n" + own : "");
   saved.step = 2;
   try { localStorage.setItem("azoir_wiz", JSON.stringify(saved)); } catch {}
   location.href = "commission.html?from=band-builder";
 }
 
-// Order path: a priced design (no diamonds, every metal with a rate) goes
-// straight to checkout. The server prices the spec again and opens Stripe;
-// the design is kept so a cancelled payment comes back to it.
-function placeOrder() {
-  writeHash();
-  const form = $("bbOrderForm");
-  form.elements.spec.value = JSON.stringify(specJSON());
-  form.elements.spec_text.value = specText();
-  form.elements.hash.value = location.hash.slice(1);
-  try { localStorage.setItem("azoir_band_last", location.hash.slice(1)); } catch {}
-  $("bbRequest").disabled = true; // one checkout per click
-  form.submit();
-}
-$("bbRequest").addEventListener("click", () => (ui.canOrder ? placeOrder() : requestQuote()));
-$("bbQuoteLink").addEventListener("click", (e) => { e.preventDefault(); requestQuote(); });
-// Back from Stripe can restore this page from the back-forward cache.
-window.addEventListener("pageshow", () => { $("bbRequest").disabled = false; });
-
-// Back from checkout (?order=…): bring the design back and say what happened.
-(function orderNotice() {
-  const q = new URLSearchParams(location.search);
-  const code = q.get("order");
-  if (!code) return;
-  if (!location.hash.slice(1)) {
-    let last = ""; try { last = localStorage.getItem("azoir_band_last") || ""; } catch {}
-    if (last) history.replaceState(null, "", location.pathname + location.search + "#" + last);
-  }
-  const msg = {
-    cancelled: "Your payment wasn't completed, so nothing was ordered. Your design is still here — order it when you're ready.",
-    quote: "This design needs a quote from the atelier before it can be ordered — use Request a quote and we'll price it for you.",
-    weight: "We couldn't price this design automatically. Request a quote and the atelier will price it by hand.",
-    busy: "That was a little quick for us — give it a few seconds and press Order again. If it keeps happening, write to hello@azoir.co.",
-    error: "We couldn't open the payment page. Please try again in a moment, or write to hello@azoir.co.",
-  }[code];
-  if (msg) { const n = $("bbNotice"); n.textContent = msg; n.hidden = false; }
-  q.delete("order");
-  const rest = q.toString();
-  try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch {}
-})();
-
+$("bbRequest").addEventListener("click", requestQuote);
 
 // ── Custom cross-section import (SVG path, DXF polyline, Rhino .3dm) ─────────
 // The file describes the section in mm: y along the band axis, x radial. We
@@ -1606,7 +1521,7 @@ function specJSON() {
   const r2 = (v) => Math.round(v * 100) / 100;
   return {
     version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined,
-    estimate: (() => { const e = estimateAll(); return { totalCents: e.totalCents, metalCents: e.metalCents, laborCents: e.laborCents, unpricedMetals: e.unpriced, basis: "metal weight × rate per gram + labour per band; diamonds quoted separately", perGramCents: PRICING.perGramCents, laborCentsPerBand: PRICING.laborCents }; })(),
+    prices: "inquiry only — quoted individually by the atelier",
     bands: list.map((i) => {
       const b = bands[i], v = views[i], m = v.metrics, st = v.sec && v.sec.stone, zb = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
       return {
@@ -1619,7 +1534,6 @@ function specJSON() {
         stones: m.stones ? { count: m.stones, shape: b.shape, shapeName: SHAPES[b.shape].name, span: b.stones, sizeKey: b.stonesz, shortMm: r2(st.s), acrossBandMm: r2(st.W), alongBandMm: r2(st.Lx), depthMm: r2(st.D), caratsTotal: r2(m.carats), setting: b.setting, settingName: SETTINGS[b.setting].name, detail: m.setting, fitRules: m.limits, grooveWidthMm: r2(st.channelW), grooveDepthMm: r2(st.channelD) } : null,
         engraving: b.engraving.trim() ? { text: b.engraving.trim(), style: b.font } : null,
         weightG: r2(m.grams),
-        estimate: (() => { const e = estimateBand(b, m); return { metalCents: e.metalCents, laborCents: e.laborCents, totalCents: e.totalCents, unpricedMetals: e.unpriced, diamondsIncluded: false }; })(),
         customProfile: b.profile === "custom" && CUSTOM ? { name: CUSTOM.name, points: CUSTOM.pts.map((p) => [r2(p.x), r2(p.y)]) } : undefined,
       };
     }),
@@ -1633,8 +1547,19 @@ function downloadSpec() {
 }
 
 // ── Try it on: export the band as GLB (mm, axis +Y, centred) and hand it to the try-on page ──
-const TRYON_ORIGIN = "https://jewel-tryon.pages.dev";
-let tryFrameReady = false, tryPending = null;
+// ── Try it on: the try-on app runs inside the stage, fed live with the current band ──
+// Contract (host mode): iframe ← tryon:set {config:{type,metal,model,innerDiameterMm,fit}}, tryon:cmd {action:'stop'|'snapshot'};
+// iframe → tryon:ready, tryon:change {live, tracking, modelLoaded}, tryon:photo {dataUrl}|{error}.
+const PAGE_Q = new URLSearchParams(location.search);
+const TRYON_ORIGIN = (() => { const o = PAGE_Q.get("tryon"); return o && /^https?:\/\/[^/]+$/.test(o) ? o : "https://jewel-tryon.pages.dev"; })();
+const tryon = { active: false, ready: false, pending: null, timer: 0, wait: 0, photoWaiters: [] };
+const stage = document.querySelector(".bb-stage"), tryFrame = $("bbTryFrame"), tryPill = $("bbTryPill");
+const isPhone = () => matchMedia("(max-width:900px)").matches;
+function tryonSrc() {
+  let u = `${TRYON_ORIGIN}/?type=ring&embed=1&ui=host&theme=light&host=${encodeURIComponent(location.origin)}`;
+  const photo = PAGE_Q.get("photo"); if (photo) u += `&photo=${encodeURIComponent(photo)}`; // dev: a still instead of the camera
+  return u;
+}
 async function exportGLB(view) {
   const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js");
   const plain = (mat) => new THREE.MeshStandardMaterial({ color: mat.color.clone(), metalness: mat.metalness, roughness: Math.max(0.03, mat.roughness === 1 ? 0.3 : mat.roughness), transparent: mat.transmission > 0, opacity: mat.transmission > 0 ? 0.85 : 1 });
@@ -1652,40 +1577,88 @@ async function exportGLB(view) {
 function tryonConfig(model) {
   const b = bands[ui.active];
   const metal = { "14y": "yellow", "18y": "yellow", "14w": "white", "18w": "white", "14r": "rose", "18r": "rose", pt: "platinum" }[b.metals[0]] || "yellow";
-  return { type: "tryon:set", config: { type: "ring", metal, model, units: "mm", innerDiameterMm: Math.round(usToDiameter(b.size) * 100) / 100 } };
+  return { type: "tryon:set", config: { type: "ring", metal, model, units: "mm", innerDiameterMm: Math.round(usToDiameter(b.size) * 100) / 100, fit: 1 } };
 }
-function postTryon() {
-  if (!tryFrameReady || !tryPending) return;
-  const frame = $("bbTryFrame"), model = tryPending; tryPending = null;
-  frame.contentWindow.postMessage(tryonConfig(model), TRYON_ORIGIN, [model]);
+function pill(text) { tryPill.textContent = text || ""; tryPill.hidden = !text; }
+function postCmd(action) { if (tryon.ready && tryFrame.contentWindow) tryFrame.contentWindow.postMessage({ type: "tryon:cmd", action }, TRYON_ORIGIN); }
+function postPending() {
+  if (!tryon.ready || !tryon.pending || !tryon.active) return;
+  const model = tryon.pending; tryon.pending = null;
+  tryFrame.contentWindow.postMessage(tryonConfig(model), TRYON_ORIGIN, [model]);
+  clearTimeout(tryon.wait);
+  tryon.wait = setTimeout(() => { if (tryon.active) pill("Still loading… allow the camera if asked, or check your connection."); }, 8000);
+}
+// Any rebuild while trying on re-exports the band (debounced) and sends it across.
+function scheduleResend(delay = 500) {
+  clearTimeout(tryon.timer);
+  tryon.timer = setTimeout(async () => {
+    if (!tryon.active) return;
+    pill("Updating your band…");
+    try { tryon.pending = await exportGLB(views[ui.active]); postPending(); }
+    catch (err) { pill("Couldn't export the band: " + err.message); }
+  }, delay);
 }
 window.addEventListener("message", (e) => {
-  if (e.origin !== TRYON_ORIGIN || !e.data || e.data.type !== "tryon:ready") return;
-  tryFrameReady = true; postTryon();
+  if (e.origin !== TRYON_ORIGIN || !e.data || typeof e.data.type !== "string") return;
+  const d = e.data;
+  if (d.type === "tryon:ready") { tryon.ready = true; postPending(); }
+  else if (d.type === "tryon:change") {
+    if (d.modelLoaded) { clearTimeout(tryon.wait); pill(d.tracking === "lost" ? "Show the back of your hand to the camera" : ""); }
+    else if (d.live === false && !tryon.pending && !tryon.wait) pill("Allow the camera to try it on");
+  } else if (d.type === "tryon:photo") tryon.photoWaiters.splice(0).forEach((fn) => fn(d));
 });
-async function openTryon() {
-  const modal = $("bbTry"), frame = $("bbTryFrame"), status = $("bbTryStatus");
-  modal.hidden = false; $("bbQrWrap").hidden = true;
-  if (!frame.src) { tryFrameReady = false; frame.src = TRYON_ORIGIN + "/?type=ring&embed=1"; }
-  status.textContent = "Preparing your band…";
-  try {
-    const buf = await exportGLB(views[ui.active]);
-    tryPending = buf; status.textContent = `${ui.pair ? BAND_NAMES[ui.active] + " band" : "Your band"} sent to the try-on (${Math.round(buf.byteLength / 1024)} KB). Allow the camera when asked.`;
-    postTryon();
-  } catch (err) { status.textContent = "Couldn't export the band: " + err.message; }
+function syncTryUI() {
+  stage.classList.toggle("tryon", tryon.active);
+  document.querySelector(".bb-app").classList.toggle("tryon-full", tryon.active && isPhone());
+  document.body.classList.toggle("tryon-lock", tryon.active && isPhone());
+  document.querySelectorAll("[data-view]").forEach((el) => { const on = (el.dataset.view === "try") === tryon.active; el.classList.toggle("on", on); el.setAttribute("aria-pressed", on); });
+  document.querySelectorAll(".bb-trybar [data-band]").forEach((el) => el.classList.toggle("on", Number(el.dataset.band) === ui.active));
+  $("bbTryBands").hidden = !ui.pair;
+  $("bbTryQr").hidden = true;
+}
+function enterTryon() {
+  if (tryon.active) return;
+  tryon.active = true;
+  if (!tryFrame.src) { tryon.ready = false; tryFrame.hidden = false; tryFrame.src = tryonSrc(); }
+  syncTryUI();
+  pill("Preparing your band…");
+  scheduleResend(0);
+}
+function leaveTryon() {
+  if (!tryon.active) return;
+  tryon.active = false; clearTimeout(tryon.timer); clearTimeout(tryon.wait); tryon.pending = null;
+  postCmd("stop"); // camera off; the iframe stays loaded for next time
+  pill("");
+  syncTryUI();
+}
+async function savePhoto() {
+  const reply = await new Promise((res) => { const t = setTimeout(() => res(null), 4000); tryon.photoWaiters.push((d) => { clearTimeout(t); res(d); }); postCmd("snapshot"); });
+  const a = document.createElement("a");
+  if (reply && reply.dataUrl) { a.download = "azoir-band-on-hand.png"; a.href = reply.dataUrl; }
+  else {
+    pill(reply && reply.error === "not-live" ? "The camera isn't live yet — saved the 3D view instead." : "No photo came back — saved the 3D view instead.");
+    setTimeout(() => { if (tryon.active) pill(""); }, 2800);
+    a.download = `azoir-wedding-band-${bands[0].metals[0]}-${fmt(bands[0].width)}mm.png`; a.href = snapshot();
+  }
+  a.click();
 }
 async function showQr() {
   writeHash();
-  const wrap = $("bbQrWrap"), box = $("bbQr"); wrap.hidden = false; box.textContent = "";
+  const wrap = $("bbTryQr"), box = $("bbQr"); wrap.hidden = false; box.textContent = "";
   if (!window.qrcode) await new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("QR library failed to load")); document.head.appendChild(sc); }).catch((e) => { box.textContent = e.message; });
   if (!window.qrcode) return;
-  const qr = window.qrcode(0, "M"); qr.addData(location.href); qr.make();
+  const url = location.href + (location.hash.length > 1 ? "&" : "#") + "tryon=1"; // opens straight into try-on on the phone
+  const qr = window.qrcode(0, "M"); qr.addData(url); qr.make();
   box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
 }
-$("bbTryBtn").addEventListener("click", openTryon);
-$("bbTryClose").addEventListener("click", () => { $("bbTry").hidden = true; });
-$("bbTry").addEventListener("click", (e) => { if (e.target === $("bbTry")) $("bbTry").hidden = true; });
-$("bbQrBtn").addEventListener("click", showQr);
+document.querySelectorAll("[data-view]").forEach((el) => el.addEventListener("click", () => (el.dataset.view === "try" ? enterTryon() : leaveTryon())));
+for (const id of ["bbTryBack", "bbTryBackBar", "bbTryCloseBar"]) $(id).addEventListener("click", leaveTryon);
+$("bbTryPhoto").addEventListener("click", savePhoto);
+for (const id of ["bbQrBtn", "bbQrBtnBar"]) $(id).addEventListener("click", showQr);
+$("bbQrClose").addEventListener("click", () => { $("bbTryQr").hidden = true; });
+document.querySelectorAll(".bb-trybar [data-band]").forEach((el) => el.addEventListener("click", () => { ui.active = Number(el.dataset.band); update(false); }));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && tryon.active) leaveTryon(); });
+matchMedia("(max-width:900px)").addEventListener("change", () => { if (tryon.active) syncTryUI(); });
 
 // ── Chip vs toolbar: hide the chip when they would overlap ───────────────────
 function chipCheck() {
@@ -1704,7 +1677,6 @@ function applyCatalog(c) {
   if (c.edges) Object.assign(EDGES, c.edges);
   if (c.sizes && c.sizes.usToDiameter) { SIZE_A = c.sizes.usToDiameter.a; SIZE_B = c.sizes.usToDiameter.b; }
   if (c.defaults) DEFAULTS = c.defaults;
-  if (c.pricing) PRICING = { laborCents: c.pricing.laborCents ?? PRICING.laborCents, perGramCents: { ...PRICING.perGramCents, ...(c.pricing.perGramCents || {}) } };
   const hide = (opt, keys, table) => { for (const k of keys || []) { delete table[k]; panel.querySelectorAll(`[data-opt="${opt}"][data-v="${k}"]`).forEach((el) => el.remove()); } };
   if (c.hidden) { hide("profile", c.hidden.profiles, PROFILES); hide("metal", c.hidden.metals, METALS); hide("finish", c.hidden.finishes, FINISHES); hide("setting", c.hidden.settings, SETTINGS); hide("shape", c.hidden.shapes, SHAPES); }
   // swatches/names from the catalogue
@@ -1718,23 +1690,12 @@ async function loadCatalog() {
   } catch (e) { /* baked-in tables stay in force */ }
 }
 
-// Bot-gate stamp for /band-order. Kept in localStorage so a bounce back from
-// the server (or any reload) doesn't make the next click "too fast"; it renews
-// past 5 h. The server only checks that it exists and is at least 4 s old.
-{
-  let stamp = 0;
-  try { stamp = Number(localStorage.getItem("azoir_band_ts")) || 0; } catch {}
-  if (!(stamp <= Date.now() && Date.now() - stamp < 5 * 60 * 60 * 1000)) {
-    stamp = Date.now();
-    try { localStorage.setItem("azoir_band_ts", String(stamp)); } catch {}
-  }
-  $("bbOrderForm").elements.fg_ts.value = String(stamp);
-}
 loadCatalog().then(() => {
   Object.assign(bands[0], defaultBand(0)); Object.assign(bands[1], defaultBand(1)); // catalogue defaults
   readHash();
   update();
   fitView();
+  if (ui.tryonStart) enterTryon();
   document.fonts?.ready.then(() => { if (bands.some((b) => b.engraving.trim())) update(); });
-  window.__bandBuilder = { bands, ui, views, state: bands[0], metrics: views[0].metrics, scene, renderer, camera, rebuild: update, fitView, openSheet, specJSON, exportGLB, importProfile, prepareCustom, CUSTOM: () => CUSTOM };
+  window.__bandBuilder = { bands, ui, views, state: bands[0], metrics: views[0].metrics, scene, renderer, camera, rebuild: update, fitView, openSheet, specJSON, exportGLB, importProfile, prepareCustom, CUSTOM: () => CUSTOM, tryon, enterTryon, leaveTryon, TRYON_ORIGIN };
 });

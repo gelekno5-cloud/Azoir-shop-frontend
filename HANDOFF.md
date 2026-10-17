@@ -154,6 +154,19 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     hand-off message. **Catalogue**: `web/band-catalog.json` is fetched at start and merged over the baked-in tables
     (names, colours, densities, setting numbers, defaults, size chart, `hidden` lists remove options); the JS tables are the
     fallback. **Chip**: `chipCheck()` hides the stage chip when it would overlap the toolbar pill.
+  - **Stage try-on + prices off (branch `claude/band-builder-stage`):** the try-on modal is gone; a "3D view | Try it on"
+    segmented control (top-right, top-centre on phones) swaps the stage to an in-place iframe of
+    `${TRYON_ORIGIN}/?type=ring&embed=1&ui=host&theme=light&host=<our origin>` (set once; `?tryon=http://localhost:5188`
+    on the page URL overrides the origin for dev, `?photo=<url>` passes a still through). While active the render loop
+    skips `renderer.render`, intro/chip/hint hide, the toolbar shows Back to 3D · Save photo · Open on your phone, Escape
+    leaves, leaving posts `tryon:cmd stop` and keeps the iframe loaded. Every `update()` while active debounces 500 ms,
+    re-exports the active band (GLB, mm, +Y) and posts `tryon:set {…, fit:1}`; a stage pill says "Updating your band…"
+    until `tryon:change {modelLoaded}` (8 s → "Still loading…"). Phones: `.bb-app.tryon-full` makes the stage fixed
+    full-screen above the nav with a 48 px bar (Back · Hers/His · phone · ×) and `body.tryon-lock` stops scroll. QR links
+    add `tryon=1` to the hash so the phone opens straight into try-on. Save photo = `tryon:cmd snapshot` → PNG, falling back
+    to the 3D PNG when the reply is `not-live`. PR #10's pricing/order UI is removed from the builder (no `$` anywhere, CTA
+    is "Request this band/pair" → commission wizard step 2 with the spec text + spec.json); `server.js`'s `/band-order`
+    route and `web/band-thanks.html` are left in place but nothing links to them.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

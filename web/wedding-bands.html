@@ -67,6 +67,9 @@
 .bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .bb-note{font-size:12.5px;color:var(--bb-mute);margin:10px 0 0;line-height:1.55}
 .bb-note a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px}
+.bb-notice{margin:14px 0 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-ink);border-radius:10px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
+.bb-pricing{margin:14px 0 4px;font-size:12.5px;color:var(--bb-mute);line-height:1.55}
+.bb-pricing a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .bb-tabs{display:flex;margin:16px 26px 0;border-bottom:1px solid var(--bb-line);overflow-x:auto;scrollbar-width:none;gap:4px;justify-content:space-between}
 .bb-tabs::-webkit-scrollbar{display:none}
 .bb-tabs button{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font-size:12.5px;font-weight:500;color:var(--bb-mute);padding:12px 6px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s ease}
@@ -267,7 +270,7 @@
     <div class="bb-intro">
       <span class="bb-kicker">Wedding band builder</span>
       <h1>Design your band, <em>live</em> in 3D.</h1>
-      <p>Every option is cut into real geometry and weighed. When it's right, print the spec sheet or send it to our New York atelier.</p>
+      <p>Every option is cut into real geometry, weighed and priced. When it's right, order it — or send it to our New York atelier for a quote.</p>
     </div>
     <span class="bb-chip" id="bbChip"></span>
     <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
@@ -297,6 +300,7 @@
         </div>
       </div>
       <p class="bb-note" id="bbPairNote" hidden>Linked bands share profile, interior, edges, metals and finish. Width, depth, size, diamonds and engraving are set per band.</p>
+      <p class="bb-notice" id="bbNotice" role="status" hidden></p>
     </header>
 
     <div class="bb-tabs" role="tablist" aria-label="Design steps">
@@ -516,6 +520,7 @@
         <summary>Full specification <span id="bbSumHint"></span></summary>
         <div id="bbSummary"></div>
       </details>
+      <p class="bb-pricing">Priced by weight: 14k gold at $120 per gram, 18k by its gold content, plus $100 of labour per band; insured shipping included. Diamonds and platinum are quoted individually. Paid by card at checkout; a designer confirms the specification with you before we begin. <a id="bbQuoteLink" href="commission.html" hidden>Prefer to talk to a designer first? Request a quote</a></p>
     </div>
 
     <footer class="bb-bar">
@@ -523,6 +528,12 @@
       <button type="button" class="bb-cta" id="bbRequest"><em id="bbRequestLabel" style="font-style:normal">Request this band</em><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></i></button>
     </footer>
   </aside>
+  <!-- real form, populated + submitted by band-builder.js (placeOrder) -->
+  <form id="bbOrderForm" method="POST" action="/band-order" hidden>
+    <input name="spec"><input name="spec_text"><input name="hash">
+    <input type="hidden" name="fg_ts" value="">
+    <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
+  </form>
   <div class="bb-modal" id="bbTry" hidden>
     <div class="bb-modal-card" role="dialog" aria-label="Try it on">
       <div class="bb-modal-head"><b>Try it on</b><div><button type="button" class="bb-segb" id="bbQrBtn">Open on your phone</button><button type="button" class="bb-modal-x" id="bbTryClose" aria-label="Close">×</button></div></div>
@@ -565,7 +576,7 @@
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=28"></script>
+<script type="module" src="band-builder.js?v=29"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 </body>

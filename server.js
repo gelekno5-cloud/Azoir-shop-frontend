@@ -224,6 +224,191 @@ async function sendInquiryEmails(f, session) {
   }
 }
 
+// ── Wedding band orders ──────────────────────────────────────────────────────
+// A band designed in the builder (wedding-bands.html) and paid in full by
+// card. The row goes into the shared Supabase (band_orders, migration
+// 2026-10-17 in the Moksh Diam repo) as pending_payment BEFORE the customer
+// sees Stripe, so the spec never has to fit in Stripe's metadata; the success
+// redirect and the webhook both mark it paid, and the compare-and-set on
+// status makes whichever lands second a no-op. The atelier processes it in
+// Moksh Diam under /app/band-orders.
+//
+// The price is recomputed here from the spec's per-zone weights and the
+// atelier's rates — the browser's number is never charged. The weights come
+// from the browser's 3D model, so they're bounded against the ring's
+// bounding annulus (a band is at least ~45% of it and never above it by much)
+// and the bench confirms the weight before casting.
+const BAND_MODE = "azoir_band";
+const BAND_LABOR_CENTS = 10000;                        // per band (owner, 2026-10-17)
+const BAND_RATES = { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null }; // cents per gram; null = quoted
+const BAND_DENSITY = { "14y": 13.1, "14w": 12.7, "14r": 13.0, "18y": 15.5, "18w": 15.1, "18r": 15.2, pt: 20.6 };
+const BAND_SHIP_COUNTRIES = ["US", "CA", "GB"];
+const ADMIN_URL = (process.env.ADMIN_URL || "https://mokshdiam.com").replace(/\/+$/, "");
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Supabase REST with the service role. Returns parsed JSON (or null) and the status. */
+async function sb(pathAndQuery, { method = "GET", body, prefer } = {}) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("supabase env unset");
+  const r = await fetch(`${url}/rest/v1/${pathAndQuery}`, {
+    method,
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(prefer ? { Prefer: prefer } : {}) },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await r.text();
+  if (!r.ok) throw Object.assign(new Error(`supabase ${r.status}: ${text.slice(0, 300)}`), { status: r.status });
+  return text ? JSON.parse(text) : null;
+}
+
+const num = (v, lo, hi) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : null);
+const str = (v, max) => (typeof v === "string" && v.length <= max ? v : null);
+
+/**
+ * Check the builder's spec JSON and price it. Returns { spec, metalCents, laborCents, summary }
+ * or { reject: "quote" | "invalid" | "weight" }. "quote" = diamonds or an unpriced metal: the
+ * wizard path handles those.
+ */
+function priceBandSpec(raw) {
+  if (typeof raw !== "string" || raw.length > 40000) return { reject: "invalid" };
+  let spec;
+  try { spec = JSON.parse(raw); } catch { return { reject: "invalid" }; }
+  if (!spec || spec.version !== 2 || !Array.isArray(spec.bands) || spec.bands.length < 1 || spec.bands.length > 2) return { reject: "invalid" };
+  if (!/^AZB-[A-Z2-9]{6}$/.test(String(spec.ref || ""))) return { reject: "invalid" };
+  const pair = spec.bands.length === 2;
+  if (!!spec.pair !== pair) return { reject: "invalid" };
+  let metalCents = 0;
+  const summary = [];
+  for (const b of spec.bands) {
+    if (!b || typeof b !== "object") return { reject: "invalid" };
+    const width = num(b.widthMm, 1.5, 12), depth = num(b.depthMm, 0.8, 4), us = num(b.size && b.size.us, 2, 16), grams = num(b.weightG, 0.2, 120);
+    if (width == null || depth == null || us == null || grams == null || !Array.isArray(b.zones) || b.zones.length < 1 || b.zones.length > 3) return { reject: "invalid" };
+    if (!b.profile || !str(b.profile.key, 20) || !str(b.profile.name, 40)) return { reject: "invalid" };
+    if (b.engraving && (!str(b.engraving.text, 30) || !str(b.engraving.style, 20))) return { reject: "invalid" };
+    if (b.stones) return { reject: "quote" };
+    let zoneGrams = 0, boundDensity = 0;
+    for (const z of b.zones) {
+      if (!z || !(z.metal in BAND_RATES) || !str(z.metalName, 40) || !str(z.finishName, 40)) return { reject: "invalid" };
+      const g = num(z.weightG, 0, 120);
+      if (g == null) return { reject: "invalid" };
+      if (BAND_RATES[z.metal] == null) return { reject: "quote" };
+      zoneGrams += g;
+      boundDensity = Math.max(boundDensity, BAND_DENSITY[z.metal]);
+      metalCents += g * BAND_RATES[z.metal];
+    }
+    if (Math.abs(zoneGrams - grams) > Math.max(0.3, grams * 0.05)) return { reject: "invalid" };
+    // Bounding annulus of the ring, in mm³ → g at the densest zone's density.
+    const ri = (11.66 + 0.811 * us) / 2;
+    const boxGrams = Math.PI * ((ri + depth) ** 2 - ri ** 2) * width / 1000 * boundDensity;
+    if (grams < boxGrams * 0.45 || grams > boxGrams * 1.35) return { reject: "weight" };
+    summary.push(`${b.zones[0].metalName}${b.zones.length > 1 ? ` + ${b.zones.length - 1}` : ""} · ${b.profile.name} ${width} mm · US ${us}`);
+  }
+  metalCents = Math.round(metalCents);
+  return { spec, metalCents, laborCents: BAND_LABOR_CENTS * spec.bands.length, summary: pair ? summary.map((t, i) => `${spec.bands[i].label || ["Hers", "His"][i]}: ${t}`).join(" · ") : summary[0] };
+}
+
+/** Honeypot, the builder's page stamp (≥ 4 s old) and the per-IP window — no max age: people design for hours. */
+function bandBotVerdict(req) {
+  if (String(req.body?.website_url || "").trim() !== "") return "honeypot";
+  const ts = Number(req.body?.fg_ts);
+  if (!Number.isFinite(ts) || ts <= 0) return "no_ts";
+  if (Date.now() - ts < MIN_FILL_MS) return "too_fast";
+  const ip = req.ip || "unknown", now = Date.now();
+  const seen = (hits.get(ip) || []).filter((t) => now - t < DAY_MS);
+  if (seen.filter((t) => now - t < WINDOW_MS).length >= MAX_PER_WINDOW || seen.length >= MAX_PER_DAY) return "rate_limited";
+  seen.push(now); hits.set(ip, seen);
+  return null;
+}
+
+async function bandEvent(orderId, kind, actor, extra = {}) {
+  try {
+    await sb("band_order_events", { method: "POST", body: { order_id: orderId, kind, actor, from_status: extra.from ?? null, to_status: extra.to ?? null, note: extra.note ?? null, data: extra.data ?? {} } });
+  } catch (e) { console.error("[band] event failed", e.message); }
+}
+
+const money = (cents) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function shipToText(ship) {
+  if (!ship) return "";
+  const a = ship.address || {};
+  return [ship.name, a.line1, a.line2, [a.city, [a.state, a.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", "), a.country].filter(Boolean).join("\n");
+}
+
+async function sendBandOrderEmails(order, session) {
+  const summary = order.spec?.bands ? priceBandSpec(JSON.stringify(order.spec)).summary || "Wedding band" : "Wedding band";
+  const ship = shipToText(order.ship_to);
+  const total = order.subtotal_cents + (order.shipping_cents || 0);
+  const designLink = order.design_url;
+  const adminLink = `${ADMIN_URL}/app/band-orders/${order.id}`;
+  const text =
+    `Order: ${order.order_number}\nDesign: ${order.design_ref}\nBand: ${summary}\nTotal: ${money(total)} paid by card (Stripe ${session.payment_intent})\n` +
+    `Customer: ${order.customer_name || "—"} <${order.email}>${order.phone ? ` · ${order.phone}` : ""}\n${ship ? `Ship to:\n${ship}\n` : ""}\n` +
+    `Open in Moksh Diam: ${adminLink}\nOpen the design: ${designLink}\n\n${order.spec_text || ""}`;
+  const esc = escapeHtml;
+  const html =
+    `<h2 style="font-family:Georgia,serif">New wedding band order — ${esc(order.order_number)}</h2>` +
+    `<p><strong>Band:</strong> ${esc(summary)}<br><strong>Total:</strong> ${money(total)} paid by card<br><strong>Customer:</strong> ${esc(order.customer_name || "—")} &lt;${esc(order.email || "")}&gt;${order.phone ? ` · ${esc(order.phone)}` : ""}</p>` +
+    (ship ? `<p><strong>Ship to:</strong><br>${esc(ship).replace(/\n/g, "<br>")}</p>` : "") +
+    `<p><a href="${esc(adminLink)}">Open in Moksh Diam</a> · <a href="${esc(designLink)}">Open the design</a></p>` +
+    `<pre style="font:13px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">${esc(order.spec_text || "")}</pre>`;
+  const first = String(order.customer_name || "").split(/\s+/)[0];
+  const p = "font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#475569;margin:0 0 14px";
+  const arHtml =
+    `<div style="max-width:520px;margin:0 auto">` +
+    `<p style="font-family:Georgia,serif;font-size:22px;color:#18181B">Thank you${first ? `, ${esc(first)}` : ""}.</p>` +
+    `<p style="${p}">Your order <strong>${esc(order.order_number)}</strong> is with our New York atelier: ${esc(summary)}, ${money(total)} paid by card.</p>` +
+    `<p style="${p}">A designer will confirm the specification with you by email within one business day before we begin. Your design stays at <a href="${esc(designLink)}" style="color:#18181B">${esc(order.design_ref)}</a>.</p>` +
+    (ship ? `<p style="${p}">Shipping to:<br>${esc(ship).replace(/\n/g, "<br>")}</p>` : "") +
+    `<p style="${p}">With care,<br><strong style="color:#18181B">Azoir &amp; Co.</strong> · New York</p></div>`;
+  const arText = `Thank you${first ? `, ${first}` : ""}.\n\nYour order ${order.order_number} is with our New York atelier: ${summary}, ${money(total)} paid by card.\n\nA designer will confirm the specification with you by email within one business day before we begin. Your design: ${designLink}\n${ship ? `\nShipping to:\n${ship}\n` : ""}\nWith care,\nAzoir & Co. · New York\nhello@azoir.co`;
+  if (!process.env.RESEND_API_KEY) { console.log("[band] RESEND_API_KEY unset — order logged only:\n" + text); return { atelier: true, customer: false }; }
+  const send = async (payload) => {
+    const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (!r.ok) console.error("[band] resend failed", r.status, await r.text());
+    return r.ok;
+  };
+  let atelier = false, customer = false;
+  try {
+    atelier = await send({ from: INQUIRY_FROM, to: [INQUIRY_TO], reply_to: order.email || undefined, subject: `Band order ${order.order_number} — ${money(total)} paid`, text, html });
+    if (!atelier) console.log("[band] payload:\n" + text);
+    if (order.email) customer = await send({ from: INQUIRY_FROM, to: [order.email], subject: `Your order ${order.order_number} — Azoir & Co.`, text: arText, html: arHtml });
+  } catch (e) { console.error("[band] send error", e); console.log("[band] payload:\n" + text); }
+  return { atelier, customer };
+}
+
+/** Mark a paid session's order paid, once, then tell the atelier and the customer. */
+async function deliverBandOrder(session) {
+  if (session.metadata?.mode !== BAND_MODE || session.payment_status !== "paid") return;
+  const id = String(session.metadata.band_order_id || "");
+  if (!UUID.test(id)) { console.error("[band] paid session without an order id", session.id); return; }
+  const cd = session.customer_details || {};
+  const shipping = session.shipping_details || session.collected_information?.shipping_details || null;
+  const now = new Date().toISOString();
+  const patch = {
+    status: "paid", paid_at: now, updated_at: now,
+    stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
+    stripe_checkout_session_id: session.id,
+    email: cd.email || null, customer_name: (shipping && shipping.name) || cd.name || null, phone: cd.phone || null,
+    ship_to: shipping ? { name: shipping.name || null, address: shipping.address || null } : null,
+  };
+  const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment`, { method: "PATCH", body: patch, prefer: "return=representation" });
+  if (!rows || rows.length === 0) {
+    // Already delivered — or cancelled by the admin after the customer had paid.
+    const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number`);
+    if (cur && cur[0] && cur[0].status === "cancelled") {
+      await bandEvent(id, "paid", "stripe", { note: "Paid after the order was cancelled — refund due", data: { payment_intent: patch.stripe_payment_intent } });
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `Band order ${cur[0].order_number} was paid after it was cancelled (${patch.stripe_payment_intent}) — refund it from /app/band-orders.` } }).catch(() => {});
+    }
+    return;
+  }
+  const order = rows[0];
+  await bandEvent(id, "paid", "stripe", { from: "pending_payment", to: "paid", data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total } });
+  const sent = await sendBandOrderEmails(order, session);
+  await bandEvent(id, "email", "system", { data: { template: "confirmation", sent: sent.customer } });
+  try {
+    await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `New band order ${order.order_number} — ${money(order.subtotal_cents + (order.shipping_cents || 0))} paid. Open /app/band-orders to start it.` } });
+  } catch (e) { console.error("[band] admin notification failed", e.message); }
+}
+
 // Sessions this process has delivered — the dedupe for when the Supabase write
 // fails and the unique index can't (a replayed /inquiry/paid would otherwise
 // send another pair of emails each time).
@@ -335,13 +520,106 @@ app.get("/inquiry/paid", async (req, res) => {
   res.redirect("/thanks.html");
 });
 
+// Band order — price the spec, save it as pending, send the customer to Stripe.
+app.post("/band-order", async (req, res) => {
+  const back = (q) => res.redirect(`/wedding-bands.html?order=${q}`);
+  const verdict = bandBotVerdict(req);
+  if (verdict) {
+    console.log(`[band] bot dropped (${verdict}) ip=${req.ip}`);
+    return verdict === "honeypot" || verdict === "no_ts" ? res.redirect("/band-thanks.html") : back("busy");
+  }
+  const priced = priceBandSpec(req.body?.spec);
+  if (priced.reject) {
+    console.log(`[band] spec rejected (${priced.reject}) ip=${req.ip}`);
+    return back(priced.reject === "quote" ? "quote" : priced.reject === "weight" ? "weight" : "error");
+  }
+  if (!process.env.STRIPE_SECRET_KEY) { console.error("[band] STRIPE_SECRET_KEY unset"); return back("error"); }
+  const { spec, metalCents, laborCents, summary } = priced;
+  const origin = `${req.protocol}://${req.get("host")}`;
+  const designUrl = `${origin}/wedding-bands.html#${String(req.body?.hash || "").replace(/^#/, "").slice(0, 2000)}`;
+  let order;
+  try {
+    const rows = await sb("band_orders", {
+      method: "POST", prefer: "return=representation",
+      body: {
+        design_ref: spec.ref, design_url: designUrl, spec, spec_text: clean(req.body?.spec_text) || null,
+        metal_cents: metalCents, labor_cents: laborCents, subtotal_cents: metalCents + laborCents, shipping_cents: 0, currency: "USD", status: "pending_payment",
+      },
+    });
+    order = rows && rows[0];
+    if (!order) throw new Error("no row returned");
+  } catch (e) {
+    console.error("[band] could not save the order", e.message);
+    return back("error");
+  }
+  await bandEvent(order.id, "placed", "customer", { data: { design_ref: spec.ref, pair: !!spec.pair } });
+  const params = {
+    mode: "payment",
+    "payment_method_types[0]": "card",
+    "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][unit_amount]": String(metalCents + laborCents),
+    "line_items[0][price_data][product_data][name]": `Wedding band ${spec.ref} — ${order.order_number}`,
+    "line_items[0][price_data][product_data][description]": summary.slice(0, 500),
+    "phone_number_collection[enabled]": "true",
+    "metadata[mode]": BAND_MODE,
+    "metadata[band_order_id]": order.id,
+    "metadata[design_ref]": spec.ref,
+    "payment_intent_data[metadata][band_order_id]": order.id,
+    "payment_intent_data[description]": `Azoir wedding band ${order.order_number} (${spec.ref})`,
+    expires_at: String(Math.floor(Date.now() / 1000) + 2 * 60 * 60),
+    success_url: `${origin}/band-order/paid?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/wedding-bands.html?order=cancelled`,
+  };
+  BAND_SHIP_COUNTRIES.forEach((c, i) => { params[`shipping_address_collection[allowed_countries][${i}]`] = c; });
+  try {
+    const session = await stripe("checkout/sessions", params);
+    await sb(`band_orders?id=eq.${order.id}`, { method: "PATCH", body: { stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() } });
+    res.redirect(303, session.url);
+  } catch (e) {
+    console.error("[band] checkout error", e);
+    await sb(`band_orders?id=eq.${order.id}&status=eq.pending_payment`, { method: "PATCH", body: { status: "cancelled", updated_at: new Date().toISOString() } }).catch(() => {});
+    back("error");
+  }
+});
+
+// Stripe success redirect for a band order. The webhook delivers it regardless.
+app.get("/band-order/paid", async (req, res) => {
+  const id = String(req.query.session_id || "");
+  if (!/^cs_\w+$/.test(id)) return res.redirect("/wedding-bands.html");
+  let ref = "", number = "";
+  try {
+    const session = await stripe(`checkout/sessions/${id}`);
+    if (session.payment_status !== "paid") return res.redirect("/wedding-bands.html?order=cancelled");
+    await deliverBandOrder(session);
+    ref = session.metadata?.design_ref || "";
+    const rows = await sb(`band_orders?id=eq.${session.metadata?.band_order_id}&select=order_number`).catch(() => null);
+    number = (rows && rows[0] && rows[0].order_number) || "";
+  } catch (e) {
+    console.error("[band] confirm error", e);
+  }
+  const q = new URLSearchParams();
+  if (number) q.set("order", number);
+  if (ref) q.set("ref", ref);
+  res.redirect(`/band-thanks.html${q.toString() ? `?${q}` : ""}`);
+});
+
 // Stripe webhook (checkout.session.completed) — delivers a paid request whose
 // customer closed the tab before the success redirect. A 500 makes Stripe retry.
 app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
   const event = verifyStripeEvent(req.body, req.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET);
   if (!event) return res.status(400).send("invalid signature");
   try {
-    if (event.type === "checkout.session.completed") await deliverInquiry(event.data.object);
+    const session = event.data.object;
+    if (event.type === "checkout.session.completed") {
+      if (session.metadata?.mode === BAND_MODE) await deliverBandOrder(session);
+      else await deliverInquiry(session);
+    } else if (event.type === "checkout.session.expired" && session.metadata?.mode === BAND_MODE && UUID.test(String(session.metadata.band_order_id || ""))) {
+      // Never paid: the row stays pending_payment (the admin's Abandoned tab); only the timeline says why.
+      const id = session.metadata.band_order_id;
+      const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment&select=id`);
+      if (rows && rows.length) await bandEvent(id, "expired", "stripe");
+    }
   } catch (e) {
     console.error("[webhook] delivery error", e);
     return res.status(500).send("error");

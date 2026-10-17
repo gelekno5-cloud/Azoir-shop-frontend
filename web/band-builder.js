@@ -31,6 +31,46 @@ const METALS = {
   "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#F1BFA4", density: 15.2, sw: "#E4AE96" },
   "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#E1DEDA", density: 20.6, sw: "#D5D2CE" },
 };
+// ── Pricing (owner, 2026-10-17) ──────────────────────────────────────────────
+// Estimate = metal weight × the alloy's rate + flat labour per band. 14k is
+// $120/g; 18k scales by fine-gold content (0.750 / 0.585). A metal with no
+// rate (platinum, until the atelier sets one) makes the band "quoted
+// individually". Diamonds are never estimated here. Editable in
+// band-catalog.json under "pricing".
+let PRICING = {
+  laborCents: 10000,
+  perGramCents: { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null },
+};
+const usd = (cents) => "$" + Math.round(cents / 100).toLocaleString("en-US");
+// One band: metal per zone (its own rate) + labour. `unpriced` lists metals without a rate.
+function estimateBand(b, m) {
+  let metalCents = 0; const unpriced = [];
+  for (let z = 0; z < b.zones; z++) {
+    const rate = PRICING.perGramCents[b.metals[z]];
+    if (rate == null) { if (!unpriced.includes(METALS[b.metals[z]].name)) unpriced.push(METALS[b.metals[z]].name); continue; }
+    metalCents += m.zoneGrams[z] * rate;
+  }
+  metalCents = Math.round(metalCents);
+  const laborCents = PRICING.laborCents;
+  return { metalCents, laborCents, totalCents: unpriced.length ? null : metalCents + laborCents, unpriced, stones: m.stones > 0 };
+}
+// Every band in the current design, summed.
+function estimateAll() {
+  const list = ui.pair ? [0, 1] : [0];
+  const parts = list.map((i) => estimateBand(bands[i], views[i].metrics));
+  const unpriced = [...new Set(parts.flatMap((e) => e.unpriced))];
+  return {
+    parts, unpriced,
+    metalCents: parts.reduce((a, e) => a + e.metalCents, 0),
+    laborCents: parts.reduce((a, e) => a + e.laborCents, 0),
+    totalCents: unpriced.length ? null : parts.reduce((a, e) => a + e.totalCents, 0),
+    stones: parts.some((e) => e.stones),
+  };
+}
+function estimateText(e, short = false) {
+  if (e.totalCents == null) return short ? "Quoted individually" : `Quoted individually (${e.unpriced.join(", ")} has no set rate yet)`;
+  return `≈ ${usd(e.totalCents)}` + (e.stones ? (short ? " + diamonds" : " + diamonds, quoted separately") : "");
+}
 // Each finish is a real surface: a generated normal map at true scale (tile = mm).
 const FINISHES = {
   polished: { name: "Polished",  roughness: 0.035 },
@@ -1078,6 +1118,7 @@ function bandText(b, v) {
     size: `${sizeText(b.size)} · ${fmt(usToDiameter(b.size))} mm inside`,
     engraving: b.engraving.trim() ? `“${b.engraving.trim()}” (${{ script: "script", serif: "serif", sans: "modern" }[b.font]})` : "—",
     weight,
+    estimate: (() => { const e = estimateBand(b, m); return e.totalCents == null ? estimateText(e) : `${estimateText(e)} (metal ${usd(e.metalCents)} + labour ${usd(e.laborCents)})`; })(),
   };
 }
 // Profile icons are the real cross-sections (same functions that cut the band).
@@ -1099,7 +1140,7 @@ const setRange = (el, v, label) => {
   const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
 };
 
-const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
+const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight", estimate: "Est. price" };
 
 function syncUI() {
   const b = active();
@@ -1174,13 +1215,18 @@ function syncUI() {
   if (ui.pair) {
     const m1 = views[1].metrics;
     $("bbBarTitle").textContent = `${BAND_NAMES[0]} ${fmt(b0.width)} mm · ${BAND_NAMES[1]} ${fmt(bands[1].width)} mm`;
-    $("bbBarSub").textContent = `US ${usLabel(b0.size)} / ${usLabel(bands[1].size)} · ≈ ${fmt(m0.grams + m1.grams)} g together`;
+    $("bbBarSub").textContent = `US ${usLabel(b0.size)} / ${usLabel(bands[1].size)} · ≈ ${fmt(m0.grams + m1.grams)} g together · ${estimateText(estimateAll(), true)}`;
   } else {
     const short = (k) => METALS[k].name.replace(" Gold", "").replace(" 950", "");
     $("bbBarTitle").textContent = `${PROFILES[b0.profile].name} · ${short(b0.metals[0])}${b0.zones > 1 ? " + " + (b0.zones - 1) : ""}`;
-    $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""}`;
+    $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""} · ${estimateText(estimateAll(), true)}`;
   }
-  $("bbRequestLabel").textContent = ui.pair ? "Request this pair" : "Request this band";
+  const est = estimateAll();
+  ui.canOrder = est.totalCents != null && !est.stones;
+  $("bbRequestLabel").textContent = ui.canOrder
+    ? `Order ${ui.pair ? "this pair" : "this band"} · ${usd(est.totalCents)}`
+    : `Request a quote${ui.pair ? " for this pair" : ""}`;
+  $("bbQuoteLink").hidden = !ui.canOrder;
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
@@ -1339,16 +1385,17 @@ function openSheet() {
       </div>
       <img class="bb-doc-snap" src="${snapshot()}" alt="3D preview">
       ${list.map(bandBlock).join("")}
-      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
+      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. Prices are estimates: metal by weight at the atelier's current rate plus labour per band; diamonds, and any metal without a set rate, are quoted individually. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
     </div>`;
   sheet.classList.add("open");
   sheet.scrollTop = 0;
 }
 $("bbSheetBtn").addEventListener("click", openSheet);
 
-// Hand the design to the commission wizard (same localStorage it reads).
-$("bbRequest").addEventListener("click", () => {
+// The spec as the atelier reads it — the same text goes into the order and into a quote request.
+function specText() {
   const list = ui.pair ? [0, 1] : [0];
+  const est = estimateAll();
   const blocks = list.map((i) => {
     const b = bands[i], t = bandText(b, views[i]);
     return [
@@ -1356,14 +1403,27 @@ $("bbRequest").addEventListener("click", () => {
       `Profile: ${t.profile} · edges: ${t.edges}`,
       `Width ${t.width} · depth ${t.depth} · size ${t.size}`,
       `Metal: ${t.metal} · finish: ${t.finish}`,
+      t.wave !== "—" ? `Wave: ${t.wave}` : "",
       `Diamonds: ${t.diamonds}`,
       t.setting !== "—" ? `Setting: ${t.setting}` : "",
       t.limits !== "—" ? `Fit rules: ${t.limits}` : "",
       b.engraving.trim() ? `Engraving: "${b.engraving.trim()}"` : "",
       `Estimated weight ${t.weight}`,
+      `Estimated price: ${t.estimate}`,
     ].filter(Boolean).join("\n");
   });
-  const spec = [`Wedding band${ui.pair ? "s (His & Hers pair" + (ui.link ? ", linked)" : ")") : ""} from the builder — ref ${refCode()}\n${location.href}`, ...blocks].join("\n\n");
+  return [
+    `Wedding band${ui.pair ? "s (His & Hers pair" + (ui.link ? ", linked)" : ")") : ""} — ref ${refCode()}\n${location.href}`,
+    ...blocks,
+    `Estimate for the ${ui.pair ? "pair" : "band"}: ${estimateText(est)} — metal by weight (14k $120/g, 18k by gold content) plus $100 labour per band; diamonds quoted separately.`,
+  ].join("\n\n");
+}
+
+// Quote path: hand the design to the commission wizard (same localStorage it
+// reads), which takes the $60 design fee and sends the brief to the atelier.
+function requestQuote() {
+  writeHash();
+  const list = ui.pair ? [0, 1] : [0];
   const anyStones = list.some((i) => views[i].metrics.stones);
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem("azoir_wiz") || "{}"); } catch {}
@@ -1371,11 +1431,52 @@ $("bbRequest").addEventListener("click", () => {
   saved.metal = METALS[bands[0].metals[0]].wizard;
   if (anyStones && !saved.stone) saved.stone = "";
   else if (!anyStones) saved.stone = "No stone";
-  saved.message = spec + "\n\n--- spec.json ---\n" + JSON.stringify(specJSON()) + (saved.message && !/from the builder/.test(saved.message) ? "\n\n" + saved.message : "");
+  const own = (saved.message || "").split("\n\n--- your notes ---\n")[1] || (saved.message && !/from the builder|— ref AZB-/.test(saved.message) ? saved.message : "");
+  saved.message = specText() + (own ? "\n\n--- your notes ---\n" + own : "");
   saved.step = 2;
   try { localStorage.setItem("azoir_wiz", JSON.stringify(saved)); } catch {}
   location.href = "commission.html?from=band-builder";
-});
+}
+
+// Order path: a priced design (no diamonds, every metal with a rate) goes
+// straight to checkout. The server prices the spec again and opens Stripe;
+// the design is kept so a cancelled payment comes back to it.
+function placeOrder() {
+  writeHash();
+  const form = $("bbOrderForm");
+  form.elements.spec.value = JSON.stringify(specJSON());
+  form.elements.spec_text.value = specText();
+  form.elements.hash.value = location.hash.slice(1);
+  try { localStorage.setItem("azoir_band_last", location.hash.slice(1)); } catch {}
+  $("bbRequest").disabled = true; // one checkout per click
+  form.submit();
+}
+$("bbRequest").addEventListener("click", () => (ui.canOrder ? placeOrder() : requestQuote()));
+$("bbQuoteLink").addEventListener("click", (e) => { e.preventDefault(); requestQuote(); });
+// Back from Stripe can restore this page from the back-forward cache.
+window.addEventListener("pageshow", () => { $("bbRequest").disabled = false; });
+
+// Back from checkout (?order=…): bring the design back and say what happened.
+(function orderNotice() {
+  const q = new URLSearchParams(location.search);
+  const code = q.get("order");
+  if (!code) return;
+  if (!location.hash.slice(1)) {
+    let last = ""; try { last = localStorage.getItem("azoir_band_last") || ""; } catch {}
+    if (last) history.replaceState(null, "", location.pathname + location.search + "#" + last);
+  }
+  const msg = {
+    cancelled: "Your payment wasn't completed, so nothing was ordered. Your design is still here — order it when you're ready.",
+    quote: "This design needs a quote from the atelier before it can be ordered — use Request a quote and we'll price it for you.",
+    weight: "We couldn't price this design automatically. Request a quote and the atelier will price it by hand.",
+    busy: "Please wait a few minutes, then try ordering again.",
+    error: "We couldn't open the payment page. Please try again in a moment, or write to hello@azoir.co.",
+  }[code];
+  if (msg) { const n = $("bbNotice"); n.textContent = msg; n.hidden = false; }
+  q.delete("order");
+  const rest = q.toString();
+  try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch {}
+})();
 
 
 // ── Custom cross-section import (SVG path, DXF polyline, Rhino .3dm) ─────────
@@ -1504,7 +1605,8 @@ function specJSON() {
   const list = ui.pair ? [0, 1] : [0];
   const r2 = (v) => Math.round(v * 100) / 100;
   return {
-    version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined, prices: "inquiry only",
+    version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined,
+    estimate: (() => { const e = estimateAll(); return { totalCents: e.totalCents, metalCents: e.metalCents, laborCents: e.laborCents, unpricedMetals: e.unpriced, basis: "metal weight × rate per gram + labour per band; diamonds quoted separately", perGramCents: PRICING.perGramCents, laborCentsPerBand: PRICING.laborCents }; })(),
     bands: list.map((i) => {
       const b = bands[i], v = views[i], m = v.metrics, st = v.sec && v.sec.stone, zb = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
       return {
@@ -1517,6 +1619,7 @@ function specJSON() {
         stones: m.stones ? { count: m.stones, shape: b.shape, shapeName: SHAPES[b.shape].name, span: b.stones, sizeKey: b.stonesz, shortMm: r2(st.s), acrossBandMm: r2(st.W), alongBandMm: r2(st.Lx), depthMm: r2(st.D), caratsTotal: r2(m.carats), setting: b.setting, settingName: SETTINGS[b.setting].name, detail: m.setting, fitRules: m.limits, grooveWidthMm: r2(st.channelW), grooveDepthMm: r2(st.channelD) } : null,
         engraving: b.engraving.trim() ? { text: b.engraving.trim(), style: b.font } : null,
         weightG: r2(m.grams),
+        estimate: (() => { const e = estimateBand(b, m); return { metalCents: e.metalCents, laborCents: e.laborCents, totalCents: e.totalCents, unpricedMetals: e.unpriced, diamondsIncluded: false }; })(),
         customProfile: b.profile === "custom" && CUSTOM ? { name: CUSTOM.name, points: CUSTOM.pts.map((p) => [r2(p.x), r2(p.y)]) } : undefined,
       };
     }),
@@ -1601,6 +1704,7 @@ function applyCatalog(c) {
   if (c.edges) Object.assign(EDGES, c.edges);
   if (c.sizes && c.sizes.usToDiameter) { SIZE_A = c.sizes.usToDiameter.a; SIZE_B = c.sizes.usToDiameter.b; }
   if (c.defaults) DEFAULTS = c.defaults;
+  if (c.pricing) PRICING = { laborCents: c.pricing.laborCents ?? PRICING.laborCents, perGramCents: { ...PRICING.perGramCents, ...(c.pricing.perGramCents || {}) } };
   const hide = (opt, keys, table) => { for (const k of keys || []) { delete table[k]; panel.querySelectorAll(`[data-opt="${opt}"][data-v="${k}"]`).forEach((el) => el.remove()); } };
   if (c.hidden) { hide("profile", c.hidden.profiles, PROFILES); hide("metal", c.hidden.metals, METALS); hide("finish", c.hidden.finishes, FINISHES); hide("setting", c.hidden.settings, SETTINGS); hide("shape", c.hidden.shapes, SHAPES); }
   // swatches/names from the catalogue
@@ -1614,6 +1718,7 @@ async function loadCatalog() {
   } catch (e) { /* baked-in tables stay in force */ }
 }
 
+$("bbOrderForm").elements.fg_ts.value = String(Date.now());
 loadCatalog().then(() => {
   Object.assign(bands[0], defaultBand(0)); Object.assign(bands[1], defaultBand(1)); // catalogue defaults
   readHash();

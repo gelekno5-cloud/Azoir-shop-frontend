@@ -1469,7 +1469,7 @@ window.addEventListener("pageshow", () => { $("bbRequest").disabled = false; });
     cancelled: "Your payment wasn't completed, so nothing was ordered. Your design is still here — order it when you're ready.",
     quote: "This design needs a quote from the atelier before it can be ordered — use Request a quote and we'll price it for you.",
     weight: "We couldn't price this design automatically. Request a quote and the atelier will price it by hand.",
-    busy: "Please wait a few minutes, then try ordering again.",
+    busy: "That was a little quick for us — give it a few seconds and press Order again. If it keeps happening, write to hello@azoir.co.",
     error: "We couldn't open the payment page. Please try again in a moment, or write to hello@azoir.co.",
   }[code];
   if (msg) { const n = $("bbNotice"); n.textContent = msg; n.hidden = false; }
@@ -1718,7 +1718,18 @@ async function loadCatalog() {
   } catch (e) { /* baked-in tables stay in force */ }
 }
 
-$("bbOrderForm").elements.fg_ts.value = String(Date.now());
+// Bot-gate stamp for /band-order. Kept in localStorage so a bounce back from
+// the server (or any reload) doesn't make the next click "too fast"; it renews
+// past 5 h. The server only checks that it exists and is at least 4 s old.
+{
+  let stamp = 0;
+  try { stamp = Number(localStorage.getItem("azoir_band_ts")) || 0; } catch {}
+  if (!(stamp <= Date.now() && Date.now() - stamp < 5 * 60 * 60 * 1000)) {
+    stamp = Date.now();
+    try { localStorage.setItem("azoir_band_ts", String(stamp)); } catch {}
+  }
+  $("bbOrderForm").elements.fg_ts.value = String(stamp);
+}
 loadCatalog().then(() => {
   Object.assign(bands[0], defaultBand(0)); Object.assign(bands[1], defaultBand(1)); // catalogue defaults
   readHash();

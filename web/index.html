@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=2">
+<link rel="stylesheet" href="azoir.css?v=5">
 
 <meta name="description" content="Bespoke fine jewelry, designed with you and crafted by hand in New York. Engagement rings, necklaces, heirlooms reborn — begin a commission with Azoir &amp; Co.">
 <link rel="canonical" href="https://azoir.co/">
@@ -26,13 +26,14 @@
 
 <nav>
   <a href="index.html" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."></a>
-  <div class="navlinks">
+  <div class="navlinks" id="navlinks">
     <a href="how.html">How it Works</a>
     <a href="gallery.html">Gallery</a>
     <a href="wedding-bands.html">Wedding Bands</a>
     <a href="about.html">About</a>
     <a href="commission.html" class="btn-fill sm">Begin a Commission</a>
   </div>
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
 </nav>
 
 <div class="hero-scroll" id="heroScroll">
@@ -180,5 +181,6 @@
 
 <script src="/gallery-video.js" defer></script>
 <script src="/analytics.js" defer></script>
+<script src="nav.js?v=1" defer></script>
 </body>
 </html>

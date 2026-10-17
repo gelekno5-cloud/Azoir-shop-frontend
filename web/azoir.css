@@ -259,3 +259,31 @@ body.nav-clear nav.solid{background:rgba(240,242,248,.82);backdrop-filter:blur(1
   .wizard{padding:28px 20px 24px;border-radius:18px}
   .wiz-cards,.wiz-cards.sm{grid-template-columns:1fr 1fr}
 }
+
+/* ---- Mobile menu (nav.js) ---- */
+.nav-toggle{display:none}
+@media(max-width:900px){
+  nav{padding:12px 20px}
+  .nav-toggle{display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin-right:-10px;padding:0;
+    background:none;border:0;cursor:pointer;color:var(--ink)}
+  .nav-toggle span,.nav-toggle span::before,.nav-toggle span::after{display:block;width:22px;height:1.5px;background:currentColor;
+    transition:transform .12s ease,background .12s ease}
+  .nav-toggle span{position:relative}
+  .nav-toggle span::before,.nav-toggle span::after{content:"";position:absolute;left:0}
+  .nav-toggle span::before{top:-7px}
+  .nav-toggle span::after{top:7px}
+  .nav-toggle[aria-expanded="true"] span{background:transparent}
+  .nav-toggle[aria-expanded="true"] span::before{transform:translateY(7px) rotate(45deg)}
+  .nav-toggle[aria-expanded="true"] span::after{transform:translateY(-7px) rotate(-45deg)}
+  nav .navlinks{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;
+    padding:8px 20px 20px;background:var(--bg);border-bottom:1px solid rgba(213,217,232,.6);
+    max-height:calc(100vh - 100%);max-height:calc(100dvh - 68px);overflow-y:auto;font-size:13px}
+  nav.open .navlinks{display:flex}
+  nav .navlinks a{display:flex;align-items:center;min-height:56px;border-bottom:1px solid rgba(213,217,232,.6)}
+  nav .navlinks a.btn-fill{justify-content:center;margin-top:16px;border-bottom:1px solid var(--blue);min-height:52px;color:#fff}
+  nav .navlinks a.active{color:var(--ink);font-weight:600}
+  /* !important: beat body.nav-clear transparent nav so the open menu bar is opaque */
+  nav.open{background:var(--bg) !important;backdrop-filter:none !important}
+  body.nav-open{overflow:hidden}
+  .page-hero{overflow-x:clip} /* 560px decorative glow caused horizontal scroll on phones */
+}

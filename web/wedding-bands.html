@@ -65,7 +65,25 @@
 .bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .bb-note{font-size:12.5px;color:var(--bb-mute);margin:10px 0 0;line-height:1.55}
 .bb-note a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px}
-.bb-notice{margin:14px 0 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-ink);border-radius:10px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
+.bb-notice{margin:14px 26px 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-acc);border-radius:10px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
+.bb-req-rows{border:1px solid var(--bb-line);border-radius:14px;background:#fff;padding:4px 16px}
+.bb-req-rows .bb-row{padding:11px 0}
+.bb-req-rows .bb-row+.bb-row{border-top:1px solid var(--bb-line)}
+.bb-req-rows .bb-row.bb-row-dep b{color:var(--bb-acc);font-size:15px}
+.bb-req-lines{margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--bb-ink2)}
+.bb-req-lines b{color:var(--bb-ink);font-weight:600}
+.bb-field-col{flex-direction:column}
+.bb-field-col input,.bb-field-col textarea{width:100%;flex:none}
+.bb-field textarea{background:#fff;border:1px solid var(--bb-line);border-radius:12px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-height:84px;resize:vertical}
+.bb-field textarea:focus{border-color:var(--bb-acc);box-shadow:0 0 0 3px var(--bb-tint)}
+.bb-field input.bad,.bb-field textarea.bad{border-color:#C8323C;box-shadow:0 0 0 3px rgba(200,50,60,.12)}
+.bb-check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-size:13px;line-height:1.55;color:var(--bb-ink2);cursor:pointer}
+.bb-check input{margin:3px 0 0;width:16px;height:16px;flex:none;accent-color:var(--bb-acc)}
+.bb-check.bad{color:#C8323C}
+.bb-err{color:#C8323C!important}
+.bb-cta-wide{width:100%;justify-content:center;padding:15px 18px}
+.bb-cta[disabled]{opacity:.6;cursor:progress;transform:none}
+.bb-req-alt{text-align:center;margin-top:14px}
 .bb-tabs{display:flex;margin:16px 26px 0;border-bottom:1px solid var(--bb-line);overflow-x:auto;scrollbar-width:none;gap:4px;justify-content:space-between}
 .bb-tabs::-webkit-scrollbar{display:none}
 .bb-tabs button{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;font-size:12.5px;font-weight:500;color:var(--bb-mute);padding:12px 6px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s ease}
@@ -236,7 +254,7 @@ body.tryon-lock{overflow:hidden}
   .bb-tool span{display:none}
   .bb-panel{position:static;height:auto;border-left:0;border-top:1px solid var(--bb-line);z-index:1}
   .bb-head{padding:18px 18px 0}
-  .bb-tabs,.bb-editing{margin-left:18px;margin-right:18px}
+  .bb-tabs,.bb-editing,.bb-notice{margin-left:18px;margin-right:18px}
   .bb-scroll{overflow:visible;padding:4px 18px 24px}
   .bb-bar{position:sticky;bottom:0;z-index:5;padding:12px 18px;box-shadow:0 -8px 24px rgba(50,40,20,.08)}
   .consent{bottom:112px!important}
@@ -263,6 +281,9 @@ body.tryon-lock{overflow:hidden}
   .bb-presets{grid-template-columns:1fr 1fr 1fr;gap:6px}
   .bb-preset{padding:9px 8px;font-size:12px}
   .bb-preset small{display:none}
+  .bb-tabs{justify-content:flex-start;gap:2px}
+  .bb-tabs button{padding:12px 5px}
+  .bb-tabs button:not([aria-selected=true]) span{display:none}
 }
 </style>
 </head>
@@ -332,11 +353,13 @@ body.tryon-lock{overflow:hidden}
     </header>
 
     <div class="bb-tabs" role="tablist" aria-label="Design steps">
-      <button type="button" role="tab" data-tab="shape" aria-selected="true"><i>1</i>Shape</button>
-      <button type="button" role="tab" data-tab="metal" aria-selected="false"><i>2</i>Metals</button>
-      <button type="button" role="tab" data-tab="stones" aria-selected="false"><i>3</i>Diamonds</button>
-      <button type="button" role="tab" data-tab="engrave" aria-selected="false"><i>4</i>Engraving</button>
+      <button type="button" role="tab" data-tab="shape" aria-selected="true"><i>1</i><span>Shape</span></button>
+      <button type="button" role="tab" data-tab="metal" aria-selected="false"><i>2</i><span>Metals</span></button>
+      <button type="button" role="tab" data-tab="stones" aria-selected="false"><i>3</i><span>Diamonds</span></button>
+      <button type="button" role="tab" data-tab="engrave" aria-selected="false"><i>4</i><span>Engraving</span></button>
+      <button type="button" role="tab" data-tab="request" aria-selected="false"><i>5</i><span>Request</span></button>
     </div>
+    <p class="bb-notice" id="bbNotice" role="status" hidden></p>
     <p class="bb-editing" id="bbEditing" hidden></p>
 
     <div class="bb-scroll" id="bbScroll">
@@ -547,19 +570,54 @@ body.tryon-lock{overflow:hidden}
           </div>
           <p class="bb-note">Hand-engraved on the inside of the band. Up to 30 characters. In a pair, each band has its own.</p>
         </div>
+        <div class="bb-next"><button type="button" class="bb-nextbtn" data-tab="request">Continue to your request <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+      </div>
+
+      <div class="bb-pane" data-pane="request" role="tabpanel" hidden>
+        <div class="bb-g">
+          <h3>Your design <span id="bbReqRef"></span></h3>
+          <p class="bb-req-lines" id="bbReqSummary"></p>
+          <div class="bb-req-rows">
+            <div class="bb-row"><span>Price estimate</span><b id="bbReqEst"></b></div>
+            <div class="bb-row bb-row-dep"><span>Deposit today</span><b id="bbReqDeposit"></b></div>
+            <div class="bb-row"><span>Balance before production</span><b id="bbReqBalance"></b></div>
+          </div>
+          <p class="bb-note" id="bbReqTerms">The deposit reserves your band and is applied to the final price. It is refundable until you approve the final design. Metal is priced by weight at the atelier's current rate; diamonds and platinum are quoted by a designer.</p>
+        </div>
+        <div class="bb-g">
+          <h3>Your details</h3>
+          <div class="bb-field bb-field-col">
+            <input type="text" id="bbReqName" name="name" autocomplete="name" maxlength="120" placeholder="Full name" aria-label="Full name">
+            <input type="email" id="bbReqEmail" name="email" autocomplete="email" maxlength="200" placeholder="Email" aria-label="Email">
+            <input type="tel" id="bbReqPhone" name="phone" autocomplete="tel" maxlength="40" placeholder="Phone (optional)" aria-label="Phone, optional">
+            <textarea id="bbReqNotes" name="notes" maxlength="2000" placeholder="Anything we should know — a date you need it by, a size you're unsure of, a detail to discuss…" aria-label="Notes, optional"></textarea>
+          </div>
+          <label class="bb-check" id="bbReqAgreeRow"><input type="checkbox" id="bbReqAgree"> <span>I understand the price shown is an estimate, and that the size and final price are confirmed with me before production.</span></label>
+          <p class="bb-note bb-err" id="bbReqError" hidden></p>
+        </div>
+        <div class="bb-next">
+          <button type="button" class="bb-cta bb-cta-wide" id="bbReqPay"><span id="bbReqPayLabel">Continue to secure payment</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></button>
+          <p class="bb-note bb-req-alt">Secure card payment by Stripe. Prefer to talk first? <a href="commission.html?from=band-builder" id="bbReqTalk">Send your design to a designer instead</a>.</p>
+        </div>
       </div>
 
       <details class="bb-sumbox" id="bbSumBox">
         <summary>Full specification <span id="bbSumHint"></span></summary>
         <div id="bbSummary"></div>
       </details>
-      <p class="bb-estnote">Prices are estimates, not quotes: metal by weight at the atelier's current rate plus labour per band. Diamonds and platinum are quoted individually. A designer confirms everything with you before anything is made.</p>
+      <p class="bb-estnote">Prices are estimates, not quotes: metal by weight at the atelier's current rate plus labour per band. Diamonds and platinum are quoted individually. Reserving a band takes a 25% deposit (minimum $250), applied to the final price, which a designer confirms with you before anything is made.</p>
     </div>
 
     <footer class="bb-bar">
       <div class="bb-bar-info"><b id="bbBarTitle"></b><span id="bbBarSub"></span><em id="bbBarEst"></em></div>
-      <button type="button" class="bb-cta" id="bbRequest"><span id="bbRequestLabel">Request a quote</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></button>
+      <button type="button" class="bb-cta" id="bbRequest"><span id="bbRequestLabel">Reserve this band</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></button>
     </footer>
+    <form id="bbOrderForm" method="POST" action="/band-request" hidden>
+      <input type="hidden" name="spec"><input type="hidden" name="spec_text"><input type="hidden" name="hash">
+      <input type="hidden" name="name"><input type="hidden" name="email"><input type="hidden" name="phone"><input type="hidden" name="notes">
+      <input type="hidden" name="deposit_cents"><input type="hidden" name="fg_ts">
+      <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </form>
   </aside>
 </main>
 
@@ -593,7 +651,7 @@ body.tryon-lock{overflow:hidden}
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=36"></script>
+<script type="module" src="band-builder.js?v=37"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 </body>

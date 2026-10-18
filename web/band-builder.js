@@ -60,6 +60,15 @@ function estimateAll() {
   return { parts, unpriced, metalCents: parts.reduce((a, e) => a + e.metalCents, 0), laborCents: parts.reduce((a, e) => a + e.laborCents, 0),
     totalCents: unpriced.length ? null : parts.reduce((a, e) => a + e.totalCents, 0), stones: parts.some((e) => e.stones) };
 }
+// Reserving a band takes a deposit: 25% of the estimate, never under $250, and a
+// flat $250 when there is no estimate (platinum, diamonds). The server recomputes
+// it from the spec before charging; this is what the customer sees.
+const DEPOSIT = { rate: 0.25, minCents: 25000 };
+function depositFor(e) {
+  const quoteNeeded = e.totalCents == null || !!e.stones;
+  const depositCents = quoteNeeded ? DEPOSIT.minCents : Math.max(DEPOSIT.minCents, Math.round(e.totalCents * DEPOSIT.rate));
+  return { depositCents, quoteNeeded, estimateCents: quoteNeeded ? null : e.totalCents, balanceCents: quoteNeeded ? null : Math.max(0, e.totalCents - depositCents) };
+}
 function estimateText(e, short = false) {
   if (e.totalCents == null) return short ? "Quoted individually" : `Quoted individually — ${e.unpriced.join(", ")} has no set rate yet`;
   return `≈ ${usd(e.totalCents)}` + (e.stones ? (short ? " + diamonds" : " + diamonds, quoted separately") : "") + (short ? "" : " — estimate only");
@@ -1293,6 +1302,30 @@ const setRange = (el, v, label) => {
 
 const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight", estimate: "Price estimate" };
 
+// The Request step: what is being reserved, the money, and the labels.
+function syncRequest(est, dep) {
+  const list = ui.pair ? [0, 1] : [0];
+  $("bbReqRef").textContent = refCode();
+  $("bbReqSummary").innerHTML = list.map((i) => {
+    const b = bands[i], m = views[i].metrics;
+    const metals = Array.from({ length: b.zones }, (_, z) => METALS[b.metals[z]].name).filter((v, k, a) => a.indexOf(v) === k).join(" + ");
+    const parts = [`${PROFILES[b.profile].name} ${fmt(b.width)} mm`, metals, `US ${usLabel(b.size)}`, m.stones ? `${m.stones} ${SHAPES[b.shape].name.toLowerCase()} diamonds, ${SETTINGS[b.setting].name.toLowerCase()}` : "", b.engraving.trim() ? `engraved “${b.engraving.trim()}”` : ""].filter(Boolean);
+    return `<b>${esc(ui.pair ? BAND_NAMES[i] : "Band")}:</b> ${esc(parts.join(" · "))}`;
+  }).join("<br>");
+  const estText = est.totalCents == null ? `Quoted by a designer — ${est.unpriced.join(", ")} has no set rate` : `${usd(est.totalCents)}${est.stones ? " + diamonds, quoted" : ""} · estimate`;
+  $("bbReqEst").textContent = estText;
+  $("bbReqDeposit").textContent = `${usd(dep.depositCents)}${dep.quoteNeeded ? " · flat deposit" : ` · ${Math.round(DEPOSIT.rate * 100)}% of the estimate`}`;
+  $("bbReqBalance").textContent = dep.quoteNeeded ? "Quoted before production" : `≈ ${usd(dep.balanceCents)} · confirmed first`;
+  $("bbReqPayLabel").textContent = `Continue to secure payment · ${usd(dep.depositCents)}`;
+}
+function openRequest() {
+  ui.tab = "request"; syncUI();
+  const sc = $("bbScroll");
+  if (getComputedStyle(sc).overflowY === "auto") sc.scrollTo({ top: 0, behavior: "smooth" });
+  else panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => { const n = $("bbReqName"); if (n && !n.value) n.focus({ preventScroll: true }); }, 350);
+}
+
 function syncUI() {
   const b = active();
   panel.querySelectorAll("[data-opt]").forEach((el) => {
@@ -1374,7 +1407,9 @@ function syncUI() {
   }
   const est = estimateAll();
   $("bbBarEst").textContent = est.totalCents == null ? "Quoted individually by the atelier" : `Est. ${usd(est.totalCents)}${est.stones ? " + diamonds" : ""} · estimate only`;
-  $("bbRequestLabel").textContent = ui.pair ? "Request a quote for the pair" : "Request a quote";
+  const dep = depositFor(est);
+  $("bbRequestLabel").textContent = ui.tab === "request" ? `Pay ${usd(dep.depositCents)} deposit` : dep.quoteNeeded ? `Reserve · ${usd(dep.depositCents)} deposit` : `Reserve this ${ui.pair ? "pair" : "band"} · ${usd(dep.depositCents)} deposit`;
+  syncRequest(est, dep);
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
@@ -1579,8 +1614,8 @@ function specText() {
   ].join("\n\n");
 }
 
-// Hand the design to the commission wizard (same localStorage it reads), which
-// sends the brief to the atelier. No prices anywhere: the site is inquiry-only.
+// The no-deposit path: hand the design to the commission wizard (same
+// localStorage it reads), which sends the brief to the atelier.
 function requestQuote() {
   writeHash();
   const list = ui.pair ? [0, 1] : [0];
@@ -1598,7 +1633,70 @@ function requestQuote() {
   location.href = "commission.html?from=band-builder";
 }
 
-$("bbRequest").addEventListener("click", requestQuote);
+$("bbRequest").addEventListener("click", () => { if (ui.tab === "request") placeOrder(); else openRequest(); });
+$("bbReqPay").addEventListener("click", placeOrder);
+$("bbReqTalk").addEventListener("click", (e) => { e.preventDefault(); requestQuote(); });
+["bbReqName", "bbReqEmail", "bbReqAgree"].forEach((id) => $(id).addEventListener("input", () => { $(id).classList.remove("bad"); $("bbReqAgreeRow").classList.remove("bad"); $("bbReqError").hidden = true; }));
+
+// Reserve with a deposit: validate the details, hand the spec and the form to
+// /band-request, which prices it again and opens Stripe Checkout for the deposit.
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+function placeOrder() {
+  if (ui.tab !== "request") { openRequest(); return; }
+  const name = $("bbReqName").value.trim(), email = $("bbReqEmail").value.trim(), agree = $("bbReqAgree").checked;
+  const problems = [];
+  $("bbReqName").classList.toggle("bad", !name); if (!name) problems.push("your name");
+  $("bbReqEmail").classList.toggle("bad", !EMAIL_RE.test(email)); if (!EMAIL_RE.test(email)) problems.push("a valid email");
+  $("bbReqAgreeRow").classList.toggle("bad", !agree); if (!agree) problems.push("the confirmation box");
+  const err = $("bbReqError");
+  if (problems.length) {
+    err.textContent = `Please add ${problems.join(", ").replace(/, ([^,]*)$/, " and $1")}.`; err.hidden = false;
+    const first = panel.querySelector(".bad"); if (first) (first.querySelector("input") || first).focus({ preventScroll: true });
+    return;
+  }
+  err.hidden = true;
+  writeHash();
+  const form = $("bbOrderForm"), f = form.elements;
+  const spec = specJSON();
+  f.spec.value = JSON.stringify(spec);
+  f.spec_text.value = specText();
+  f.hash.value = location.hash.slice(1);
+  f.name.value = name; f.email.value = email; f.phone.value = $("bbReqPhone").value.trim(); f.notes.value = $("bbReqNotes").value.trim();
+  f.deposit_cents.value = String(spec.estimate.depositCents);
+  try { localStorage.setItem("azoir_band_last", location.hash.slice(1)); } catch {}
+  $("bbRequest").disabled = true; $("bbReqPay").disabled = true; // one checkout per click
+  $("bbReqPayLabel").textContent = "Opening secure payment…";
+  form.submit();
+}
+window.addEventListener("pageshow", () => { $("bbRequest").disabled = false; $("bbReqPay").disabled = false; syncUI(); });
+
+// Bot gate stamp for /band-request: set when the page loads and renewed while the
+// customer designs, so a form posted seconds after load is not a person.
+(function stampForm() {
+  let stamp = 0;
+  try { stamp = Number(localStorage.getItem("azoir_band_ts")) || 0; } catch {}
+  if (!stamp || Date.now() - stamp > 5 * 3600e3) { stamp = Date.now(); try { localStorage.setItem("azoir_band_ts", String(stamp)); } catch {} }
+  $("bbOrderForm").elements.fg_ts.value = String(stamp);
+})();
+
+// Coming back from Stripe (cancelled) or from a rejected request: restore the
+// design from the last saved hash and say what happened.
+(function orderNotice() {
+  const q = new URLSearchParams(location.search); const code = q.get("order");
+  if (!code) return;
+  if (!location.hash.slice(1)) { let last = ""; try { last = localStorage.getItem("azoir_band_last") || ""; } catch {} if (last) history.replaceState(null, "", location.pathname + location.search + "#" + last); }
+  const msg = {
+    cancelled: "No payment was taken. Your design is still here — reserve it whenever you're ready, or send it to a designer without a deposit.",
+    fields: "Please check your name and email address and try again.",
+    weight: "That band's weight didn't check out against its dimensions. Adjust the width or depth slightly and try again, or send the design to a designer.",
+    busy: "That was quick — please wait a moment and try again.",
+    error: "We couldn't open the payment page just now. Your design is saved; please try again in a minute or email hello@azoir.co.",
+  }[code];
+  if (msg) { const n = $("bbNotice"); n.textContent = msg; n.hidden = false; }
+  if (code === "fields") ui.tab = "request";
+  q.delete("order"); const rest = q.toString();
+  try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch {}
+})();
 
 // ── Custom cross-section import (SVG path, DXF polyline, Rhino .3dm) ─────────
 // The file describes the section in mm: y along the band axis, x radial. We
@@ -1727,7 +1825,7 @@ function specJSON() {
   const r2 = (v) => Math.round(v * 100) / 100;
   return {
     version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined,
-    estimate: (() => { const e = estimateAll(); return { isEstimate: true, note: "estimate only, confirmed by the atelier; diamonds quoted separately", totalCents: e.totalCents, metalCents: e.metalCents, laborCents: e.laborCents, unpricedMetals: e.unpriced, perGramCents: PRICING.perGramCents, laborCentsPerBand: PRICING.laborCents }; })(),
+    estimate: (() => { const e = estimateAll(), d = depositFor(e); return { isEstimate: true, note: "estimate only, confirmed by the atelier; diamonds quoted separately", totalCents: e.totalCents, metalCents: e.metalCents, laborCents: e.laborCents, unpricedMetals: e.unpriced, perGramCents: PRICING.perGramCents, laborCentsPerBand: PRICING.laborCents, depositCents: d.depositCents, balanceCents: d.balanceCents, quoteNeeded: d.quoteNeeded, depositRate: DEPOSIT.rate, depositMinCents: DEPOSIT.minCents }; })(),
     bands: list.map((i) => {
       const b = bands[i], v = views[i], m = v.metrics, st = v.sec && v.sec.stone, zb = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
       return {

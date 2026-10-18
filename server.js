@@ -224,21 +224,27 @@ async function sendInquiryEmails(f, session) {
   }
 }
 
-// ── Wedding band orders ──────────────────────────────────────────────────────
-// A band designed in the builder (wedding-bands.html) and paid in full by
-// card. The row goes into the shared Supabase (band_orders, migration
-// 2026-10-17 in the Moksh Diam repo) as pending_payment BEFORE the customer
-// sees Stripe, so the spec never has to fit in Stripe's metadata; the success
-// redirect and the webhook both mark it paid, and the compare-and-set on
-// status makes whichever lands second a no-op. The atelier processes it in
+// ── Wedding band requests ────────────────────────────────────────────────────
+// A band designed in the builder (wedding-bands.html) and reserved with a
+// deposit by card. The row goes into the shared Supabase (band_orders,
+// migrations 2026-10-17 and 2026-10-18 in the Moksh Diam repo) as
+// pending_payment BEFORE the customer sees Stripe, so the spec never has to
+// fit in Stripe's metadata; the success redirect and the webhook both mark it
+// deposit_paid, and the compare-and-set on status makes whichever lands second
+// a no-op. The atelier confirms the final price and collects the balance from
 // Moksh Diam under /app/band-orders.
 //
-// The price is recomputed here from the spec's per-zone weights and the
+// The estimate is recomputed here from the spec's per-zone weights and the
 // atelier's rates — the browser's number is never charged. The weights come
 // from the browser's 3D model, so they're bounded against the ring's
 // bounding annulus (a band is at least ~45% of it and never above it by much)
-// and the bench confirms the weight before casting.
+// and the bench confirms the weight before casting. Diamonds and platinum
+// have no estimate (quoteNeeded): the deposit is the flat minimum and the
+// price is quoted by the atelier.
 const BAND_MODE = "azoir_band";
+const BAND_DEPOSIT_MIN_CENTS = 25000;                  // $250 floor, and the flat deposit when there is no estimate
+const BAND_DEPOSIT_RATE = 0.25;                        // of the estimate (owner, 2026-10-17)
+const bandDepositCents = (estimateCents) => estimateCents == null ? BAND_DEPOSIT_MIN_CENTS : Math.max(BAND_DEPOSIT_MIN_CENTS, Math.round(estimateCents * BAND_DEPOSIT_RATE));
 const BAND_LABOR_CENTS = 10000;                        // per band (owner, 2026-10-17)
 const BAND_RATES = { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null }; // cents per gram; null = quoted
 const BAND_DENSITY = { "14y": 13.1, "14w": 12.7, "14r": 13.0, "18y": 15.5, "18w": 15.1, "18r": 15.2, pt: 20.6 };
@@ -264,9 +270,9 @@ const num = (v, lo, hi) => (typeof v === "number" && Number.isFinite(v) && v >= 
 const str = (v, max) => (typeof v === "string" && v.length <= max ? v : null);
 
 /**
- * Check the builder's spec JSON and price it. Returns { spec, metalCents, laborCents, summary }
- * or { reject: "quote" | "invalid" | "weight" }. "quote" = diamonds or an unpriced metal: the
- * wizard path handles those.
+ * Check the builder's spec JSON and price it. Returns { spec, metalCents, laborCents, summary, quoteNeeded }
+ * or { reject: "invalid" | "weight" }. quoteNeeded = diamonds or an unpriced metal (platinum): the
+ * structure is still validated, metalCents covers only the priced zones, and the atelier quotes the price.
  */
 function priceBandSpec(raw) {
   if (typeof raw !== "string" || raw.length > 40000) return { reject: "invalid" };
@@ -276,7 +282,7 @@ function priceBandSpec(raw) {
   if (!/^AZB-[A-Z2-9]{6}$/.test(String(spec.ref || ""))) return { reject: "invalid" };
   const pair = spec.bands.length === 2;
   if (!!spec.pair !== pair) return { reject: "invalid" };
-  let metalCents = 0;
+  let metalCents = 0, quoteNeeded = false;
   const summary = [];
   for (const b of spec.bands) {
     if (!b || typeof b !== "object") return { reject: "invalid" };
@@ -284,26 +290,38 @@ function priceBandSpec(raw) {
     if (width == null || depth == null || us == null || grams == null || !Array.isArray(b.zones) || b.zones.length < 1 || b.zones.length > 3) return { reject: "invalid" };
     if (!b.profile || !str(b.profile.key, 20) || !str(b.profile.name, 40)) return { reject: "invalid" };
     if (b.engraving && (!str(b.engraving.text, 30) || !str(b.engraving.style, 20))) return { reject: "invalid" };
-    if (b.stones) return { reject: "quote" };
+    if (b.stones) {
+      if (typeof b.stones !== "object" || Array.isArray(b.stones)) return { reject: "invalid" };
+      quoteNeeded = true;
+    }
     let zoneGrams = 0, boundDensity = 0;
     for (const z of b.zones) {
       if (!z || !(z.metal in BAND_RATES) || !str(z.metalName, 40) || !str(z.finishName, 40)) return { reject: "invalid" };
       const g = num(z.weightG, 0, 120);
       if (g == null) return { reject: "invalid" };
-      if (BAND_RATES[z.metal] == null) return { reject: "quote" };
+      if (BAND_RATES[z.metal] == null) quoteNeeded = true;
       zoneGrams += g;
       boundDensity = Math.max(boundDensity, BAND_DENSITY[z.metal]);
-      metalCents += g * BAND_RATES[z.metal];
+      metalCents += g * (BAND_RATES[z.metal] || 0);
     }
     if (Math.abs(zoneGrams - grams) > Math.max(0.3, grams * 0.05)) return { reject: "invalid" };
     // Bounding annulus of the ring, in mm³ → g at the densest zone's density.
     const ri = (11.66 + 0.811 * us) / 2;
     const boxGrams = Math.PI * ((ri + depth) ** 2 - ri ** 2) * width / 1000 * boundDensity;
     if (grams < boxGrams * 0.45 || grams > boxGrams * 1.35) return { reject: "weight" };
-    summary.push(`${b.zones[0].metalName}${b.zones.length > 1 ? ` + ${b.zones.length - 1}` : ""} · ${b.profile.name} ${width} mm · US ${us}`);
+    summary.push(`${b.zones[0].metalName}${b.zones.length > 1 ? ` + ${b.zones.length - 1}` : ""} · ${b.profile.name} ${width} mm · US ${us}${b.stones ? " · diamonds" : ""}`);
   }
   metalCents = Math.round(metalCents);
-  return { spec, metalCents, laborCents: BAND_LABOR_CENTS * spec.bands.length, summary: pair ? summary.map((t, i) => `${spec.bands[i].label || ["Hers", "His"][i]}: ${t}`).join(" · ") : summary[0] };
+  return { spec, metalCents, laborCents: BAND_LABOR_CENTS * spec.bands.length, quoteNeeded, summary: pair ? summary.map((t, i) => `${spec.bands[i].label || ["Hers", "His"][i]}: ${t}`).join(" · ") : summary[0] };
+}
+
+/** The deposit terms of a saved request, from spec.deposit (written by /band-request) with safe fallbacks. */
+function bandDepositOf(order) {
+  const d = (order.spec && order.spec.deposit) || {};
+  const quoteNeeded = !!d.quoteNeeded;
+  const estimateCents = quoteNeeded ? null : Number.isFinite(d.estimateCents) ? d.estimateCents : order.subtotal_cents + (order.shipping_cents || 0);
+  const depositCents = Number.isFinite(d.depositCents) ? d.depositCents : bandDepositCents(estimateCents);
+  return { quoteNeeded, estimateCents, depositCents, balanceCents: estimateCents == null ? null : Math.max(0, estimateCents - depositCents), notes: typeof d.notes === "string" ? d.notes : "" };
 }
 
 /** Honeypot, the builder's page stamp (≥ 4 s old) and the per-IP window — no max age: people design for hours. */
@@ -336,31 +354,42 @@ function shipToText(ship) {
 async function sendBandOrderEmails(order, session) {
   const summary = order.spec?.bands ? priceBandSpec(JSON.stringify(order.spec)).summary || "Wedding band" : "Wedding band";
   const ship = shipToText(order.ship_to);
-  const total = order.subtotal_cents + (order.shipping_cents || 0);
+  const dep = bandDepositOf(order);
+  const paid = Number.isFinite(session.amount_total) ? session.amount_total : dep.depositCents;
+  const priceLine = dep.quoteNeeded
+    ? "Price: to be quoted (diamonds or platinum) — the deposit is the flat minimum"
+    : `Estimate: ${money(dep.estimateCents)} (estimate only) · balance ≈ ${money(dep.balanceCents)} after the price is confirmed`;
   const designLink = order.design_url;
   const adminLink = `${ADMIN_URL}/app/band-orders/${order.id}`;
   const text =
-    `Order: ${order.order_number}\nDesign: ${order.design_ref}\nBand: ${summary}\nTotal: ${money(total)} paid by card (Stripe ${session.payment_intent})\n` +
-    `Customer: ${order.customer_name || "—"} <${order.email}>${order.phone ? ` · ${order.phone}` : ""}\n${ship ? `Ship to:\n${ship}\n` : ""}\n` +
+    `Request: ${order.order_number}\nDesign: ${order.design_ref}\nBand: ${summary}\nDeposit: ${money(paid)} paid by card (Stripe ${session.payment_intent})\n${priceLine}\n` +
+    `Customer: ${order.customer_name || "—"} <${order.email}>${order.phone ? ` · ${order.phone}` : ""}\n${dep.notes ? `Notes: ${dep.notes}\n` : ""}${ship ? `Ship to:\n${ship}\n` : ""}\n` +
+    `Next: confirm the size and the final price with the customer, then collect the balance before production.\n` +
     `Open in Moksh Diam: ${adminLink}\nOpen the design: ${designLink}\n\n${order.spec_text || ""}`;
   const esc = escapeHtml;
   const html =
-    `<h2 style="font-family:Georgia,serif">New wedding band order — ${esc(order.order_number)}</h2>` +
-    `<p><strong>Band:</strong> ${esc(summary)}<br><strong>Total:</strong> ${money(total)} paid by card<br><strong>Customer:</strong> ${esc(order.customer_name || "—")} &lt;${esc(order.email || "")}&gt;${order.phone ? ` · ${esc(order.phone)}` : ""}</p>` +
+    `<h2 style="font-family:Georgia,serif">Wedding band request — ${esc(order.order_number)}</h2>` +
+    `<p><strong>Band:</strong> ${esc(summary)}<br><strong>Deposit:</strong> ${money(paid)} paid by card<br><strong>${esc(priceLine.split(":")[0])}:</strong> ${esc(priceLine.split(/:\s*/).slice(1).join(": "))}<br>` +
+    `<strong>Customer:</strong> ${esc(order.customer_name || "—")} &lt;${esc(order.email || "")}&gt;${order.phone ? ` · ${esc(order.phone)}` : ""}</p>` +
+    (dep.notes ? `<p><strong>Notes:</strong><br>${esc(dep.notes).replace(/\n/g, "<br>")}</p>` : "") +
     (ship ? `<p><strong>Ship to:</strong><br>${esc(ship).replace(/\n/g, "<br>")}</p>` : "") +
+    `<p>Next: confirm the size and the final price with the customer, then collect the balance before production.</p>` +
     `<p><a href="${esc(adminLink)}">Open in Moksh Diam</a> · <a href="${esc(designLink)}">Open the design</a></p>` +
     `<pre style="font:13px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">${esc(order.spec_text || "")}</pre>`;
   const first = String(order.customer_name || "").split(/\s+/)[0];
   const p = "font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#475569;margin:0 0 14px";
+  const custPrice = dep.quoteNeeded
+    ? "Because your design includes diamonds or platinum, a designer will quote the final price for you before anything is made."
+    : `Your current estimate is ${money(dep.estimateCents)} — an estimate, not a final price. Once a designer confirms the price with you, we invoice the balance (about ${money(dep.balanceCents)}) before production begins.`;
   const arHtml =
     `<div style="max-width:520px;margin:0 auto">` +
     `<p style="font-family:Georgia,serif;font-size:22px;color:#18181B">Thank you${first ? `, ${esc(first)}` : ""}.</p>` +
-    `<p style="${p}">Your order <strong>${esc(order.order_number)}</strong> is with our New York atelier: ${esc(summary)}, ${money(total)} paid by card.</p>` +
-    `<p style="${p}">A designer will confirm the specification with you by email within one business day before we begin. Your design stays at <a href="${esc(designLink)}" style="color:#18181B">${esc(order.design_ref)}</a>.</p>` +
-    (ship ? `<p style="${p}">Shipping to:<br>${esc(ship).replace(/\n/g, "<br>")}</p>` : "") +
+    `<p style="${p}">Your deposit of <strong>${money(paid)}</strong> is received and your request <strong>${esc(order.order_number)}</strong> is with our New York atelier: ${esc(summary)}.</p>` +
+    `<p style="${p}">${esc(custPrice)}</p>` +
+    `<p style="${p}">A designer will be in touch within one business day to confirm the size and the specification. Your deposit is applied to the final price and is refundable until you approve the final design. Your design stays at <a href="${esc(designLink)}" style="color:#18181B">${esc(order.design_ref)}</a>.</p>` +
     `<p style="${p}">With care,<br><strong style="color:#18181B">Azoir &amp; Co.</strong> · New York</p></div>`;
-  const arText = `Thank you${first ? `, ${first}` : ""}.\n\nYour order ${order.order_number} is with our New York atelier: ${summary}, ${money(total)} paid by card.\n\nA designer will confirm the specification with you by email within one business day before we begin. Your design: ${designLink}\n${ship ? `\nShipping to:\n${ship}\n` : ""}\nWith care,\nAzoir & Co. · New York\nhello@azoir.co`;
-  if (!process.env.RESEND_API_KEY) { console.log("[band] RESEND_API_KEY unset — order logged only:\n" + text); return { atelier: true, customer: false }; }
+  const arText = `Thank you${first ? `, ${first}` : ""}.\n\nYour deposit of ${money(paid)} is received and your request ${order.order_number} is with our New York atelier: ${summary}.\n\n${custPrice}\n\nA designer will be in touch within one business day to confirm the size and the specification. Your deposit is applied to the final price and is refundable until you approve the final design. Your design: ${designLink}\n\nWith care,\nAzoir & Co. · New York\nhello@azoir.co`;
+  if (!process.env.RESEND_API_KEY) { console.log("[band] RESEND_API_KEY unset — request logged only:\n" + text); return { atelier: true, customer: false }; }
   const send = async (payload) => {
     const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (!r.ok) console.error("[band] resend failed", r.status, await r.text());
@@ -368,14 +397,14 @@ async function sendBandOrderEmails(order, session) {
   };
   let atelier = false, customer = false;
   try {
-    atelier = await send({ from: INQUIRY_FROM, to: [INQUIRY_TO], reply_to: order.email || undefined, subject: `Band order ${order.order_number} — ${money(total)} paid`, text, html });
+    atelier = await send({ from: INQUIRY_FROM, to: [INQUIRY_TO], reply_to: order.email || undefined, subject: `Band request ${order.order_number} — ${money(paid)} deposit paid${dep.quoteNeeded ? " · quote needed" : ""}`, text, html });
     if (!atelier) console.log("[band] payload:\n" + text);
-    if (order.email) customer = await send({ from: INQUIRY_FROM, to: [order.email], subject: `Your order ${order.order_number} — Azoir & Co.`, text: arText, html: arHtml });
+    if (order.email) customer = await send({ from: INQUIRY_FROM, to: [order.email], subject: `Your wedding band request ${order.order_number} — Azoir & Co.`, text: arText, html: arHtml });
   } catch (e) { console.error("[band] send error", e); console.log("[band] payload:\n" + text); }
   return { atelier, customer };
 }
 
-/** Mark a paid session's order paid, once, then tell the atelier and the customer. */
+/** Mark a paid session's request deposit_paid, once, then tell the atelier and the customer. */
 async function deliverBandOrder(session) {
   if (session.metadata?.mode !== BAND_MODE || session.payment_status !== "paid") return;
   const id = String(session.metadata.band_order_id || "");
@@ -383,29 +412,38 @@ async function deliverBandOrder(session) {
   const cd = session.customer_details || {};
   const shipping = session.shipping_details || session.collected_information?.shipping_details || null;
   const now = new Date().toISOString();
+  // Keys left undefined are dropped by JSON.stringify, so the form's name/email/phone
+  // stay unless Stripe collected something.
   const patch = {
-    status: "paid", paid_at: now, updated_at: now,
+    status: "deposit_paid", paid_at: now, updated_at: now,
     stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
     stripe_checkout_session_id: session.id,
-    email: cd.email || null, customer_name: (shipping && shipping.name) || cd.name || null, phone: cd.phone || null,
-    ship_to: shipping ? { name: shipping.name || null, address: shipping.address || null } : null,
+    email: cd.email || undefined, customer_name: (shipping && shipping.name) || cd.name || undefined, phone: cd.phone || undefined,
+    ship_to: shipping ? { name: shipping.name || null, address: shipping.address || null } : undefined,
   };
   const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment`, { method: "PATCH", body: patch, prefer: "return=representation" });
   if (!rows || rows.length === 0) {
     // Already delivered — or cancelled by the admin after the customer had paid.
     const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number`);
     if (cur && cur[0] && cur[0].status === "cancelled") {
-      await bandEvent(id, "paid", "stripe", { note: "Paid after the order was cancelled — refund due", data: { payment_intent: patch.stripe_payment_intent } });
-      await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `Band order ${cur[0].order_number} was paid after it was cancelled (${patch.stripe_payment_intent}) — refund it from /app/band-orders.` } }).catch(() => {});
+      await bandEvent(id, "paid", "stripe", { note: "Deposit paid after the request was cancelled — refund due", data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total } });
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `Band request ${cur[0].order_number} was paid after it was cancelled (${patch.stripe_payment_intent}) — refund it from /app/band-orders.` } }).catch(() => {});
     }
     return;
   }
   const order = rows[0];
-  await bandEvent(id, "paid", "stripe", { from: "pending_payment", to: "paid", data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total } });
+  const dep = bandDepositOf(order);
+  const paid = Number.isFinite(session.amount_total) ? session.amount_total : dep.depositCents;
+  // Deposit columns arrive with the 2026-10-18 migration; until it runs this
+  // PATCH fails and the deposit is still readable from spec.deposit.
+  await sb(`band_orders?id=eq.${id}`, { method: "PATCH", body: { deposit_cents: paid, balance_cents: dep.balanceCents, quote_needed: dep.quoteNeeded } })
+    .catch((e) => console.error("[band] deposit columns not written (migration pending?)", e.message));
+  await bandEvent(id, "paid", "stripe", { from: "pending_payment", to: "deposit_paid", note: `Deposit ${money(paid)}${dep.quoteNeeded ? " · price to be quoted" : ` · balance ≈ ${money(dep.balanceCents)}`}`, data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total, deposit_cents: paid, balance_cents: dep.balanceCents, quote_needed: dep.quoteNeeded } });
   const sent = await sendBandOrderEmails(order, session);
-  await bandEvent(id, "email", "system", { data: { template: "confirmation", sent: sent.customer } });
+  await bandEvent(id, "email", "system", { data: { template: "deposit_confirmation", sent: sent.customer } });
   try {
-    await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `New band order ${order.order_number} — ${money(order.subtotal_cents + (order.shipping_cents || 0))} paid. Open /app/band-orders to start it.` } });
+    const tail = dep.quoteNeeded ? "price to be quoted" : `estimate ${money(dep.estimateCents)}, balance ≈ ${money(dep.balanceCents)}`;
+    await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `New band request ${order.order_number} — ${money(paid)} deposit paid (${tail}). Confirm the price from /app/band-orders.` } });
   } catch (e) { console.error("[band] admin notification failed", e.message); }
 }
 
@@ -520,8 +558,11 @@ app.get("/inquiry/paid", async (req, res) => {
   res.redirect("/thanks.html");
 });
 
-// Band order — price the spec, save it as pending, send the customer to Stripe.
-app.post("/band-order", async (req, res) => {
+// Band request — price the spec, save it as pending with the customer's details,
+// send the customer to Stripe for the deposit only. The balance is collected by
+// the atelier once the final price is confirmed. /band-order is the old name.
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+async function bandRequest(req, res) {
   const back = (q) => res.redirect(`/wedding-bands.html?order=${q}`);
   const verdict = bandBotVerdict(req);
   if (verdict) {
@@ -531,10 +572,20 @@ app.post("/band-order", async (req, res) => {
   const priced = priceBandSpec(req.body?.spec);
   if (priced.reject) {
     console.log(`[band] spec rejected (${priced.reject}) ip=${req.ip}`);
-    return back(priced.reject === "quote" ? "quote" : priced.reject === "weight" ? "weight" : "error");
+    return back(priced.reject === "weight" ? "weight" : "error");
   }
+  const name = clean(req.body?.name).slice(0, 120), email = clean(req.body?.email).slice(0, 200).toLowerCase();
+  const phone = clean(req.body?.phone).slice(0, 40) || null, notes = clean(req.body?.notes).slice(0, 2000);
+  if (!name || !EMAIL_RE.test(email)) return back("fields");
   if (!process.env.STRIPE_SECRET_KEY) { console.error("[band] STRIPE_SECRET_KEY unset"); return back("error"); }
-  const { spec, metalCents, laborCents, summary } = priced;
+  const { spec, metalCents, laborCents, summary, quoteNeeded } = priced;
+  const estimateCents = quoteNeeded ? null : metalCents + laborCents;
+  const depositCents = bandDepositCents(estimateCents);
+  const balanceCents = estimateCents == null ? null : Math.max(0, estimateCents - depositCents);
+  // What the browser showed is not trusted for the charge, but a mismatch is worth a log line.
+  const shown = Number(req.body?.deposit_cents);
+  if (Number.isFinite(shown) && shown !== depositCents) console.log(`[band] deposit shown ${shown} ≠ computed ${depositCents} (${spec.ref})`);
+  spec.deposit = { depositCents, estimateCents, balanceCents, quoteNeeded, isEstimate: true, rate: BAND_DEPOSIT_RATE, minCents: BAND_DEPOSIT_MIN_CENTS, notes };
   const origin = `${req.protocol}://${req.get("host")}`;
   const designUrl = `${origin}/wedding-bands.html#${String(req.body?.hash || "").replace(/^#/, "").slice(0, 2000)}`;
   let order;
@@ -543,35 +594,36 @@ app.post("/band-order", async (req, res) => {
       method: "POST", prefer: "return=representation",
       body: {
         design_ref: spec.ref, design_url: designUrl, spec, spec_text: clean(req.body?.spec_text) || null,
-        metal_cents: metalCents, labor_cents: laborCents, subtotal_cents: metalCents + laborCents, shipping_cents: 0, currency: "USD", status: "pending_payment",
+        customer_name: name, email, phone,
+        metal_cents: quoteNeeded ? 0 : metalCents, labor_cents: quoteNeeded ? 0 : laborCents, subtotal_cents: estimateCents || 0, shipping_cents: 0, currency: "USD", status: "pending_payment",
       },
     });
     order = rows && rows[0];
     if (!order) throw new Error("no row returned");
   } catch (e) {
-    console.error("[band] could not save the order", e.message);
+    console.error("[band] could not save the request", e.message);
     return back("error");
   }
-  await bandEvent(order.id, "placed", "customer", { data: { design_ref: spec.ref, pair: !!spec.pair } });
+  await bandEvent(order.id, "placed", "customer", { data: { design_ref: spec.ref, pair: !!spec.pair, deposit_cents: depositCents, estimate_cents: estimateCents, quote_needed: quoteNeeded } });
+  const what = spec.pair ? "wedding bands" : "wedding band";
   const params = {
     mode: "payment",
     "payment_method_types[0]": "card",
+    customer_email: email,
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "usd",
-    "line_items[0][price_data][unit_amount]": String(metalCents + laborCents),
-    "line_items[0][price_data][product_data][name]": `Wedding band ${spec.ref} — ${order.order_number}`,
-    "line_items[0][price_data][product_data][description]": summary.slice(0, 500),
-    "phone_number_collection[enabled]": "true",
+    "line_items[0][price_data][unit_amount]": String(depositCents),
+    "line_items[0][price_data][product_data][name]": `Deposit — ${what} ${spec.ref}`,
+    "line_items[0][price_data][product_data][description]": `${quoteNeeded ? "Flat deposit; the price is quoted by the atelier" : `${Math.round(BAND_DEPOSIT_RATE * 100)}% of the ${money(estimateCents)} estimate`}. ${summary}`.slice(0, 500),
     "metadata[mode]": BAND_MODE,
     "metadata[band_order_id]": order.id,
     "metadata[design_ref]": spec.ref,
     "payment_intent_data[metadata][band_order_id]": order.id,
-    "payment_intent_data[description]": `Azoir wedding band ${order.order_number} (${spec.ref})`,
+    "payment_intent_data[description]": `Azoir ${what} deposit ${order.order_number} (${spec.ref})`,
     expires_at: String(Math.floor(Date.now() / 1000) + 2 * 60 * 60),
-    success_url: `${origin}/band-order/paid?session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${origin}/band-request/paid?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/wedding-bands.html?order=cancelled`,
   };
-  BAND_SHIP_COUNTRIES.forEach((c, i) => { params[`shipping_address_collection[allowed_countries][${i}]`] = c; });
   try {
     const session = await stripe("checkout/sessions", params);
     await sb(`band_orders?id=eq.${order.id}`, { method: "PATCH", body: { stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() } });
@@ -579,30 +631,37 @@ app.post("/band-order", async (req, res) => {
   } catch (e) {
     console.error("[band] checkout error", e);
     await sb(`band_orders?id=eq.${order.id}&status=eq.pending_payment`, { method: "PATCH", body: { status: "cancelled", updated_at: new Date().toISOString() } }).catch(() => {});
-    back("error");
+    back(e.code === "email_invalid" || e.param === "customer_email" ? "fields" : "error");
   }
-});
+}
+app.post("/band-request", bandRequest);
+app.post("/band-order", bandRequest);
 
-// Stripe success redirect for a band order. The webhook delivers it regardless.
-app.get("/band-order/paid", async (req, res) => {
+// Stripe success redirect for a band request. The webhook delivers it regardless.
+async function bandRequestPaid(req, res) {
   const id = String(req.query.session_id || "");
   if (!/^cs_\w+$/.test(id)) return res.redirect("/wedding-bands.html");
-  let ref = "", number = "";
+  let ref = "", number = "", deposit = "", quote = false;
   try {
     const session = await stripe(`checkout/sessions/${id}`);
     if (session.payment_status !== "paid") return res.redirect("/wedding-bands.html?order=cancelled");
     await deliverBandOrder(session);
     ref = session.metadata?.design_ref || "";
-    const rows = await sb(`band_orders?id=eq.${session.metadata?.band_order_id}&select=order_number`).catch(() => null);
-    number = (rows && rows[0] && rows[0].order_number) || "";
+    if (Number.isFinite(session.amount_total)) deposit = String(session.amount_total);
+    const rows = await sb(`band_orders?id=eq.${session.metadata?.band_order_id}&select=order_number,spec`).catch(() => null);
+    if (rows && rows[0]) { number = rows[0].order_number || ""; quote = !!(rows[0].spec && rows[0].spec.deposit && rows[0].spec.deposit.quoteNeeded); }
   } catch (e) {
     console.error("[band] confirm error", e);
   }
   const q = new URLSearchParams();
   if (number) q.set("order", number);
   if (ref) q.set("ref", ref);
+  if (deposit) q.set("deposit", deposit);
+  if (quote) q.set("quote", "1");
   res.redirect(`/band-thanks.html${q.toString() ? `?${q}` : ""}`);
-});
+}
+app.get("/band-request/paid", bandRequestPaid);
+app.get("/band-order/paid", bandRequestPaid);
 
 // Stripe webhook (checkout.session.completed) — delivers a paid request whose
 // customer closed the tab before the success redirect. A 500 makes Stripe retry.

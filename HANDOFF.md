@@ -175,6 +175,25 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
     `.app.light{color:var(--text)}` (the start heading was near-white on white), stock metal colours moved to the builder's
     F0 values at roughness 0.035, and uploaded parts with their own metallic colour get a per-colour clone of the shared
     metal (`Materials.metalFor`) instead of the single selected metal.
+  - **Moksh Diam materials (branch `claude/band-builder-moksh-materials`):** the builder now renders with the Moksh Diam
+    viewer's look so every model across the site matches (reference: `~/Desktop/moksh-azoir main/app/components/viewer`).
+    Metal colours are MatrixGold's measured swatches (`metalConfigs.generated.ts`: yellow #d19f37, white #cbcbcb, rose
+    #dc987b, platinum #cfcece; 14k and 18k share them), also in `band-catalog.json` and the try-on. The metal reflects the
+    viewer's procedural light tent (`studioEnv.ts` ported: gold/white family by band A's first alloy) and uses its
+    Gulbrandsen conductor Fresnel + micro-roughness (`metalFresnel.ts`/`metalShading.ts` ported as `mokshMetal()`); finish
+    roughness floors follow `NEXT_FINISHES`; tone mapping is ACES at exposure 1.0 (threepipe's TonemapPlugin default, the
+    next look's exposure). The diamond is the viewer's `GEM_CONFIGS.diamond` (transmission 0.9, thickness 2, clearcoat 1,
+    specularIntensity 3, envMapIntensity 4) reflecting the viewer's gem studio via its own envMap. Not ported: the next
+    look's ray-traced gem batch and AO/edge rounding. The try-on's stock metals use the same measured colours.
+  - **Finalisation (same branch):** settings cut to what is actually made on bands — Channel, Pavé (bead-set: two
+    beads per gap at ±0.34 W), Shared prong (saddles + prongs, U cut-outs), Flush (stones sunk one by one, no groove, a
+    0.35 mm burnished rim just proud of the surface, seat volume subtracted) and Bar; cushion dropped. Old link values
+    map (`LEGACY_SETTING`: bezel→flush, prong/split/uprong→shared, fishtail→pave; cushion→round). **Price estimate is
+    back, explicitly an estimate** (owner's rule: 14k $120/g, 18k by gold content, +$100 labour/band; platinum "quoted
+    individually"; diamonds extra): action-bar line "Est. $… · estimate only", "Price estimate" row, spec sheet, spec
+    JSON (`estimate.isEstimate`), hand-off text, `band-catalog.json` → `pricing`. CTA is "Request a quote" (plain cobalt
+    button, inline arrow); toolbar tools are labelled chips on desktop, icons on phones. "Start from" presets (classic,
+    half eternity, two-tone) at the top of the Shape step; on phones the cookie banner is lifted above the sticky bar.
   - Old v1 share links still load unchanged (all original keys kept; defaults for the new ones).
   - Phone: the single-column grid is `minmax(0,1fr)` — plain `1fr` let the panel's min-content push the page to 490 px at 375.
     The only remaining horizontal overflow site-wide is `.page-hero::before` (560 px glow), masked by `body{overflow-x:hidden}`.

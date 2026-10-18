@@ -44,13 +44,11 @@
 .bb-chip{position:absolute;left:40px;bottom:34px;z-index:2;font-size:11.5px;letter-spacing:.06em;color:var(--bb-ink2);background:rgba(255,255,255,.9);
   backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.9);border-radius:99px;padding:8px 14px;pointer-events:none;max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;box-shadow:var(--bb-shadow)}
 .bb-tools{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;z-index:3;background:#fff;border-radius:99px;box-shadow:var(--bb-shadow);border:1px solid var(--bb-line)}
-.bb-tool{position:relative;width:42px;height:42px;border-radius:99px;border:0;background:transparent;color:var(--bb-ink);cursor:pointer;display:grid;place-items:center;transition:background .18s ease,transform .18s ease}
+.bb-tool{position:relative;height:38px;padding:0 13px 0 11px;border-radius:99px;border:0;background:transparent;color:var(--bb-ink);cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;letter-spacing:.01em;white-space:nowrap;transition:background .18s ease,transform .18s ease}
 .bb-tool svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .bb-tool:hover{background:var(--bb-soft)}
 .bb-tool:active{transform:scale(.94)}
-.bb-tool span{position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(4px);white-space:nowrap;font-size:11.5px;letter-spacing:.04em;
-  background:var(--bb-ink);color:#fff;padding:6px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:.18s ease}
-.bb-tool:hover span,.bb-tool:focus-visible span{opacity:1;transform:translateX(-50%)}
+.bb-tool span{display:inline}
 .bb-tool.primary{background:var(--bb-acc);color:#fff}
 .bb-tool.primary:hover{background:var(--bb-acc-deep)}
 .bb-hint{position:absolute;right:34px;bottom:40px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--bb-mute);pointer-events:none;z-index:2}
@@ -137,7 +135,7 @@
 .bb-stage.tryon .bb-intro,.bb-stage.tryon .bb-chip,.bb-stage.tryon .bb-hint{display:none}
 .bb-tool.onlytry{display:none}
 .bb-stage.tryon .bb-tool.only3d{display:none}
-.bb-stage.tryon .bb-tool.onlytry{display:grid}
+.bb-stage.tryon .bb-tool.onlytry{display:inline-flex}
 .bb-trypill{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:4;background:var(--bb-ink);color:#fff;font-size:12.5px;padding:8px 14px;border-radius:99px;box-shadow:var(--bb-shadow);max-width:calc(100% - 40px);text-align:center}
 .bb-trypill[hidden],.bb-qr[hidden],.bb-tryon-frame[hidden]{display:none}
 .bb-qr{position:absolute;inset:0;z-index:6;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
@@ -180,13 +178,18 @@ body.tryon-lock{overflow:hidden}
 .bb-bar-info{min-width:0;flex:1}
 .bb-bar-info b{display:block;font-weight:600;font-size:15px;line-height:1.2;color:var(--bb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bb-bar-info span{display:block;font-size:12px;color:var(--bb-mute);margin-top:3px;font-variant-numeric:tabular-nums;line-height:1.4}
-.bb-cta{flex:none;position:relative;display:inline-flex;align-items:center;gap:12px;border:0;background:var(--bb-acc);color:#fff;border-radius:99px;padding:6px 6px 6px 22px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:background .18s ease,transform .18s ease,box-shadow .18s ease;box-shadow:0 8px 20px -8px rgba(43,77,255,.6)}
-.bb-cta i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#fff;color:var(--bb-acc);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
-.bb-cta i svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .22s cubic-bezier(.2,.8,.2,1)}
-.bb-cta:hover{background:var(--bb-acc-deep);box-shadow:0 12px 26px -8px rgba(43,77,255,.7)}
-.bb-cta:hover i{transform:rotate(-45deg)}
-.bb-cta:hover i svg{transform:translateX(1px)}
-.bb-cta:active{transform:scale(.97)}
+.bb-cta{flex:none;display:inline-flex;align-items:center;gap:10px;border:0;background:var(--bb-acc);color:#fff;border-radius:12px;padding:14px 18px 14px 20px;font-size:13.5px;font-weight:600;letter-spacing:.01em;cursor:pointer;transition:background .18s ease,transform .18s ease,box-shadow .18s ease;box-shadow:0 8px 20px -10px rgba(43,77,255,.55)}
+.bb-cta svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease}
+.bb-cta:hover{background:var(--bb-acc-deep);box-shadow:0 12px 26px -10px rgba(43,77,255,.65)}
+.bb-cta:hover svg{transform:translateX(3px)}
+.bb-cta:active{transform:scale(.98)}
+.bb-bar-info em{display:block;font-style:normal;font-size:12.5px;font-weight:600;color:var(--bb-ink);margin-top:4px;font-variant-numeric:tabular-nums}
+.bb-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bb-preset{text-align:left;border:1px solid var(--bb-line);border-radius:10px;background:var(--bb-paper);padding:10px 12px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--bb-ink);cursor:pointer;transition:.18s ease;line-height:1.3}
+.bb-preset small{display:block;font-weight:400;font-size:11px;color:var(--bb-mute);margin-top:2px}
+.bb-preset:hover{border-color:var(--bb-acc);background:var(--bb-tint2)}
+.bb-preset:active{transform:scale(.98)}
+.bb-estnote{font-size:12px;color:var(--bb-mute);line-height:1.55;margin:12px 0 4px}
 /* below the app */
 .bb-after{background:#F4F5F8;padding:70px 0 60px;border-top:1px solid #E4E6EC}
 .bb-steps{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:34px}
@@ -229,13 +232,14 @@ body.tryon-lock{overflow:hidden}
   .bb-chip{left:14px;bottom:20px;max-width:calc(100% - 230px)}
   .bb-hint{display:none}
   .bb-tools{bottom:14px;left:auto;right:14px;transform:none}
-  .bb-tool{width:38px;height:38px}
+  .bb-tool{width:38px;height:38px;padding:0;justify-content:center}
   .bb-tool span{display:none}
   .bb-panel{position:static;height:auto;border-left:0;border-top:1px solid var(--bb-line);z-index:1}
   .bb-head{padding:18px 18px 0}
   .bb-tabs,.bb-editing{margin-left:18px;margin-right:18px}
   .bb-scroll{overflow:visible;padding:4px 18px 24px}
   .bb-bar{position:sticky;bottom:0;z-index:5;padding:12px 18px;box-shadow:0 -8px 24px rgba(50,40,20,.08)}
+  .consent{bottom:112px!important}
   .bb-pairrow{grid-template-columns:1fr}
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
@@ -254,8 +258,11 @@ body.tryon-lock{overflow:hidden}
   .bb-opts,.bb-opts.four{grid-template-columns:repeat(3,1fr)}
   .bb-opt{font-size:12px;padding:10px 6px 9px}
   .bb-opt svg{width:52px;height:30px}
-  .bb-cta{padding:5px 5px 5px 16px;gap:8px;font-size:11px}
-  .bb-cta i{width:32px;height:32px}
+  .bb-cta{padding:12px 14px;font-size:12.5px}
+  .bb-bar-info span{display:none}
+  .bb-presets{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .bb-preset{padding:9px 8px;font-size:12px}
+  .bb-preset small{display:none}
 }
 </style>
 </head>
@@ -278,7 +285,7 @@ body.tryon-lock{overflow:hidden}
     <div class="bb-intro">
       <span class="bb-kicker">Wedding band builder</span>
       <h1>Design your band, <em>live</em> in 3D.</h1>
-      <p>Every option is cut into real geometry and weighed. When it's right, print the spec sheet or send it to our New York atelier.</p>
+      <p>Every option is cut into real geometry, weighed and estimated. When it's right, print the spec sheet or ask our New York atelier for a quote.</p>
     </div>
     <span class="bb-chip" id="bbChip"></span>
     <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
@@ -334,6 +341,14 @@ body.tryon-lock{overflow:hidden}
 
     <div class="bb-scroll" id="bbScroll">
       <div class="bb-pane" data-pane="shape" role="tabpanel">
+        <div class="bb-g">
+          <h3>Start from</h3>
+          <div class="bb-presets">
+            <button type="button" class="bb-preset" data-preset="classic">Classic<small>4 mm court, 18k yellow</small></button>
+            <button type="button" class="bb-preset" data-preset="eternity">Half eternity<small>Pavé diamonds, white gold</small></button>
+            <button type="button" class="bb-preset" data-preset="twotone">Two-tone<small>Rose and white, satin</small></button>
+          </div>
+        </div>
         <div class="bb-g">
           <h3>Profile</h3>
           <div class="bb-opts four" id="bbProfiles">
@@ -432,13 +447,13 @@ body.tryon-lock{overflow:hidden}
         <div class="bb-g">
           <h3 id="bbMetalH">Metal</h3>
           <div class="bb-opts four">
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#E9CB84"></span>14k Yellow</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#E6E6E3"></span>14k White</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#E6B8A4"></span>14k Rose</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#D5D2CE"></span>Platinum</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#E8C06A"></span>18k Yellow</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#E2E1DD"></span>18k White</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#E4AE96"></span>18k Rose</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#d19f37"></span>14k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#cbcbcb"></span>14k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#dc987b"></span>14k Rose</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#cfcece"></span>Platinum</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#d19f37"></span>18k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#cbcbcb"></span>18k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#dc987b"></span>18k Rose</button>
           </div>
         </div>
 
@@ -494,7 +509,6 @@ body.tryon-lock{overflow:hidden}
           <div class="bb-opts" id="bbShapes">
             <button type="button" class="bb-opt" data-opt="shape" data-v="round" aria-pressed="false"><svg viewBox="0 0 64 36"><circle cx="32" cy="18" r="13" fill="#E9EBF0" stroke-width="1.1"/><path d="M32 5 L32 31 M19 18 L45 18 M22.8 8.8 L41.2 27.2 M41.2 8.8 L22.8 27.2" fill="none" stroke-width=".7"/></svg>Round</button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="princess" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M21 5 H43 L45 7 V29 L43 31 H21 L19 29 V7 Z"/><path d="M19 7 L45 29 M45 7 L19 29" fill="none" stroke-width=".7"/></svg>Princess</button>
-            <button type="button" class="bb-opt" data-opt="shape" data-v="cushion" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M18 18 C18 8 22 4 32 4 C42 4 46 8 46 18 C46 28 42 32 32 32 C22 32 18 28 18 18 Z"/><path d="M26 12 H38 V24 H26 Z" fill="none" stroke-width=".7"/></svg>Cushion</button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="emerald" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M21 7 H43 L47 11 V25 L43 29 H21 L17 25 V11 Z"/><path d="M24 11 H40 L43 13 V23 L40 25 H24 L21 23 V13 Z M27 15 H37 V21 H27 Z" fill="none" stroke-width=".7"/></svg>Emerald<small>Set across the band</small></button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="baguette" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M18 11 H46 V25 H18 Z"/><path d="M22 14 H42 V22 H22 Z" fill="none" stroke-width=".7"/></svg>Baguette<small>Set across the band</small></button>
           </div>
@@ -502,14 +516,12 @@ body.tryon-lock{overflow:hidden}
 
         <div class="bb-g">
           <h3>Setting</h3>
-          <div class="bb-opts four">
-            <button type="button" class="bb-opt" data-opt="setting" data-v="channel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V8 H20 V16 H44 V8 H56 V30 Z"/><circle cx="32" cy="16" r="7" fill="#fff" stroke-width="1.1"/></svg>Channel<small>Two walls, cut seat</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="bar" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V14 H56 V30 Z"/><path d="M14 14 V6 H18 V14 Z M30 14 V6 H34 V14 Z M46 14 V6 H50 V14 Z"/><rect x="20" y="8" width="8" height="8" fill="#fff" stroke-width="1"/><rect x="36" y="8" width="8" height="8" fill="#fff" stroke-width="1"/></svg>Bar set<small>Bars between stones</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="bezel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V14 H56 V30 Z"/><path d="M20 14 V9 H44 V14 Z"/><circle cx="32" cy="11" r="7" fill="#fff" stroke-width="1.1"/></svg>Bezel<small>Full rim, follows the stone</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="prong" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V16 H56 V30 Z"/><path d="M17 16 V4 H21 V16 Z M43 16 V4 H47 V16 Z"/><circle cx="32" cy="11" r="8" fill="#fff" stroke-width="1.1"/></svg>Shared prong<small>4 per stone, shared</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="split" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V16 H56 V30 Z"/><path d="M19 16 L15 4 H18 L21 14 L24 4 H27 Z M45 16 L41 4 H44 L47 14 L50 4 H53 Z"/><circle cx="34" cy="11" r="8" fill="#fff" stroke-width="1.1"/></svg>Split prong<small>Prongs open into a V</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="fishtail" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V12 H56 V30 Z"/><path d="M12 12 L18 4 L24 12 Z M40 12 L46 4 L52 12 Z"/><circle cx="32" cy="12" r="7" fill="#fff" stroke-width="1.1"/></svg>Fishtail<small>Bead-set points</small></button>
-            <button type="button" class="bb-opt" data-opt="setting" data-v="uprong" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V12 H16 V4 H20 V12 Q32 32 44 12 V4 H48 V12 H56 V30 Z"/><circle cx="32" cy="12" r="7" fill="#fff" stroke-width="1.1"/></svg>U-prong<small>Scalloped cut-outs</small></button>
+          <div class="bb-opts">
+            <button type="button" class="bb-opt" data-opt="setting" data-v="channel" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V8 H20 V16 H44 V8 H56 V30 Z"/><circle cx="32" cy="16" r="7" fill="#fff" stroke-width="1.1"/></svg>Channel<small>Stones between two walls</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="pave" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V13 H56 V30 Z"/><circle cx="22" cy="14" r="6.5" fill="#fff" stroke-width="1.1"/><circle cx="42" cy="14" r="6.5" fill="#fff" stroke-width="1.1"/><circle class="mg" cx="32" cy="9.5" r="1.8"/><circle class="mg" cx="32" cy="18.5" r="1.8"/><circle class="mg" cx="12" cy="9.5" r="1.8"/><circle class="mg" cx="12" cy="18.5" r="1.8"/><circle class="mg" cx="52" cy="9.5" r="1.8"/><circle class="mg" cx="52" cy="18.5" r="1.8"/></svg>Pavé<small>Bead-set, most sparkle</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="shared" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V12 H16 V4 H20 V12 Q32 32 44 12 V4 H48 V12 H56 V30 Z"/><circle cx="32" cy="12" r="7" fill="#fff" stroke-width="1.1"/></svg>Shared prong<small>Prongs between stones</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="flush" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V10 H56 V30 Z"/><path d="M22 10 V8 H42 V10 Z"/><circle cx="32" cy="12" r="7" fill="#fff" stroke-width="1.1"/></svg>Flush<small>Sunk into the metal</small></button>
+            <button type="button" class="bb-opt" data-opt="setting" data-v="bar" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M8 30 V14 H56 V30 Z"/><path d="M14 14 V6 H18 V14 Z M30 14 V6 H34 V14 Z M46 14 V6 H50 V14 Z"/><rect x="20" y="8" width="8" height="8" fill="#fff" stroke-width="1"/><rect x="36" y="8" width="8" height="8" fill="#fff" stroke-width="1"/></svg>Bar<small>Bars between baguettes</small></button>
           </div>
           <p class="bb-note" id="bbRuleNote" hidden></p>
         </div>
@@ -541,11 +553,12 @@ body.tryon-lock{overflow:hidden}
         <summary>Full specification <span id="bbSumHint"></span></summary>
         <div id="bbSummary"></div>
       </details>
+      <p class="bb-estnote">Prices are estimates, not quotes: metal by weight at the atelier's current rate plus labour per band. Diamonds and platinum are quoted individually. A designer confirms everything with you before anything is made.</p>
     </div>
 
     <footer class="bb-bar">
-      <div class="bb-bar-info"><b id="bbBarTitle"></b><span id="bbBarSub"></span></div>
-      <button type="button" class="bb-cta" id="bbRequest"><em id="bbRequestLabel" style="font-style:normal">Request this band</em><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></i></button>
+      <div class="bb-bar-info"><b id="bbBarTitle"></b><span id="bbBarSub"></span><em id="bbBarEst"></em></div>
+      <button type="button" class="bb-cta" id="bbRequest"><span id="bbRequestLabel">Request a quote</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M12 6l6 6-6 6"/></svg></button>
     </footer>
   </aside>
 </main>
@@ -580,7 +593,7 @@ body.tryon-lock{overflow:hidden}
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=32"></script>
+<script type="module" src="band-builder.js?v=36"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 </body>

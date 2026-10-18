@@ -1419,6 +1419,16 @@ panel.addEventListener("click", (e) => {
     if (k === "pair") { ui.pair = v === "1"; if (!ui.pair) ui.active = 0; update(); fitView(); }
     else if (k === "link") { ui.link = v === "1"; update(); }
     else if (k === "sizesys") { ui.sizesys = v; update(false); }
+  } else if (el.dataset.preset) {
+    // Start-from presets: a known-good design, keeping the customer's size and engraving.
+    const b = active(), base = defaultBand(ui.active);
+    const P = {
+      classic:  { profile: "court", width: 4, depth: 1.8, metals: ["18y", "18y", "18y"], finishes: ["polished", "polished", "polished"], zones: 1, stones: "none" },
+      eternity: { profile: "court", width: 3, depth: 1.8, metals: ["18w", "18w", "18w"], finishes: ["polished", "polished", "polished"], zones: 1, stones: "half", shape: "round", setting: "pave", stonesz: "m" },
+      twotone:  { profile: "flat", width: 5.5, depth: 1.9, metals: ["18r", "18w", "18r"], finishes: ["satin", "polished", "polished"], zones: 2, zsplit: 0.5, stones: "none", edgel: "bevel", edger: "bevel" },
+    }[el.dataset.preset];
+    Object.assign(b, base, { size: b.size, engraving: b.engraving, font: b.font }, P);
+    update(); fitView();
   } else if (el.dataset.band != null) { ui.active = Number(el.dataset.band); update(false); }
   else if (el.dataset.tab) {
     ui.tab = el.dataset.tab; syncUI();

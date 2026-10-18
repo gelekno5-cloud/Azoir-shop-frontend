@@ -32,6 +32,39 @@ const METALS = {
   "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#dc987b", density: 15.2, sw: "#dc987b" },
   "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#cfcece", density: 20.6, sw: "#cfcece" },
 };
+// ── Price estimate (owner's rule, 2026-10-17) ────────────────────────────────
+// Estimate = metal weight × the alloy's rate + flat labour per band. 14k is
+// $120/g; 18k scales by fine-gold content. A metal with no rate (platinum until
+// the atelier sets one) makes the band "quoted individually". Diamonds are
+// never estimated here. Always shown as an estimate, never a quote; editable
+// in band-catalog.json under "pricing".
+let PRICING = {
+  laborCents: 10000,
+  perGramCents: { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null },
+};
+const usd = (cents) => "$" + Math.round(cents / 100).toLocaleString("en-US");
+function estimateBand(b, m) {
+  let metalCents = 0; const unpriced = [];
+  for (let z = 0; z < b.zones; z++) {
+    const rate = PRICING.perGramCents[b.metals[z]];
+    if (rate == null) { if (!unpriced.includes(METALS[b.metals[z]].name)) unpriced.push(METALS[b.metals[z]].name); continue; }
+    metalCents += m.zoneGrams[z] * rate;
+  }
+  metalCents = Math.round(metalCents);
+  return { metalCents, laborCents: PRICING.laborCents, totalCents: unpriced.length ? null : metalCents + PRICING.laborCents, unpriced, stones: m.stones > 0 };
+}
+function estimateAll() {
+  const list = ui.pair ? [0, 1] : [0];
+  const parts = list.map((i) => estimateBand(bands[i], views[i].metrics));
+  const unpriced = [...new Set(parts.flatMap((e) => e.unpriced))];
+  return { parts, unpriced, metalCents: parts.reduce((a, e) => a + e.metalCents, 0), laborCents: parts.reduce((a, e) => a + e.laborCents, 0),
+    totalCents: unpriced.length ? null : parts.reduce((a, e) => a + e.totalCents, 0), stones: parts.some((e) => e.stones) };
+}
+function estimateText(e, short = false) {
+  if (e.totalCents == null) return short ? "Quoted individually" : `Quoted individually — ${e.unpriced.join(", ")} has no set rate yet`;
+  return `≈ ${usd(e.totalCents)}` + (e.stones ? (short ? " + diamonds" : " + diamonds, quoted separately") : "") + (short ? "" : " — estimate only");
+}
+
 // Each finish is a real surface: a generated normal map at true scale (tile = mm).
 const FINISHES = {
   polished: { name: "Polished",  roughness: 0.04, micro: 0.03 },
@@ -106,7 +139,9 @@ function readBand(q, p, b) {
   pick("profile", PROFILES, (v) => (b.profile = v)); pick("interior", INTERIORS, (v) => (b.interior = v));
   pick("metal", METALS, (v) => (b.metals[0] = v)); pick("metal2", METALS, (v) => (b.metals[1] = v)); pick("metal3", METALS, (v) => (b.metals[2] = v));
   pick("finish", FINISHES, (v) => (b.finishes[0] = v)); pick("finish2", FINISHES, (v) => (b.finishes[1] = v)); pick("finish3", FINISHES, (v) => (b.finishes[2] = v));
-  pick("stones", SPANS, (v) => (b.stones = v)); pick("shape", SHAPES, (v) => (b.shape = v)); pick("setting", SETTINGS, (v) => (b.setting = v)); pick("stonesz", STONE_SIZES, (v) => (b.stonesz = v));
+  pick("stones", SPANS, (v) => (b.stones = v));
+  { const v = g("shape"); if (v && SHAPES[LEGACY_SHAPE[v] || v]) b.shape = LEGACY_SHAPE[v] || v; }
+  { const v = g("setting"); if (v && SETTINGS[LEGACY_SETTING[v] || v]) b.setting = LEGACY_SETTING[v] || v; } pick("stonesz", STONE_SIZES, (v) => (b.stonesz = v));
   pick("edgel", EDGES, (v) => (b.edgel = v)); pick("edger", EDGES, (v) => (b.edger = v)); pick("font", FONTS, (v) => (b.font = v));
   pick("wavemode", WAVE_MODES, (v) => (b.wavemode = v));
   if (b.profile === "custom" && !CUSTOM) b.profile = "court"; // the imported section lives in this browser only
@@ -247,19 +282,21 @@ function splitRuns(poly) {
 const SHAPES = {
   round:    { name: "Round brilliant", ratio: 1,    depth: 0.60, crown: 0.16, fit: 1,    k: 0.0061 },
   princess: { name: "Princess",        ratio: 1,    depth: 0.70, crown: 0.12, fit: 1,    k: 0.0083 },
-  cushion:  { name: "Cushion",         ratio: 1.05, depth: 0.65, crown: 0.14, fit: 1,    k: 0.0081, along: true },
   emerald:  { name: "Emerald",         ratio: 1.4,  depth: 0.65, crown: 0.15, fit: 0.72, k: 0.0092 },
   baguette: { name: "Baguette",        ratio: 2,    depth: 0.60, crown: 0.12, fit: 0.55, k: 0.0092 },
 };
+// The five ways stones are actually set into a band. Each is real metal built
+// on the band (see BandView.build) and each carries the setter's rules.
 const SETTINGS = {
-  channel:  { name: "Channel",      shapes: ["round", "princess", "baguette", "emerald"], wall: 0.45, gap: 0.15 },
-  bar:      { name: "Bar set",      shapes: ["baguette", "emerald", "princess"], wall: 0.45, bar: 0.5, gap: 0.1 },
-  bezel:    { name: "Bezel",        shapes: ["round", "princess", "cushion", "emerald", "baguette"], rim: 0.4, gap: 0.4 },
-  prong:    { name: "Shared prong", shapes: ["round", "cushion"], prong: 0.55, side: 0.6, raised: true },
-  split:    { name: "Split prong",  shapes: ["round"], prong: 0.45, side: 0.6, raised: true, split: true },
-  fishtail: { name: "Fishtail",     shapes: ["round"], side: 0.6, gap: 0.15, min: 1.3, max: 2.5 },
-  uprong:   { name: "U-prong",      shapes: ["round"], prong: 0.55, side: 0.9, raised: true, scoop: true },
+  channel: { name: "Channel",      shapes: ["round", "princess", "baguette", "emerald"], wall: 0.45, gap: 0.15 },
+  pave:    { name: "Pavé",         shapes: ["round"], side: 0.6, gap: 0.15, min: 1.0, max: 2.5, bead: 0.13 },
+  shared:  { name: "Shared prong", shapes: ["round"], prong: 0.55, side: 0.9, raised: true, scoop: true },
+  flush:   { name: "Flush",        shapes: ["round", "princess"], rim: 0.35, gap: 0.5, flush: true },
+  bar:     { name: "Bar",          shapes: ["baguette", "emerald", "princess"], wall: 0.45, bar: 0.5, gap: 0.1 },
 };
+// Older share links used these names.
+const LEGACY_SETTING = { bezel: "flush", prong: "shared", split: "shared", uprong: "shared", fishtail: "pave" };
+const LEGACY_SHAPE = { cushion: "round" };
 const r1 = (v) => Math.round(v * 10) / 10;
 const stoneBase = (width, stonesz) => { const base = Math.min(Math.max(r1((width - 1.4) * 0.6), 1.2), 2.4); return Math.max(1.0, Math.min(3.2, r1(base * STONE_SIZES[stonesz].k))); };
 function stoneDims(shape, d) {
@@ -302,19 +339,24 @@ function stoneSpec(b) {
   const prong = st.prong ? (b.metals[zoneAtY(b, 0)] === "pt" ? Math.max(st.prong, 0.6) : st.prong) : 0;
   const rp = prong / 2;
   const girdleBelow = st.raised ? -0.05 : r.hc + 0.05; // girdle just over the surface (prongs) or table flush with it
-  const channelD = girdleBelow + r.hp + 0.02;          // groove floor just under the pavilion tip; 0.3 mm of metal stays beneath
-  const channelW = st.rim ? r.W + 2 * st.rim + 0.1 : st.scoop ? r.W + 0.5 : st.raised ? r.W + 0.2 : r.W + 0.1;
-  let pitch, zp = 0, endPad;
+  const channel = !st.flush;                            // flush stones are sunk one by one; everything else sits in a groove
+  const channelD = channel ? girdleBelow + r.hp + 0.02 : 0; // groove floor just under the pavilion tip; 0.3 mm of metal stays beneath
+  const channelW = !channel ? 0 : st.scoop ? r.W + 0.5 : st.raised ? r.W + 0.2 : r.W + 0.1;
+  let pitch, zp = 0, endPad = 0.2;
   if (st.prong) {
     // a shared prong touches both neighbours: sit it at ±zp across the band and space the stones so the geometry closes
     zp = Math.min(0.3 * r.W, b.width / 2 - rp - 0.1);
-    const reach = r.Lx / 2 + rp + (st.split ? 0.1 : 0);
+    const reach = r.Lx / 2 + rp;
     pitch = 2 * Math.sqrt(Math.max(0.05, reach * reach - zp * zp));
     endPad = 0.3 + rp;
   } else if (st.bar) { pitch = r.Lx + st.bar + 2 * st.gap; endPad = st.bar + st.gap + 0.1; }
-  else if (st.rim) { pitch = r.Lx + 2 * st.rim + st.gap; endPad = st.rim + 0.05; }
-  else { pitch = r.Lx + st.gap; endPad = b.setting === "fishtail" ? 0.55 : 0.2; }
-  return { ...r, shape: b.shape, setting: b.setting, st, channel: true, channelW, channelD, pitch, prong, rp, zp, girdleBelow, endPad, outline: stoneOutline(b.shape, r) };
+  else if (st.flush) { pitch = r.Lx + 2 * st.rim + st.gap; zp = 0.32 * r.W; }
+  else if (st.bead) { pitch = r.Lx + st.gap; zp = 0.34 * r.W; endPad = 0.4; }
+  else { pitch = r.Lx + st.gap; }
+  const outline = stoneOutline(b.shape, r);
+  // metal a flush seat removes (crown + a cone for the pavilion), per stone
+  const seatVol = st.flush ? polyArea(outline) * (r.hc + 0.05 + r.hp / 3) : 0;
+  return { ...r, shape: b.shape, setting: b.setting, st, channel, channelW, channelD, pitch, prong, rp, zp, girdleBelow, endPad, outline, seatVol };
 }
 const dedupe = (arr) => arr.filter((y, i) => i === 0 || Math.abs(y - arr[i - 1]) > 1e-6);
 function buildSection(b) {
@@ -631,20 +673,6 @@ function prongGeometry(rp, base, tip) {
   const g = new THREE.LatheGeometry(pts, 12); g.computeVertexNormals();
   return { geometry: g, volume: Math.PI * rp * rp * (tip - base) };
 }
-// Split prong: two thinner posts from one base, opening into a V along the band.
-function splitProngGeometry(rp, base, tip, spread) {
-  const parts = [];
-  for (const sgn of [-1, 1]) {
-    const dx = sgn * spread, dy = tip - base, len = Math.hypot(dx, dy);
-    const cyl = new THREE.CylinderGeometry(rp, rp * 0.9, len, 10);
-    cyl.translate(0, len / 2, 0); cyl.rotateZ(-Math.atan2(dx, dy)); cyl.translate(0, base, 0);
-    const dome = new THREE.SphereGeometry(rp, 10, 8); dome.translate(dx, tip, 0);
-    parts.push(cyl, dome);
-  }
-  const g = mergeGeometries(parts);
-  return { geometry: g, volume: 2 * Math.PI * rp * rp * Math.hypot(spread, tip - base) };
-}
-
 // ── Finish textures ──────────────────────────────────────────────────────────
 // Height fields at real scale (one tile = FINISHES[].tile mm), turned into
 // tangent-space normal maps, so the brush grain, hammer facets and sandblast
@@ -1097,36 +1125,31 @@ class BandView {
         const t = st.st.bar;
         inst(box, this.mats[zc], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, t, H, gw))), t * H * gw, zc);
         setDetail = `${gapAngles.length} bars ${t} mm across the band · gap ${st.st.gap} mm each side`;
-      } else if (st.setting === "bezel") {
-        const inner = offsetPolygon(st.outline, 0.03), outer = offsetPolygon(st.outline, st.st.rim + 0.03);
-        const rimH = surf + 0.02 - floor;
-        inst(annulusGeometry(outer, inner, floor, surf + 0.02), this.mats[zc], n, (im) => lay.angles.forEach((th, i) => im.setMatrixAt(i, at(th, 0))), (polyArea(outer) - polyArea(inner)) * rimH, zc);
-        const bw = st.pitch - st.Lx - 2 * st.st.rim + 0.06;
-        inst(box, this.mats[zc], between.length, (im) => between.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, bw, H, gw))), bw * H * gw, zc);
-        setDetail = `rim ${st.st.rim} mm follows the ${SHAPES[st.shape].name.toLowerCase()} outline · stones ${st.st.gap} mm apart`;
-      } else if (st.setting === "fishtail") {
-        // between each pair: an hourglass of metal whose four corners are the points pushed over the stones
-        const gap = st.pitch - st.Lx, hx = gap / 2 + 0.22, hz = 0.72 * st.W / 2;
-        const hour = [[-hx, -hz], [hx, -hz], [0.06, 0], [hx, hz], [-hx, hz], [-0.06, 0]];
-        inst(prismGeometry(hour, floor, surf + 0.12), this.mats[zc], between.length, (im) => between.forEach((th, k) => im.setMatrixAt(k, at(th, 0))), polyArea(hour) * (surf + 0.12 - floor), zc);
-        const bead = new THREE.SphereGeometry(0.13, 8, 6);
-        inst(bead, this.mats[zc], between.length * 4, (im) => { let k = 0; for (const th of between) for (const sx of [-1, 1]) for (const sz of [-1, 1]) im.setMatrixAt(k++, at(th, surf + 0.1, sx * (hx - 0.1), sz * (hz - 0.06))); }, 4 / 3 * Math.PI * 0.13 ** 3 * 0.5, zc);
-        inst(box, this.mats[zc], ends.length, (im) => ends.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, 0.5, H, gw))), 0.5 * H * gw, zc);
-        setDetail = `4 points per stone, bead-set · stones ${st.st.gap} mm apart`;
-      } else if (st.st.prong) {
-        const rp = st.rp, tip = lay.rg + 0.3 + rp;
-        let base = floor;
-        if (st.setting === "uprong") {
-          const sx = st.pitch - st.Lx + 0.1;
-          inst(box, this.mats[zc], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, sx, H, gw))), sx * H * gw, zc);
-          base = surf - 0.25;
+      } else if (st.setting === "flush") {
+        // each stone sunk into the surface, held by a thin burnished rim that stands just proud of the metal
+        const inner = offsetPolygon(st.outline, 0.02), outer = offsetPolygon(st.outline, st.st.rim);
+        const y0 = surf - 0.22, y1 = surf + 0.07;
+        inst(annulusGeometry(outer, inner, y0, y1), this.mats[zc], n, (im) => lay.angles.forEach((th, i) => im.setMatrixAt(i, at(th, 0))), (polyArea(outer) - polyArea(inner)) * 0.1, zc);
+        partsVol[zc] -= st.seatVol * n;
+        setDetail = `${n} stones sunk flush · rim ${st.st.rim} mm burnished over the girdle · ${st.st.gap} mm between rims`;
+      } else if (st.setting === "pave") {
+        // bead set: stones in a cut-down row, two raised beads between neighbours (and at the row ends) hold the girdles
+        const bead = new THREE.SphereGeometry(st.st.bead, 10, 8), rb = st.st.bead;
+        for (const side of [-1, 1]) {
+          const z = zoneOfY(sec, -side * st.zp);
+          inst(bead, this.mats[z], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, surf + rb * 0.45, 0, side * st.zp))), 4 / 3 * Math.PI * rb ** 3 * 0.6, z);
         }
-        const pg = st.st.split ? splitProngGeometry(rp, base, tip, 0.2) : prongGeometry(rp, base, tip);
+        setDetail = `${gapAngles.length * 2} beads Ø ${fmt(st.st.bead * 2, 2)} mm, bright-cut row · stones ${st.st.gap} mm apart`;
+      } else if (st.setting === "shared") {
+        // shared prongs rise from saddles between the stones; the scooped gaps are the U cut-outs seen from the side
+        const rp = st.rp, tip = lay.rg + 0.3 + rp, sx = st.pitch - st.Lx + 0.1;
+        inst(box, this.mats[zc], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, mid, 0, 0, sx, H, gw))), sx * H * gw, zc);
+        const pg = prongGeometry(rp, surf - 0.25, tip);
         for (const side of [-1, 1]) {
           const z = zoneOfY(sec, -side * st.zp);
           inst(pg.geometry, this.mats[z], gapAngles.length, (im) => gapAngles.forEach((th, k) => im.setMatrixAt(k, at(th, 0, 0, side * st.zp))), pg.volume, z);
         }
-        setDetail = `${prongCount} ${st.st.split ? "split prongs (V pairs), each" : "shared prongs"} Ø ${fmt(st.prong, 2)} mm · tips 0.3 mm over the girdle` + (st.setting === "uprong" ? " · U cut-outs between stones" : "");
+        setDetail = `${prongCount} shared prongs Ø ${fmt(st.prong, 2)} mm · tips 0.3 mm over the girdle · U cut-outs between stones`;
       }
       setLimits = `min width ${fmt(Math.ceil(st.minWidth * 10) / 10)} mm · seat ${fmt(st.seat, 2)} mm of ${fmt(b.depth)} mm depth`;
     }
@@ -1245,6 +1268,7 @@ function bandText(b, v) {
     limits: m.stones ? m.limits : "—",
     size: `${sizeText(b.size)} · ${fmt(usToDiameter(b.size))} mm inside`,
     engraving: b.engraving.trim() ? `“${b.engraving.trim()}” (${{ script: "script", serif: "serif", sans: "modern" }[b.font]})` : "—",
+    estimate: (() => { const e = estimateBand(b, m); return e.totalCents == null ? estimateText(e) : `${estimateText(e)} (metal ${usd(e.metalCents)} + labour ${usd(e.laborCents)})`; })(),
     weight,
   };
 }
@@ -1267,7 +1291,7 @@ const setRange = (el, v, label) => {
   const out = wrap.querySelector(".bb-bubble"); if (out && label != null) out.textContent = label;
 };
 
-const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight" };
+const ROW_LABELS = { profile: "Profile", edges: "Edges", width: "Width", depth: "Depth", metal: "Metal", finish: "Finish", wave: "Wave", diamonds: "Diamonds", setting: "Setting", limits: "Fit rules", size: "Size", engraving: "Engraving", weight: "Est. metal weight", estimate: "Price estimate" };
 
 function syncUI() {
   const b = active();
@@ -1348,7 +1372,9 @@ function syncUI() {
     $("bbBarTitle").textContent = `${PROFILES[b0.profile].name} · ${short(b0.metals[0])}${b0.zones > 1 ? " + " + (b0.zones - 1) : ""}`;
     $("bbBarSub").textContent = `${fmt(b0.width)} mm · US ${usLabel(b0.size)} · ≈ ${fmt(m0.grams)} g${m0.stones ? ` · ${m0.stones} diamonds` : ""}`;
   }
-  $("bbRequestLabel").textContent = ui.pair ? "Request this pair" : "Request this band";
+  const est = estimateAll();
+  $("bbBarEst").textContent = est.totalCents == null ? "Quoted individually by the atelier" : `Est. ${usd(est.totalCents)}${est.stones ? " + diamonds" : ""} · estimate only`;
+  $("bbRequestLabel").textContent = ui.pair ? "Request a quote for the pair" : "Request a quote";
   $("bbSumHint").textContent = ui.pair ? "both bands" : `${Object.keys(ROW_LABELS).length} details`;
   const chip = (i) => { const bb = bands[i], m = views[i].metrics; return `${METALS[bb.metals[0]].name}${bb.zones > 1 ? " +" + (bb.zones - 1) : ""} · ${fmt(bb.width)} mm ${PROFILES[bb.profile].name.toLowerCase()} · ≈${fmt(m.grams)} g`; };
   $("bbChip").textContent = ui.pair ? [0, 1].map((i) => `${BAND_NAMES[i]} ${fmt(bands[i].width)} mm · ≈${fmt(views[i].metrics.grams)} g`).join("  ·  ") : chip(0);
@@ -1509,7 +1535,7 @@ function openSheet() {
       </div>
       <img class="bb-doc-snap" src="${snapshot()}" alt="3D preview">
       ${list.map(bandBlock).join("")}
-      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. No prices are shown: every design is quoted individually by the atelier. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
+      <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. Prices are estimates only — metal by weight at the atelier's current rate plus labour per band; diamonds, and any metal without a set rate, are quoted individually — and are confirmed by the atelier before anything is made. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
     </div>`;
   sheet.classList.add("open");
   sheet.scrollTop = 0;
@@ -1532,12 +1558,14 @@ function specText() {
       t.limits !== "—" ? `Fit rules: ${t.limits}` : "",
       b.engraving.trim() ? `Engraving: "${b.engraving.trim()}"` : "",
       `Estimated weight ${t.weight}`,
+      `Price estimate: ${t.estimate}`,
     ].filter(Boolean).join("\n");
   });
+  const est = estimateAll();
   return [
     `Wedding band${ui.pair ? "s (His & Hers pair" + (ui.link ? ", linked)" : ")") : ""} — ref ${refCode()}\n${location.href}`,
     ...blocks,
-    "Inquiry only — every design is quoted individually by the atelier.",
+    `Estimate for the ${ui.pair ? "pair" : "band"}: ${estimateText(est)}. Metal by weight (14k $120/g, 18k by gold content) plus $100 labour per band; diamonds quoted separately. This is an estimate, not a quote — the atelier confirms the price before anything is made.`,
   ].join("\n\n");
 }
 
@@ -1689,7 +1717,7 @@ function specJSON() {
   const r2 = (v) => Math.round(v * 100) / 100;
   return {
     version: 2, ref: refCode(), url: location.href, createdAt: new Date().toISOString(), pair: ui.pair, linked: ui.pair ? ui.link : undefined,
-    prices: "inquiry only — quoted individually by the atelier",
+    estimate: (() => { const e = estimateAll(); return { isEstimate: true, note: "estimate only, confirmed by the atelier; diamonds quoted separately", totalCents: e.totalCents, metalCents: e.metalCents, laborCents: e.laborCents, unpricedMetals: e.unpriced, perGramCents: PRICING.perGramCents, laborCentsPerBand: PRICING.laborCents }; })(),
     bands: list.map((i) => {
       const b = bands[i], v = views[i], m = v.metrics, st = v.sec && v.sec.stone, zb = [-b.width / 2, ...zoneBoundsOf(b), b.width / 2];
       return {
@@ -1856,6 +1884,7 @@ function applyCatalog(c) {
   if (c.edges) Object.assign(EDGES, c.edges);
   if (c.sizes && c.sizes.usToDiameter) { SIZE_A = c.sizes.usToDiameter.a; SIZE_B = c.sizes.usToDiameter.b; }
   if (c.defaults) DEFAULTS = c.defaults;
+  if (c.pricing) PRICING = { laborCents: c.pricing.laborCents ?? PRICING.laborCents, perGramCents: { ...PRICING.perGramCents, ...(c.pricing.perGramCents || {}) } };
   const hide = (opt, keys, table) => { for (const k of keys || []) { delete table[k]; panel.querySelectorAll(`[data-opt="${opt}"][data-v="${k}"]`).forEach((el) => el.remove()); } };
   if (c.hidden) { hide("profile", c.hidden.profiles, PROFILES); hide("metal", c.hidden.metals, METALS); hide("finish", c.hidden.finishes, FINISHES); hide("setting", c.hidden.settings, SETTINGS); hide("shape", c.hidden.shapes, SHAPES); }
   // swatches/names from the catalogue

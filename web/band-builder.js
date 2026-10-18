@@ -20,25 +20,26 @@ const PROFILES = {
 };
 const INTERIORS = { comfort: "Comfort fit", flat: "Flat" };
 // Base colour = sRGB of the metal's reflectance; density in g/cm³.
-// `color` is the alloy's reflectance at normal incidence (F0) in sRGB — what a
-// metal really reflects — so the band's colour comes from the studio, not a tint.
+// `color` is the alloy as the Moksh Diam viewer renders it: the median of
+// MatrixGold's rendered swatches (moksh-azoir metalConfigs.generated.ts). The
+// same values drive the portal viewer and the try-on, so every model matches.
 const METALS = {
-  "14y": { name: "14k Yellow Gold", wizard: "Yellow gold", color: "#F5D79C", density: 13.1, sw: "#E9CB84" },
-  "14w": { name: "14k White Gold",  wizard: "White gold",  color: "#F1F0EC", density: 12.7, sw: "#E6E6E3" },
-  "14r": { name: "14k Rose Gold",   wizard: "Rose gold",   color: "#F3C9B3", density: 13.0, sw: "#E6B8A4" },
-  "18y": { name: "18k Yellow Gold", wizard: "Yellow gold", color: "#F7D08A", density: 15.5, sw: "#E8C06A" },
-  "18w": { name: "18k White Gold",  wizard: "White gold",  color: "#EFEEEA", density: 15.1, sw: "#E2E1DD" },
-  "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#F1BFA4", density: 15.2, sw: "#E4AE96" },
-  "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#E1DEDA", density: 20.6, sw: "#D5D2CE" },
+  "14y": { name: "14k Yellow Gold", wizard: "Yellow gold", color: "#d19f37", density: 13.1, sw: "#d19f37" },
+  "14w": { name: "14k White Gold",  wizard: "White gold",  color: "#cbcbcb", density: 12.7, sw: "#cbcbcb" },
+  "14r": { name: "14k Rose Gold",   wizard: "Rose gold",   color: "#dc987b", density: 13.0, sw: "#dc987b" },
+  "18y": { name: "18k Yellow Gold", wizard: "Yellow gold", color: "#d19f37", density: 15.5, sw: "#d19f37" },
+  "18w": { name: "18k White Gold",  wizard: "White gold",  color: "#cbcbcb", density: 15.1, sw: "#cbcbcb" },
+  "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#dc987b", density: 15.2, sw: "#dc987b" },
+  "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#cfcece", density: 20.6, sw: "#cfcece" },
 };
 // Each finish is a real surface: a generated normal map at true scale (tile = mm).
 const FINISHES = {
-  polished: { name: "Polished",  roughness: 0.035 },
-  satin:    { name: "Satin",     roughness: 0.3, anisotropy: 0.85, map: "satin", tile: 2.5, scale: 0.8 },
-  hammered: { name: "Hammered",  roughness: 0.1, map: "hammered", tile: 7, scale: 1.0 },
-  matte:    { name: "Matte",     roughness: 0.55, map: "matte", tile: 1.2, scale: 0.45, env: 0.9 },
-  brushed:  { name: "Brushed",   roughness: 0.3, anisotropy: 0.85, anisoRot: 0, map: "brushed", tile: 2.5, scale: 0.8 },
-  sandblast:{ name: "Sandblast", roughness: 0.7, map: "sandblast", tile: 0.8, scale: 0.9, env: 0.85 },
+  polished: { name: "Polished",  roughness: 0.04, micro: 0.03 },
+  satin:    { name: "Satin",     roughness: 0.2, anisotropy: 0.45, micro: 0.05, map: "satin", tile: 2.5, scale: 0.8 },
+  hammered: { name: "Hammered",  roughness: 0.06, micro: 0.03, map: "hammered", tile: 7, scale: 1.0 },
+  matte:    { name: "Matte",     roughness: 0.55, micro: 0.08, map: "matte", tile: 1.2, scale: 0.45 },
+  brushed:  { name: "Brushed",   roughness: 0.26, anisotropy: 0.8, anisoRot: 0, micro: 0.05, map: "brushed", tile: 2.5, scale: 0.8 },
+  sandblast:{ name: "Sandblast", roughness: 0.42, micro: 0.06, map: "sandblast", tile: 0.8, scale: 0.9 },
   ice:      { name: "Ice",       roughness: 0.22, map: "ice", tile: 2.2, scale: 1.0 },
   bark:     { name: "Bark",      roughness: 0.38, map: "bark", tile: 5, scale: 1.1 },
 };
@@ -784,7 +785,7 @@ function drawEngraving(canvas, text, font) {
 const viewer = document.getElementById("bbViewer");
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.toneMapping = THREE.NeutralToneMapping; // keeps gold gold; ACES bleaches bright metal to white
+renderer.toneMapping = THREE.ACESFilmicToneMapping; // what the Moksh Diam viewer ships (TonemapPlugin default), exposure 1.0 for the next look
 renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
@@ -792,42 +793,205 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 viewer.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-// A high-key jewellery studio: a bright graded dome, large softboxes with
-// feathered edges (so highlights on polished metal have soft shoulders, not hard
-// rectangles) and two black flags that put dark bands into the reflections —
-// that contrast is what makes metal read as metal.
-function studioEnvironment() {
-  const env = new THREE.Scene();
-  const grad = document.createElement("canvas"); grad.width = 4; grad.height = 256;
-  const gx = grad.getContext("2d"), lg = gx.createLinearGradient(0, 0, 0, 256);
-  lg.addColorStop(0, "#ffffff"); lg.addColorStop(0.38, "#e4e7ee"); lg.addColorStop(0.5, "#b9bec9"); lg.addColorStop(0.62, "#7d828d"); lg.addColorStop(1, "#3a3d45");
-  gx.fillStyle = lg; gx.fillRect(0, 0, 4, 256);
-  const domeTex = new THREE.CanvasTexture(grad); domeTex.colorSpace = THREE.SRGBColorSpace;
-  env.add(new THREE.Mesh(new THREE.SphereGeometry(60, 32, 24), new THREE.MeshBasicMaterial({ map: domeTex, side: THREE.BackSide })));
-  const soft = document.createElement("canvas"); soft.width = soft.height = 256;
-  { const x = soft.getContext("2d"), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
-    g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.55, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)");
-    x.fillStyle = g; x.fillRect(0, 0, 256, 256); }
-  const softTex = new THREE.CanvasTexture(soft);
-  const box = (w, h, x, y, z, i, warm, hard) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({
-      color: new THREE.Color(warm === "black" ? 0x000000 : warm ? 0xfff3e2 : 0xeef3ff).multiplyScalar(warm === "black" ? 1 : i),
-      map: hard ? null : softTex, transparent: !hard, side: THREE.DoubleSide,
-    }));
-    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
-  };
-  box(30, 16, 8, 32, 20, 5.5, true);          // key: big warm octabox, top front
-  box(10, 40, -42, 10, 8, 3.2, false);        // tall cool strip, left
-  box(9, 30, 44, 4, -12, 3.6, false);         // rim strip, right rear
-  box(40, 6, 0, -8, -48, 2.0, true);          // low warm bar behind (lights the inside)
-  box(36, 5, -6, -14, 44, 2.4, false);        // low front fill
-  box(50, 3, 20, 20, 36, 1, "black", true);   // flag: a dark band through the key reflection
-  box(40, 4, -30, -2, -30, 1, "black", true); // flag: low dark band, rear left
-  return env;
+// ── Moksh Diam materials ─────────────────────────────────────────────────────
+// Ported from the Moksh Diam viewer (moksh-azoir: studioEnv.ts, metalFresnel.ts,
+// metalShading.ts, JewelryViewer GEM_CONFIGS) so a band looks the same here, in
+// the portal viewer and in the try-on. Metal colours are MatrixGold's rendered
+// swatches; the metal reflects a procedural light tent; the Fresnel is a
+// measured conductor curve, not Schlick; the diamond is the viewer's config.
+const ALLOY_OF = { "14y": "yellow_gold", "18y": "yellow_gold", "14w": "white_gold", "18w": "white_gold", "14r": "rose_gold", "18r": "rose_gold", pt: "platinum" };
+const WARM = [1.0, 0.93, 0.84], NEUTRAL = [1, 1, 1], COOL = [0.93, 0.97, 1.0];
+const GEM_STUDIO = {
+  room: [0.42, 0.56, 0], floorBelow: -13.5,
+  lobes: [{ dir: [1, 0.25, 0], power: -0.6, exponent: 1.8 }],
+  bands: [{ lat: -8, width: 4, power: 0.2 }],
+  boxes: [
+    { dir: [0.993, 0.12, -0.05], size: [44, 42], power: 1.75, soft: 0.06 },
+    { dir: [0.79, 0.12, -0.6], size: [22, 22], power: 0.85, soft: 0.95 },
+    { dir: [0.84, 0.12, 0.53], size: [22, 22], power: 0.85, soft: 0.95 },
+  ],
+};
+const STUDIOS = {
+  gold: {
+    room: [0.95, 1.15, 0.22], roomTint: WARM,
+    boxes: [
+      { dir: [0, 1, 0.05], size: [90, 60], power: 1.2, tint: NEUTRAL, soft: 0.5 },
+      { dir: [-0.9, 0.1, 0.42], size: [18, 75], power: -0.93, soft: 0.2 },
+      { dir: [0.9, 0.1, 0.42], size: [18, 75], power: -0.93, soft: 0.2 },
+      { dir: [0, 0.12, 1], size: [16, 12], power: -0.55, soft: 0.5 },
+      { dir: [0, 0.22, -1], size: [120, 14], power: -0.93, soft: 0.25 },
+      { dir: [0.35, 0.75, 0.56], size: [40, 18], power: 2.6, tint: WARM, soft: 0.3 },
+    ],
+  },
+  white: {
+    room: [0.95, 1.15, 0.18], roomTint: COOL,
+    boxes: [
+      { dir: [0, 1, 0.05], size: [90, 60], power: 1.2, tint: NEUTRAL, soft: 0.5 },
+      { dir: [-0.9, 0.1, 0.42], size: [16, 75], power: -0.94, soft: 0.15 },
+      { dir: [0.9, 0.1, 0.42], size: [16, 75], power: -0.94, soft: 0.15 },
+      { dir: [0, 0.12, 1], size: [16, 12], power: -0.6, soft: 0.5 },
+      { dir: [0, 0.22, -1], size: [120, 12], power: -0.94, soft: 0.2 },
+      { dir: [0.35, 0.75, 0.56], size: [40, 18], power: 2.8, tint: NEUTRAL, soft: 0.3 },
+    ],
+  },
+  gem: GEM_STUDIO,
+};
+const v3norm = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+const v3cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+function softEdge(x, h, soft) {
+  const a = Math.abs(x);
+  if (soft <= 0) return a < h ? 1 : 0;
+  const inner = h * (1 - soft);
+  if (a <= inner) return 1;
+  if (a >= h) return 0;
+  const t = (a - inner) / (h - inner);
+  return 1 - t * t * (3 - 2 * t);
 }
+// A preset → linear RGBA float equirect (row 0 = bottom), as in studioEnv.ts.
+function renderStudio(preset, width = 512) {
+  const height = width / 2, data = new Float32Array(width * height * 4);
+  const boxes = preset.boxes.map((b) => {
+    const f = v3norm(b.dir);
+    const ref = Math.abs(f[1]) > 0.98 ? [0, 0, 1] : [0, 1, 0];
+    const r = v3norm(v3cross(ref, f)), u = v3cross(f, r);
+    return { f, r, u, hw: Math.tan(b.size[0] / 2 * Math.PI / 180), hh: Math.tan(b.size[1] / 2 * Math.PI / 180), soft: b.soft ?? 0.3, power: b.power, tint: b.tint || [1, 1, 1] };
+  });
+  const [horizon, zenith, nadir] = preset.room, rt = preset.roomTint || [1, 1, 1];
+  const lobes = (preset.lobes || []).map((l) => ({ ...l, d: v3norm(l.dir) })), bands = preset.bands || [];
+  const floorSin = preset.floorBelow !== undefined ? Math.sin(preset.floorBelow * Math.PI / 180) : -2;
+  for (let j = 0; j < height; j++) {
+    const lat = ((j + 0.5) / height - 0.5) * Math.PI, cy = Math.sin(lat), cl = Math.cos(lat);
+    let room = cy < floorSin ? 0 : cy >= 0 ? horizon + (zenith - horizon) * cy : horizon + (nadir - horizon) * -cy;
+    const latDeg = lat * 180 / Math.PI;
+    for (const b of bands) room += b.power * Math.exp(-0.5 * ((latDeg - b.lat) / b.width) ** 2);
+    for (let i = 0; i < width; i++) {
+      const phi = ((i + 0.5) / width - 0.5) * Math.PI * 2, dx = cl * Math.cos(phi), dz = cl * Math.sin(phi);
+      let R = room * rt[0], G = room * rt[1], B = room * rt[2];
+      for (const l of lobes) { const c = dx * l.d[0] + cy * l.d[1] + dz * l.d[2]; if (c > 0) { const p = l.power * Math.pow(c, l.exponent); R += p * rt[0]; G += p * rt[1]; B += p * rt[2]; } }
+      for (const b of boxes) {
+        const fd = dx * b.f[0] + cy * b.f[1] + dz * b.f[2];
+        if (fd <= 0.05) continue;
+        const x = (dx * b.r[0] + cy * b.r[1] + dz * b.r[2]) / fd, y = (dx * b.u[0] + cy * b.u[1] + dz * b.u[2]) / fd;
+        const w = softEdge(x, b.hw, b.soft) * softEdge(y, b.hh, b.soft);
+        if (w <= 0) continue;
+        const rx = x / b.hw, ry = y / b.hh, p = b.power * w * (1 - 0.18 * (rx * rx + ry * ry));
+        R += p * b.tint[0]; G += p * b.tint[1]; B += p * b.tint[2];
+      }
+      const o = (j * width + i) * 4;
+      data[o] = Math.max(R, 1e-4); data[o + 1] = Math.max(G, 1e-4); data[o + 2] = Math.max(B, 1e-4); data[o + 3] = 1;
+    }
+  }
+  return { data, width, height };
+}
+const studioCache = {};
+function studioTexture(key) {
+  if (studioCache[key]) return studioCache[key];
+  const { data, width, height } = renderStudio(STUDIOS[key], 1024);
+  const half = new Uint16Array(data.length);
+  for (let i = 0; i < data.length; i++) half[i] = THREE.DataUtils.toHalfFloat(Math.min(data[i], 65000));
+  const tex = new THREE.DataTexture(half, width, height, THREE.RGBAFormat, THREE.HalfFloatType);
+  tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.LinearSRGBColorSpace;
+  tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+  return (studioCache[key] = tex);
+}
+const familyForMetal = (key) => (ALLOY_OF[key] === "yellow_gold" || ALLOY_OF[key] === "rose_gold" ? "gold" : "white");
+
+// Conductor Fresnel (Gulbrandsen 2014) from published n/k of the alloy's dominant metal.
+const OPTICAL_CONSTANTS = {
+  Au: { n: [0.156, 0.424, 1.383], k: [3.602, 2.472, 1.916] },
+  Ag: { n: [0.052, 0.060, 0.040], k: [4.409, 3.597, 2.648] },
+  Cu: { n: [0.238, 1.007, 1.240], k: [3.626, 2.582, 2.393] },
+  Pt: { n: [2.369, 2.089, 1.850], k: [4.252, 3.698, 3.138] },
+  Rh: { n: [2.190, 1.967, 1.751], k: [5.740, 5.015, 4.452] },
+};
+const ALLOY_EDGE_SOURCE = { yellow_gold: [["Au", 1]], rose_gold: [["Au", 0.75], ["Cu", 0.25]], white_gold: [["Rh", 1]], platinum: [["Pt", 1]] };
+const reflectivityFromNK = (n, k) => ((n - 1) ** 2 + k * k) / ((n + 1) ** 2 + k * k);
+function edgeTintFromNK(n, k) {
+  const r = Math.min(reflectivityFromNK(n, k), 0.9999), nMin = (1 - r) / (1 + r), sr = Math.sqrt(r), nMax = (1 + sr) / (1 - sr);
+  return Math.min(1, Math.max(0, (nMax - n) / (nMax - nMin)));
+}
+function nkFromReflectivityEdgeTint(r, g) {
+  const rc = Math.min(Math.max(r, 0), 0.9999), sr = Math.sqrt(rc);
+  const n = g * ((1 - rc) / (1 + rc)) + (1 - g) * ((1 + sr) / (1 - sr));
+  const k2 = ((n + 1) ** 2 * rc - (n - 1) ** 2) / (1 - rc);
+  return { n, k: Math.sqrt(Math.max(k2, 0)) };
+}
+function alloyComplexIor(alloy, hex) {
+  const c = new THREE.Color(hex); // sRGB hex → linear (three's colour management)
+  const r = [c.r, c.g, c.b], g = [0, 0, 0];
+  for (const [metal, w] of ALLOY_EDGE_SOURCE[alloy] || ALLOY_EDGE_SOURCE.white_gold) {
+    const { n, k } = OPTICAL_CONSTANTS[metal];
+    for (let i = 0; i < 3; i++) g[i] += w * edgeTintFromNK(n[i], k[i]);
+  }
+  const eta = [0, 0, 0], k = [0, 0, 0];
+  for (let i = 0; i < 3; i++) { const v = nkFromReflectivityEdgeTint(r[i], g[i]); eta[i] = v.n; k[i] = v.k; }
+  return { eta, k };
+}
+const CONDUCTOR_FRESNEL_GLSL = `
+uniform vec3 metalEta;
+uniform vec3 metalK;
+vec3 fresnelConductor(float cosi, vec3 eta, vec3 k) {
+  cosi = clamp(cosi, 0.0, 1.0);
+  float c2 = cosi * cosi, s2 = 1.0 - c2;
+  vec3 e2 = eta * eta, k2 = k * k;
+  vec3 t0 = e2 - k2 - s2;
+  vec3 a2b2 = sqrt(t0 * t0 + 4.0 * e2 * k2);
+  vec3 t1 = a2b2 + c2;
+  vec3 a = sqrt(max(0.5 * (a2b2 + t0), 0.0));
+  vec3 t2 = 2.0 * cosi * a;
+  vec3 rs = (t1 - t2) / (t1 + t2);
+  vec3 t3 = c2 * a2b2 + s2 * s2;
+  vec3 t4 = t2 * s2;
+  vec3 rp = rs * (t3 - t4) / (t3 + t4);
+  return 0.5 * (rp + rs);
+}
+vec3 conductorFssEss(vec2 fab) {
+  float ess = max(fab.x + fab.y, 1e-4);
+  float cosEff = 1.0 - pow(clamp(fab.y / ess, 0.0, 1.0), 0.2);
+  return fresnelConductor(cosEff, metalEta, metalK) * ess;
+}
+float mdHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+float mdNoise(vec3 p) {
+  vec3 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(mdHash(i), mdHash(i + vec3(1,0,0)), f.x), mix(mdHash(i + vec3(0,1,0)), mdHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(mdHash(i + vec3(0,0,1)), mdHash(i + vec3(1,0,1)), f.x), mix(mdHash(i + vec3(0,1,1)), mdHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}`;
+// Patch a MeshPhysicalMaterial with the conductor Fresnel and the viewer's micro-roughness (world mm).
+function mokshMetal(mat) {
+  mat.userData.eta = { value: new THREE.Vector3(1, 1, 1) };
+  mat.userData.k = { value: new THREE.Vector3(1, 1, 1) };
+  mat.userData.micro = { value: 0.03 };
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.metalEta = mat.userData.eta; shader.uniforms.metalK = mat.userData.k; shader.uniforms.mdMicro = mat.userData.micro;
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vMdWorld;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\n  vMdWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vMdWorld;\nuniform float mdMicro;\n" + CONDUCTOR_FRESNEL_GLSL)
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(roughnessFactor + (mdNoise(vMdWorld * 18.0) - 0.5) * mdMicro, 0.0, 1.0);")
+      .replace("#include <lights_physical_pars_fragment>", THREE.ShaderChunk.lights_physical_pars_fragment
+        .replace("vec3 FssEss = Fr * fab.x + specularF90 * fab.y;", "vec3 FssEss = conductorFssEss(fab);")
+        .split("vec3 F = F_Schlick( f0, f90, dotVH );").join("vec3 F = fresnelConductor( dotVH, metalEta, metalK );"));
+  };
+  mat.customProgramCacheKey = () => "moksh-metal";
+  return mat;
+}
+function setAlloy(mat, metalKey) {
+  const met = METALS[metalKey], { eta, k } = alloyComplexIor(ALLOY_OF[metalKey], met.color);
+  mat.color.set(met.color);
+  mat.userData.eta.value.set(...eta); mat.userData.k.value.set(...k);
+}
+
+// The metal reflects the Moksh Diam light tent (gold or white family, by the first zone's alloy);
+// the stones reflect the viewer's gem studio with their own strength.
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(studioEnvironment(), 0.02).texture;
+const envCache = {};
+function envFor(key) { return envCache[key] || (envCache[key] = pmrem.fromEquirectangular(studioTexture(key)).texture); }
+scene.environment = envFor("gold");
 scene.environmentIntensity = 1.0;
+let envFamily = "gold";
+function setEnvFamily(f) { if (f !== envFamily) { envFamily = f; scene.environment = envFor(f); } }
 // A real cast shadow on the ground (the light itself adds nothing: direct light on mirror metal is one white blob).
 const GROUND_Y = -11.5;
 const sun = new THREE.DirectionalLight(0xffffff, 0.001);
@@ -855,11 +1019,13 @@ controls.addEventListener("end", () => { idleTimer = setTimeout(() => (controls.
 
 const LEAN = Math.PI / 2 + 0.22; // lathe axis Y → mostly Z: the ring stands, its top tipped toward the viewer
 const PAIR_GAP = 3; // mm between the two rings
-// Diamond: transmissive with dispersion, so facets throw a little fire.
+// Diamond: the Moksh Diam viewer's config (JewelryViewer GEM_CONFIGS.diamond), reflecting its gem studio.
 const stoneMat = new THREE.MeshPhysicalMaterial({
-  color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, reflectivity: 1, specularIntensity: 1,
-  transmission: 0.3, thickness: 0.5, dispersion: 0.3, envMapIntensity: 3.6, flatShading: true,
+  color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, transmission: 0.9, thickness: 2.0,
+  attenuationColor: new THREE.Color(0xffffff), attenuationDistance: 4.0, clearcoat: 1.0, clearcoatRoughness: 0,
+  specularIntensity: 3.0, envMapIntensity: 4, flatShading: true,
 });
+stoneMat.envMap = envFor("gem");
 const shadowC = document.createElement("canvas"); shadowC.width = shadowC.height = 256;
 { const x = shadowC.getContext("2d"); const g = x.createRadialGradient(128, 128, 10, 128, 128, 128);
   g.addColorStop(0, "rgba(20,24,40,0.3)"); g.addColorStop(0.5, "rgba(20,24,40,0.1)"); g.addColorStop(1, "rgba(20,24,40,0)");
@@ -870,7 +1036,7 @@ const shadowTex = new THREE.CanvasTexture(shadowC);
 class BandView {
   constructor() {
     this.group = new THREE.Group(); this.group.rotation.x = LEAN; scene.add(this.group);
-    this.mats = [0, 1, 2].map(() => new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.035, envMapIntensity: 1 }));
+    this.mats = [0, 1, 2].map(() => mokshMetal(new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.04, envMapIntensity: 1 })));
     this.maps = [{}, {}, {}]; // per zone, per finish: a clone of the shared normal map with its own repeat
     this.engraveMat = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.BackSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     this.engraveCanvas = document.createElement("canvas"); this.engraveCanvas.width = 2048; this.engraveCanvas.height = 160;
@@ -1005,7 +1171,8 @@ class BandView {
   applyMaterials(b) {
     for (let z = 0; z < 3; z++) {
       const met = METALS[b.metals[z]], fin = FINISHES[b.finishes[z]], mat = this.mats[z];
-      mat.color.set(met.color);
+      setAlloy(mat, b.metals[z]);
+      mat.userData.micro.value = fin.micro || 0.03;
       mat.roughness = fin.roughness;
       mat.envMapIntensity = fin.env || 1;
       mat.anisotropy = fin.anisotropy || 0;
@@ -1204,6 +1371,7 @@ function update(geom = true) {
     views[i].applyMaterials(bands[i]);
   }
   layoutViews();
+  setEnvFamily(familyForMetal(bands[0].metals[0]));
   syncUI();
   writeHash();
   if (tryon.active) { syncTryUI(); scheduleResend(500); }

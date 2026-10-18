@@ -27,50 +27,50 @@
   "14y": {
    "name": "14k Yellow Gold",
    "wizard": "Yellow gold",
-   "color": "#F5D79C",
-   "sw": "#E9CB84",
+   "color": "#d19f37",
+   "sw": "#d19f37",
    "density": 13.1
   },
   "14w": {
    "name": "14k White Gold",
    "wizard": "White gold",
-   "color": "#F1F0EC",
-   "sw": "#E6E6E3",
+   "color": "#cbcbcb",
+   "sw": "#cbcbcb",
    "density": 12.7
   },
   "14r": {
    "name": "14k Rose Gold",
    "wizard": "Rose gold",
-   "color": "#F3C9B3",
-   "sw": "#E6B8A4",
+   "color": "#dc987b",
+   "sw": "#dc987b",
    "density": 13.0
   },
   "18y": {
    "name": "18k Yellow Gold",
    "wizard": "Yellow gold",
-   "color": "#F7D08A",
-   "sw": "#E8C06A",
+   "color": "#d19f37",
+   "sw": "#d19f37",
    "density": 15.5
   },
   "18w": {
    "name": "18k White Gold",
    "wizard": "White gold",
-   "color": "#EFEEEA",
-   "sw": "#E2E1DD",
+   "color": "#cbcbcb",
+   "sw": "#cbcbcb",
    "density": 15.1
   },
   "18r": {
    "name": "18k Rose Gold",
    "wizard": "Rose gold",
-   "color": "#F1BFA4",
-   "sw": "#E4AE96",
+   "color": "#dc987b",
+   "sw": "#dc987b",
    "density": 15.2
   },
   "pt": {
    "name": "Platinum 950",
    "wizard": "Platinum",
-   "color": "#E1DEDA",
-   "sw": "#D5D2CE",
+   "color": "#cfcece",
+   "sw": "#cfcece",
    "density": 20.6
   }
  },

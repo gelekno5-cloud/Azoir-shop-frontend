@@ -211,6 +211,13 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - Also fixed: `.page-hero` decorative glow made commission.html scroll sideways on phones (`overflow-x:clip` under 900px).
 - Not deployed (`railway up` is manual).
 
+## 2026-10-20 — band builder: finish on the outer surface only, finish in the GLB (branch `claude/band-finish-outer-export`)
+
+- **Finish = outer surface only.** `buildRingGeometry` now splits each zone's faces into two material groups: faces that point outward and sit above the inside (`isOuterSegment`) get the zone's finished material (`view.mats[z]`), everything else — interior, side walls, channel walls — gets the same alloy polished (`view.mats[PLAIN_MAT + z]`, `PLAIN_MAT = 3`, set in `applyMaterials`). Setting parts, milgrain and the wave groove keep the finished material as before.
+- **The GLB carries the finish.** `exportGLB` → `exportMetal`: per live material a `MeshPhysicalMaterial` with the exact alloy colour (linear factor, no tone-mapping), the finish's roughness, the finish's normal map and a metallic-roughness map (G roughness, B metal 1) baked from the live `DataTexture`s to canvas (`bakeFinishTexture`), same repeat (→ `KHR_texture_transform`) and orientation; satin / brushed also export `KHR_materials_anisotropy` (three 0.186). UVs untouched. Meshes: `band-<zone>` (outer, finished), `band-<zone>-inside` (polished interior/sides), `band-<zone>-setting` (channel walls, bars, beads, prongs), every stone `diamond` (one shared material). A 2-zone satin/brushed half-eternity is ~3.7 MB.
+- **Hand-over:** `tryon:set` now carries `configMaterials: "gems"` — the try-on keeps the GLB's metals and re-skins only the diamonds. `envMapIntensity` 1 on exported metals (not a glTF field; the try-on's own lighting applies).
+- `band-builder.js?v=38`. Browser-pane note: `band-builder.js?v=N` is cached for 1 h — after an edit without a bump, `fetch(url, {cache:"reload"})` then reload.
+
 ## 2026-10-17 session — band builder: request flow with a deposit (branch `claude/band-request-deposit`)
 
 - **Every design can be reserved with a down payment** (owner's rule): **25% of the estimate, minimum $250**; a design with no estimate (platinum, or any diamonds) pays a **flat $250** and the price is quoted. Same rule in `band-builder.js` (`DEPOSIT`, `depositFor`) and `server.js` (`BAND_DEPOSIT_RATE`, `BAND_DEPOSIT_MIN_CENTS`, `bandDepositCents`); the server's number is what is charged.

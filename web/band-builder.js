@@ -479,6 +479,13 @@ function wedgeVolume(loop, dTheta) {
 
 // ── Lathe with per-run normals, a channel whose depth varies with angle, and a material group per zone ──
 const SEG = 192;
+const PLAIN_MAT = 3; // BandView.mats[PLAIN_MAT + z] is zone z's metal, always polished (interior, sides, channel walls)
+function isOuterSegment(sec, p, q) {
+  const tx = q.x - p.x, ty = q.y - p.y, l = Math.hypot(tx, ty) || 1;
+  const nx = ty / l; // outward radial component of the segment's 2D normal
+  const x = (p.x + q.x) / 2;
+  return nx > 0.35 && x > sec.ri + 0.3 * Math.max(0.2, sec.centerOuter - sec.ri);
+}
 const TOP = Math.PI / 2; // lathe angle that ends up at the top of the standing ring
 function buildRingGeometry(sec, b) {
   const depthAt = channelDepthFn(sec, b);
@@ -522,21 +529,25 @@ function buildRingGeometry(sec, b) {
       }
     }
   }
-  // index buffer grouped by zone (material index)
-  const byZone = Array.from({ length: b.zones }, () => []);
+  // index buffer grouped by zone and surface (material index): the outer surface
+  // carries the zone's finish (material z); the interior, the sides and the
+  // channel walls are always polished (material PLAIN_MAT + z). A segment is
+  // "outer" when it faces outward (radial normal) and sits above the inside.
+  const byZone = Array.from({ length: b.zones * 2 }, () => []);
   for (let sIdx = 0; sIdx < SEG; sIdx++) {
     let base = 0;
     for (const r of runs0) {
       for (let j = 0; j < r.length - 1; j++) {
         const a = sIdx * total + base + j, bq = a + 1, c2 = a + total, d = c2 + 1;
-        byZone[zoneOfY(sec, (r[j].y + r[j + 1].y) / 2)].push(a, c2, bq, bq, c2, d);
+        const z = zoneOfY(sec, (r[j].y + r[j + 1].y) / 2);
+        byZone[isOuterSegment(sec, r[j], r[j + 1]) ? z : b.zones + z].push(a, c2, bq, bq, c2, d);
       }
       base += r.length;
     }
   }
   const idx = [];
   const g = new THREE.BufferGeometry();
-  byZone.forEach((arr, z) => { g.addGroup(idx.length, arr.length, z); for (let i = 0; i < arr.length; i++) idx.push(arr[i]); });
+  byZone.forEach((arr, k) => { if (!arr.length) return; g.addGroup(idx.length, arr.length, k < b.zones ? k : PLAIN_MAT + (k - b.zones)); for (let i = 0; i < arr.length; i++) idx.push(arr[i]); });
   g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
   g.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
   g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
@@ -1073,7 +1084,8 @@ const shadowTex = new THREE.CanvasTexture(shadowC);
 class BandView {
   constructor() {
     this.group = new THREE.Group(); this.group.rotation.x = LEAN; scene.add(this.group);
-    this.mats = [0, 1, 2].map(() => mokshMetal(new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.04, envMapIntensity: 1 })));
+    // [0..2]: zone z with its finish (outer surface, setting parts, milgrain); [3..5]: the same alloy polished (interior, sides)
+    this.mats = [0, 1, 2, 3, 4, 5].map(() => mokshMetal(new THREE.MeshPhysicalMaterial({ metalness: 1, roughness: 0.04, envMapIntensity: 1 })));
     this.maps = [{}, {}, {}]; // per zone, per finish: a clone of the shared normal map with its own repeat
     this.engraveMat = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.BackSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     this.engraveCanvas = document.createElement("canvas"); this.engraveCanvas.width = 2048; this.engraveCanvas.height = 160;
@@ -1221,6 +1233,13 @@ class BandView {
         } else mat.roughnessMap = null;
       } else { mat.normalMap = null; mat.roughnessMap = null; }
       mat.needsUpdate = true;
+      // the polished variant: same alloy, nothing else
+      const plainMat = this.mats[PLAIN_MAT + z];
+      setAlloy(plainMat, b.metals[z]);
+      plainMat.userData.micro.value = FINISHES.polished.micro;
+      plainMat.roughness = FINISHES.polished.roughness; plainMat.envMapIntensity = 1;
+      plainMat.anisotropy = 0; plainMat.normalMap = null; plainMat.roughnessMap = null;
+      plainMat.needsUpdate = true;
     }
   }
 }
@@ -1864,35 +1883,85 @@ function tryonSrc() {
   const photo = PAGE_Q.get("photo"); if (photo) u += `&photo=${encodeURIComponent(photo)}`; // dev: a still instead of the camera
   return u;
 }
+// A live finish map (DataTexture, tiled in real mm) baked to a canvas texture the
+// GLTF exporter can write, with the same repeat (→ KHR_texture_transform) and
+// orientation. `channels` remaps the source RGBA into glTF's layout.
+function bakeFinishTexture(src, channels) {
+  const { data, width, height } = src.image;
+  const c = document.createElement("canvas"); c.width = width; c.height = height;
+  const img = new ImageData(width, height), d = img.data;
+  for (let i = 0; i < d.length; i += 4) channels(data, d, i);
+  c.getContext("2d").putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.flipY = src.flipY; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.copy(src.repeat); t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+// The metal as the builder renders it: exact alloy colour (linear factor, no
+// tone-mapping baked in), the finish's roughness, and the finish itself as a
+// tangent-space normal map + metallic-roughness map (B = metal 1, G = roughness).
+// Satin / brushed also carry KHR_materials_anisotropy (three 0.186 exports it);
+// a viewer without it still sees the streaks from the normal map.
+function exportMetal(live, cache) {
+  if (cache.has(live)) return cache.get(live);
+  const mat = new THREE.MeshPhysicalMaterial({ name: "metal", color: live.color.clone(), metalness: 1, roughness: live.roughnessMap ? 1 : live.roughness, envMapIntensity: 1 });
+  if (live.normalMap) {
+    mat.normalMap = bakeFinishTexture(live.normalMap, (s, d, i) => { d[i] = s[i]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; d[i + 3] = 255; });
+    mat.normalScale.copy(live.normalScale);
+  }
+  if (live.roughnessMap) {
+    const rm = bakeFinishTexture(live.roughnessMap, (s, d, i) => { d[i] = 0; d[i + 1] = s[i + 1]; d[i + 2] = 255; d[i + 3] = 255; });
+    mat.roughnessMap = rm; mat.metalnessMap = rm; mat.roughness = 1; mat.metalness = 1;
+  }
+  if (live.anisotropy > 0) { mat.anisotropy = live.anisotropy; mat.anisotropyRotation = live.anisotropyRotation; }
+  cache.set(live, mat);
+  return mat;
+}
 async function exportGLB(view) {
   const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js");
-  // Metal keeps its alloy colour and finish roughness (the try-on reads them per part, so two-tone survives);
-  // every stone goes out as its own mesh in its own frame, which the try-on's gem shader needs to trace the cut.
-  const plain = (mat) => mat === stoneMat
-    ? new THREE.MeshPhysicalMaterial({ name: "diamond", color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, transmission: 0.3, thickness: 0.5 })
-    : new THREE.MeshStandardMaterial({ name: "metal", color: mat.color.clone(), metalness: 1, roughness: Math.max(0.03, mat.roughness === 1 ? 0.3 : mat.roughness) });
+  // Metal goes out as the builder renders it — alloy colour, finish roughness and the finish's own maps,
+  // per zone, so two-tone and the outer-only finish survive; every stone is its own mesh in its own frame
+  // (the try-on's gem shader traces the cut per mesh). UVs are kept as they are: the maps tile by real mm.
+  const cache = new Map();
+  const zoneOf = (mat) => { const k = view.mats.indexOf(mat); return k < 0 ? 0 : k % PLAIN_MAT; };
+  const diamond = new THREE.MeshPhysicalMaterial({ name: "diamond", color: 0xffffff, metalness: 0, roughness: 0, ior: 2.42, transmission: 0.3, thickness: 0.5 }); // one material for every stone
   const g = new THREE.Group();
   for (const p of view.parts) {
     if (p.material === view.engraveMat) continue;
     if (p.isInstancedMesh && p.material === stoneMat) {
       const m = new THREE.Matrix4();
       for (let i = 0; i < p.count; i++) {
-        const stone = new THREE.Mesh(p.geometry, plain(stoneMat)); stone.name = `diamond_${i + 1}`;
+        const stone = new THREE.Mesh(p.geometry, diamond); stone.name = "diamond";
         p.getMatrixAt(i, m); m.decompose(stone.position, stone.quaternion, stone.scale);
         g.add(stone);
       }
     } else if (p.isInstancedMesh) {
       const geos = [], m = new THREE.Matrix4();
       for (let i = 0; i < p.count; i++) { const gg = p.geometry.clone(); p.getMatrixAt(i, m); gg.applyMatrix4(m); geos.push(gg); }
-      const mesh = new THREE.Mesh(mergeGeometries(geos, false), plain(p.material)); mesh.name = "setting"; g.add(mesh);
-    } else { const mesh = new THREE.Mesh(p.geometry, Array.isArray(p.material) ? p.material.map(plain) : plain(p.material)); mesh.name = "band"; g.add(mesh); }
+      const z = zoneOf(p.material);
+      const mesh = new THREE.Mesh(mergeGeometries(geos, false), exportMetal(p.material, cache)); mesh.name = `band-${z + 1}-setting`; g.add(mesh);
+    } else if (Array.isArray(p.material)) {
+      // the lathe: one single-primitive mesh per group, so names survive loading — "band-<zone>" for the
+      // finished outer surface, "band-<zone>-inside" for the polished interior and sides. Attributes are
+      // shared, the index is the group's slice, so the uvs (real-mm tiling) stay exactly as rendered.
+      const src = p.geometry, index = src.getIndex().array;
+      for (const grp of src.groups) {
+        const z = grp.materialIndex % PLAIN_MAT, outer = grp.materialIndex < PLAIN_MAT;
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", src.getAttribute("position")); geo.setAttribute("normal", src.getAttribute("normal")); geo.setAttribute("uv", src.getAttribute("uv"));
+        geo.setIndex(Array.from(index.subarray(grp.start, grp.start + grp.count)));
+        const mesh = new THREE.Mesh(geo, exportMetal(p.material[grp.materialIndex], cache)); mesh.name = `band-${z + 1}${outer ? "" : "-inside"}`; g.add(mesh);
+      }
+    } else { const mesh = new THREE.Mesh(p.geometry, exportMetal(p.material, cache)); mesh.name = `band-${zoneOf(p.material) + 1}`; g.add(mesh); }
   }
   return new Promise((res, rej) => new GLTFExporter().parse(g, res, rej, { binary: true }));
 }
 function tryonConfig(model) {
   const b = bands[ui.active];
   const metal = { "14y": "yellow", "18y": "yellow", "14w": "white", "18w": "white", "14r": "rose", "18r": "rose", pt: "platinum" }[b.metals[0]] || "yellow";
-  return { type: "tryon:set", config: { type: "ring", metal, model, units: "mm", innerDiameterMm: Math.round(usToDiameter(b.size) * 100) / 100, fit: 1 } };
+  // configMaterials:'gems' — the try-on keeps the GLB's own metal materials (colour, roughness, finish maps)
+  // and applies its gem shader to the diamonds only, so the band looks the same there as here.
+  return { type: "tryon:set", config: { type: "ring", metal, model, units: "mm", innerDiameterMm: Math.round(usToDiameter(b.size) * 100) / 100, fit: 1, configMaterials: "gems" } };
 }
 function pill(text) { tryPill.textContent = text || ""; tryPill.hidden = !text; }
 function postCmd(action) { if (tryon.ready && tryFrame.contentWindow) tryFrame.contentWindow.postMessage({ type: "tryon:cmd", action }, TRYON_ORIGIN); }

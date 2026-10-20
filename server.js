@@ -490,7 +490,14 @@ async function deliverInquiry(session) {
 app.get("/health", (_req, res) => res.send("ok"));
 
 // Static assets (media incl. hero.mp4 lives under web/media)
-app.use(express.static(WEB, { extensions: ["html"], maxAge: "1h" }));
+// Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.
+app.use(express.static(WEB, {
+  extensions: ["html"],
+  maxAge: "1h",
+  setHeaders(res, filePath) {
+    if (filePath.endsWith(".html")) res.setHeader("Cache-Control", "no-cache");
+  },
+}));
 
 // Commission inquiry — send the customer to Stripe for the design fee. Nothing
 // is stored or emailed here; deliverInquiry does that once it's paid.

@@ -134,11 +134,18 @@
     : "";
   if (q.get("fee") || q.get("error")) delete state.pendingAt; // back from checkout unpaid
   if (feeMsg) { current = TOTAL; errBox.textContent = feeMsg; errBox.style.display = "block"; }
-  // Drop the notice from the URL, so a later visit (history, Back from thanks)
+  // ?piece= from the home page's links: pick that piece and open at step 2
+  var piece = q.get("piece");
+  var typeCards = [].slice.call(wizard.querySelectorAll('.wiz-cards[data-field="type"] .wcard'));
+  if (piece && !feeMsg && typeCards.some(function (c) { return c.getAttribute("data-v") === piece; })) {
+    typeCards.forEach(function (c) { c.classList.toggle("on", c.getAttribute("data-v") === piece); });
+    state.type = piece; current = 2;
+  }
+  // Drop the notice (and ?piece) from the URL, so a later visit (history, Back from thanks)
   // doesn't tell a customer who has since paid that their payment failed.
   // Other params (utm_*, gclid) stay for analytics.
-  if (q.has("fee") || q.has("error")) {
-    q.delete("fee"); q.delete("error");
+  if (q.has("fee") || q.has("error") || q.has("piece")) {
+    q.delete("fee"); q.delete("error"); q.delete("piece");
     var rest = q.toString();
     try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch (e) {}
   }

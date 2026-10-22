@@ -185,6 +185,7 @@ async function sendInquiryEmails(f, session) {
   const arText =
     `Thank you, ${firstName}.\n\n` +
     `We've received your commission inquiry and design fee, and it's with our atelier. A designer will personally reply within one business day to begin the conversation — no obligation, just possibilities.\n\n` +
+    `Your $60 design fee is credited toward your piece's final price.\n\n` +
     `In the meantime, feel free to gather any inspiration — a stone you love, a piece you've seen, a photo of something meaningful. You'll be able to share it with us once we're in touch.\n\n` +
     `With care,\nAzoir & Co. · New York\nhello@azoir.co`;
   const p = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#475569';
@@ -192,6 +193,7 @@ async function sendInquiryEmails(f, session) {
     `<div style="max-width:520px;margin:0 auto">` +
     `<p style="font-family:Georgia,serif;font-size:20px;color:#18181B">Thank you, ${escapeHtml(firstName)}.</p>` +
     `<p style="${p}">We've received your commission inquiry and design fee, and it's with our atelier. A designer will personally reply within one business day to begin the conversation — no obligation, just possibilities.</p>` +
+    `<p style="${p}">Your $60 design fee is credited toward your piece's final price.</p>` +
     `<p style="${p}">In the meantime, feel free to gather any inspiration — a stone you love, a piece you've seen, a photo of something meaningful. You'll be able to share it with us once we're in touch.</p>` +
     `<p style="${p}">With care,<br><strong style="color:#18181B">Azoir &amp; Co.</strong> · New York</p>` +
     `</div>`;
@@ -535,6 +537,7 @@ app.post("/inquiry", async (req, res) => {
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][unit_amount]": String(DESIGN_FEE_CENTS),
     "line_items[0][price_data][product_data][name]": "Design fee — commission request",
+    "line_items[0][price_data][product_data][description]": "Credited toward your final price. Non-refundable, as it covers design work.",
     success_url: `${origin}/inquiry/paid?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/commission.html?fee=cancelled`,
   };

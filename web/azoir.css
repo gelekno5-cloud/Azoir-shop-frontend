@@ -34,17 +34,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:cent
 .page-hero h1{position:relative;font-size:clamp(40px,5.2vw,72px);line-height:1.05;margin:18px auto 22px;max-width:16ch}
 .page-hero p{position:relative;font-size:17px;line-height:1.7;color:var(--body);max-width:520px;margin:0 auto}
 
-/* Home hero */
-.hero{position:relative;padding:150px 0 60px;text-align:center}
-.hero::before{content:"";position:absolute;top:16%;left:50%;transform:translateX(-50%);width:640px;height:420px;border-radius:50%;
-    background:radial-gradient(circle,rgba(91,127,212,.13),transparent 70%);filter:blur(30px);pointer-events:none}
-.hero-inner{position:relative}
-.hero h1{font-size:clamp(48px,6.4vw,88px);line-height:1.02;letter-spacing:-.015em;max-width:14ch;margin:20px auto 26px}
-.hero .sub{font-size:18px;line-height:1.7;color:var(--body);max-width:520px;margin:0 auto 34px}
-.hero-media{position:relative;margin:56px auto 0;max-width:1040px;border-radius:26px;overflow:hidden;border:1px solid var(--line);
-    box-shadow:0 30px 70px rgba(15,23,42,.14);background:#fff;aspect-ratio:16/8}
-.hero-media img,.hero-media video{width:100%;height:100%;object-fit:cover;display:block}
-.hero-media .vcap{position:absolute;left:20px;bottom:16px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+/* Home hero — campaign film, looped with a fade (hero-film.js) */
+.hero-film{padding-top:76px}
+.film{position:relative;height:clamp(600px,42.2vw,760px);display:flex;align-items:center;overflow:hidden;background:#E8E8ED}
+.film-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:25% 30%;display:block;transition:opacity .8s ease}
+.film-media.fading{opacity:0}
+/* keeps the copy legible where the push-in brings her towards it; same grey as the clip's wall */
+.film::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(232,232,237,.92) 0%,rgba(232,232,237,.7) 30%,rgba(232,232,237,0) 55%)}
+.film-copy{position:relative;z-index:2;width:100%}
+.film-copy h1{font-size:clamp(44px,5vw,72px);line-height:1.04;letter-spacing:-.015em;max-width:12ch;margin:18px 0 22px}
+.film-copy .sub{font-size:17px;line-height:1.7;color:var(--body);max-width:420px;margin-bottom:32px}
+@media(max-width:900px){
+  .hero-film{padding-top:68px}
+  .film{height:auto;display:block;background:none}
+  .film-media{position:relative;inset:auto;height:auto;aspect-ratio:6/5;object-position:82% 30%;background:#E8E8ED}
+  .film::before{display:none}
+  .film-copy{padding-top:34px}
+  .film-copy h1{font-size:clamp(40px,11vw,56px);margin-top:14px}
+}
 
 /* Pillars */
 .pillars{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card)}
@@ -173,22 +181,6 @@ footer{background:var(--ink);color:#C4CBDE;padding:70px 0 40px}
 }
 
 
-/* ---- Scroll-scrub hero (hero-scrub.js) ---- */
-.hero-full{height:100svh;min-height:620px;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-full::before{display:none}
-.hero-full .hero-media{position:absolute;inset:0;margin:0;max-width:none;border-radius:0;border:none;aspect-ratio:auto;box-shadow:none}
-.hero-full .hero-media video{width:100%;height:100%;object-fit:cover}
-#heroCanvas{display:none;width:100%;height:100%;object-fit:cover}
-body.scrub #heroCanvas{display:block}
-body.scrub .hero-media video{display:none}
-body.scrub .hero{position:sticky;top:0}
-.hero-full .hero-inner{z-index:2;padding:0 24px}
-.hero-full .hero-inner::before{content:"";position:absolute;inset:-70px -90px;z-index:-1;
-  background:radial-gradient(closest-side,rgba(240,242,248,.85),rgba(240,242,248,0));}
-body.nav-clear nav{background:transparent;backdrop-filter:none;border-bottom:1px solid transparent;
-  transition:background .35s,border-color .35s}
-body.nav-clear nav.solid{background:rgba(240,242,248,.82);backdrop-filter:blur(16px);
-  border-bottom-color:rgba(213,217,232,.6)}
 .brand img{height:24px;width:auto;display:block}
 .fbrand img{height:22px;width:auto;display:block;margin-bottom:14px}
 
@@ -282,7 +274,6 @@ body.nav-clear nav.solid{background:rgba(240,242,248,.82);backdrop-filter:blur(1
   nav .navlinks a{display:flex;align-items:center;min-height:56px;border-bottom:1px solid rgba(213,217,232,.6)}
   nav .navlinks a.btn-fill{justify-content:center;margin-top:16px;border-bottom:1px solid var(--blue);min-height:52px;color:#fff}
   nav .navlinks a.active{color:var(--ink);font-weight:600}
-  /* !important: beat body.nav-clear transparent nav so the open menu bar is opaque */
   nav.open{background:var(--bg) !important;backdrop-filter:none !important}
   body.nav-open{overflow:hidden}
   .page-hero{overflow-x:clip} /* 560px decorative glow caused horizontal scroll on phones */

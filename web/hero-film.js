@@ -1,7 +1,8 @@
 /* Home hero carousel: each slide is a campaign film. When a film ends the
    hero crossfades to the next one, which also hides the jump a hard loop
    would make on the push-in. Reduced motion keeps the posters and only
-   changes slide on a dot. */
+   changes slide on a dot. A film with data-end moves on at that second
+   instead of at its end (the bands clip pushes in past the rings). */
 (function () {
   var hero = document.querySelector(".hero-film");
   if (!hero) return;
@@ -53,6 +54,12 @@
     video(k).addEventListener("ended", function () {
       if (k === current && !paused) next();
     });
+    var end = parseFloat(video(k).dataset.end);
+    if (end) video(k).addEventListener("timeupdate", function () {
+      if (video(k).currentTime < end) return;
+      video(k).pause();
+      if (k === current && !paused) next();
+    });
   });
 
   dots.forEach(function (d, k) { d.addEventListener("click", function () { show(k); }); });
@@ -62,7 +69,10 @@
     pauseBtn.setAttribute("aria-pressed", paused ? "true" : "false");
     pauseBtn.setAttribute("aria-label", paused ? "Play" : "Pause");
     if (paused) { clearTimeout(timer); video(current).pause(); }
-    else { var v = video(current); if (v.ended) next(); else { play(v); arm(); } }
+    else {
+      var v = video(current), end = parseFloat(v.dataset.end);
+      if (v.ended || (end && v.currentTime >= end)) next(); else { play(v); arm(); }
+    }
   });
 
   // Swipe between slides on touch screens

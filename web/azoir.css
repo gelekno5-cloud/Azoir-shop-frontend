@@ -34,24 +34,43 @@ nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:cent
 .page-hero h1{position:relative;font-size:clamp(40px,5.2vw,72px);line-height:1.05;margin:18px auto 22px;max-width:16ch}
 .page-hero p{position:relative;font-size:17px;line-height:1.7;color:var(--body);max-width:520px;margin:0 auto}
 
-/* Home hero — campaign film, looped with a fade (hero-film.js) */
-.hero-film{padding-top:76px}
-.film{position:relative;height:clamp(600px,42.2vw,760px);display:flex;align-items:center;overflow:hidden;background:#E8E8ED}
-.film-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:25% 30%;display:block;transition:opacity .8s ease}
-.film-media.fading{opacity:0}
-/* keeps the copy legible where the push-in brings her towards it; same grey as the clip's wall */
+/* Home hero — two campaign films that crossfade into each other (hero-film.js) */
+.hero-film{padding-top:76px;position:relative}
+.film-track{display:grid}
+.film{grid-area:1/1;position:relative;height:clamp(600px,42.2vw,760px);display:flex;align-items:center;overflow:hidden;background:#E8E8ED;
+  opacity:0;visibility:hidden;transition:opacity .9s ease,visibility 0s linear .9s}
+.film.is-active{opacity:1;visibility:visible;z-index:1;transition:opacity .9s ease}
+.film-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:25% 30%;display:block}
+.film-bands{background:#DDD6CE}
+.film-bands .film-media{object-position:100% 45%}
+/* keeps the copy legible where the footage reaches it; same tone as each clip's backdrop */
 .film::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(232,232,237,.92) 0%,rgba(232,232,237,.7) 30%,rgba(232,232,237,0) 55%)}
+.film-bands::before{background:linear-gradient(90deg,rgba(232,226,219,.9) 0%,rgba(232,226,219,.65) 32%,rgba(232,226,219,0) 56%)}
 .film-copy{position:relative;z-index:2;width:100%}
-.film-copy h1{font-size:clamp(44px,5vw,72px);line-height:1.04;letter-spacing:-.015em;max-width:12ch;margin:18px 0 22px}
+.film-copy h1,.film-copy h2{font-size:clamp(44px,5vw,72px);line-height:1.04;letter-spacing:-.015em;max-width:12ch;margin:18px 0 22px}
 .film-copy .sub{font-size:17px;line-height:1.7;color:var(--body);max-width:420px;margin-bottom:32px}
+.film-nav{position:absolute;left:0;right:0;bottom:30px;z-index:3;display:flex;align-items:center;gap:6px}
+.film-dot{width:34px;height:24px;padding:0;border:0;background:none;cursor:pointer;position:relative}
+.film-dot::after{content:"";position:absolute;left:0;right:0;top:11px;height:2px;border-radius:2px;background:rgba(24,24,27,.22);transition:background .3s}
+.film-dot[aria-current="true"]::after{background:var(--ink)}
+.film-dot:hover::after{background:rgba(24,24,27,.5)}
+.film-pause{width:24px;height:24px;padding:0;border:0;background:none;cursor:pointer;margin-left:6px;display:grid;place-items:center;color:rgba(24,24,27,.55)}
+.film-pause:hover{color:var(--ink)}
+.film-pause span{width:8px;height:10px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.film-pause[aria-pressed="true"] span{width:0;height:0;border:0;border-left:9px solid currentColor;border-top:5.5px solid transparent;border-bottom:5.5px solid transparent;margin-left:2px}
+.film-dot:focus-visible,.film-pause:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+@media(prefers-reduced-motion:reduce){.film,.film.is-active{transition:none}.film-pause{display:none}}
 @media(max-width:900px){
   .hero-film{padding-top:68px}
   .film{height:auto;display:block;background:none}
+  .film-bands{background:none}
   .film-media{position:relative;inset:auto;height:auto;aspect-ratio:6/5;object-position:82% 30%;background:#E8E8ED}
+  .film-bands .film-media{object-position:80% 45%;background:#DDD6CE}
   .film::before{display:none}
   .film-copy{padding-top:34px}
-  .film-copy h1{font-size:clamp(40px,11vw,56px);margin-top:14px}
+  .film-copy h1,.film-copy h2{font-size:clamp(40px,11vw,56px);margin-top:14px}
+  .film-nav{position:static;padding-top:22px}
 }
 
 /* Where-to-start links under the hero */

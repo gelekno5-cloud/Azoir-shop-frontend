@@ -10,7 +10,6 @@
   var dots = [].slice.call(hero.querySelectorAll(".film-dot"));
   var pauseBtn = hero.querySelector(".film-pause");
   var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var SLIDE_MS = 900;     // keep in step with .film's transform transition
   var FALLBACK_MS = 12000; // advance even if a film never plays (autoplay blocked)
   var current = 0, paused = still, timer = 0;
 
@@ -53,14 +52,23 @@
       if (k === i) d.setAttribute("aria-current", "true"); else d.removeAttribute("aria-current");
     });
     inc.classList.remove("from-left");
-    setTimeout(function () {
+    // tidy up when the outgoing slide has really finished moving (a busy main
+    // thread can start the slide late, so no fixed timer); no transition under
+    // reduced motion means tidy now, and the long timer is only a safety net
+    var moving = parseFloat(getComputedStyle(out).transitionDuration) > 0;
+    var fallback = setTimeout(settle, moving ? 4000 : 0);
+    out.addEventListener("transitionend", settle);
+    function settle(e) {
+      if (e && (e.target !== out || e.propertyName !== "transform")) return;
+      out.removeEventListener("transitionend", settle);
+      clearTimeout(fallback);
       if (current === prev) return;
       video(prev).pause();
       out.classList.add("no-anim"); // back off-screen right without crossing the view
       out.classList.remove("is-leaving", "to-right");
       void out.offsetWidth;
       out.classList.remove("no-anim");
-    }, SLIDE_MS);
+    }
     arm();
   }
 

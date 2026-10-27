@@ -46,7 +46,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:cent
 /* keeps the copy legible where the footage reaches it; same tone as each clip's backdrop */
 .film::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(232,232,237,.92) 0%,rgba(232,232,237,.7) 30%,rgba(232,232,237,0) 55%)}
-.film-bands::before{background:linear-gradient(90deg,rgba(232,226,219,.9) 0%,rgba(232,226,219,.65) 32%,rgba(232,226,219,0) 56%)}
+.film-bands::before{background:linear-gradient(90deg,rgba(238,233,227,.95) 0%,rgba(238,233,227,.82) 34%,rgba(238,233,227,0) 60%)}
 .film-copy{position:relative;z-index:2;width:100%}
 .film-copy h1,.film-copy h2{font-size:clamp(44px,5vw,72px);line-height:1.04;letter-spacing:-.015em;max-width:12ch;margin:18px 0 22px}
 .film-copy .sub{font-size:17px;line-height:1.7;color:var(--body);max-width:420px;margin-bottom:32px}

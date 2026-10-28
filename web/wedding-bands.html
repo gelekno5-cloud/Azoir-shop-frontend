@@ -17,11 +17,11 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band"><meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Design Your Own Wedding Band in 3D | Azoir &amp; Co."><meta name="twitter:description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $251, made in New York."><meta name="twitter:image" content="https://azoir.co/media/og-image.jpg"><meta name="twitter:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://azoir.co/wedding-bands.html#webpage","url":"https://azoir.co/wedding-bands.html","name":"Design Your Own Wedding Band in 3D","description":"Design your band, live in 3D. Every option is cut into real geometry, weighed and estimated. When it's right, print the spec sheet or ask our New York atelier for a quote.","inLanguage":"en","isPartOf":{"@type":"WebSite","@id":"https://azoir.co/#website","name":"Azoir & Co.","url":"https://azoir.co/"},"publisher":{"@type":"Organization","@id":"https://azoir.co/#organization","name":"Azoir & Co.","url":"https://azoir.co/"},"breadcrumb":{"@id":"https://azoir.co/wedding-bands.html#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://azoir.co/wedding-bands.html#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://azoir.co/"},{"@type":"ListItem","position":2,"name":"Wedding bands","item":"https://azoir.co/wedding-bands.html"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://azoir.co/wedding-bands.html#webpage","url":"https://azoir.co/wedding-bands.html","name":"Design Your Own Wedding Band in 3D","description":"Design your own wedding band, live in 3D. Every option is cut into real geometry, weighed and estimated as you go. When it's right, reserve it with a deposit or send it to a designer first.","inLanguage":"en","isPartOf":{"@type":"WebSite","@id":"https://azoir.co/#website","name":"Azoir & Co.","url":"https://azoir.co/"},"publisher":{"@type":"Organization","@id":"https://azoir.co/#organization","name":"Azoir & Co.","url":"https://azoir.co/"},"breadcrumb":{"@id":"https://azoir.co/wedding-bands.html#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://azoir.co/wedding-bands.html#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://azoir.co/"},{"@type":"ListItem","position":2,"name":"Wedding bands","item":"https://azoir.co/wedding-bands.html"}]}]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=5">
+<link rel="stylesheet" href="azoir.css?v=11">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
@@ -39,7 +39,7 @@
 .bb-viewer{position:absolute;inset:0;touch-action:none}
 .bb-viewer canvas{display:block;width:100%!important;height:100%!important}
 .bb-stage::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(20,22,40,.06)}
-.bb-intro{position:absolute;left:40px;top:34px;max-width:360px;pointer-events:none;z-index:2}
+.bb-intro{position:absolute;left:40px;top:34px;max-width:440px;pointer-events:none;z-index:2}
 .bb-kicker{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bb-acc);font-weight:600;margin-bottom:10px}
 .bb-intro h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,3vw,42px);line-height:1.02;letter-spacing:-.01em;margin:0 0 10px;color:var(--bb-ink);text-wrap:balance}
 .bb-intro h1 em{font-style:italic;color:var(--bb-acc)}
@@ -214,7 +214,10 @@ body.tryon-lock{overflow:hidden}
 /* below the app */
 .bb-after{background:#F4F5F8;padding:70px 0 60px;border-top:1px solid #E4E6EC}
 .bb-steps{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:34px}
-.bb-steps .eyebrow{color:#2B4DFF}
+.bb-steps .eyebrow,.bb-styles .eyebrow{color:#2B4DFF}
+.bb-styles .sec-head{margin-bottom:44px}
+.bb-styles .gcard{padding:28px 26px}
+.bb-styles .gcard h3{font-size:18px;font-weight:600;margin:0 0 8px;color:#14161C}
 .bb-steps h4{font-size:20px;font-weight:600;margin:10px 0 8px;color:#14161C;letter-spacing:-.01em}
 .bb-steps p{font-size:14px;line-height:1.65;color:#4B5060;max-width:36ch}
 /* spec sheet — a dedicated print view */
@@ -244,7 +247,7 @@ body.tryon-lock{overflow:hidden}
   .bb-doc{max-width:none;padding:0}
   @page{margin:14mm}
 }
-@media(max-width:1100px){.bb-app{grid-template-columns:minmax(0,1fr) 400px}.bb-intro{max-width:300px}}
+@media(max-width:1100px){.bb-app{grid-template-columns:minmax(0,1fr) 400px}.bb-intro{max-width:340px}}
 @media(max-width:900px){
   .bb-app{grid-template-columns:minmax(0,1fr);padding-top:64px;min-height:0}
   .bb-stage{position:sticky;top:64px;height:46dvh;min-height:300px;z-index:3;box-shadow:0 10px 30px rgba(50,40,20,.10)}
@@ -308,8 +311,8 @@ body.tryon-lock{overflow:hidden}
     <div class="bb-viewer" id="bbViewer"></div>
     <div class="bb-intro">
       <span class="bb-kicker">Wedding band builder</span>
-      <h1>Design your band, <em>live</em> in 3D.</h1>
-      <p>Every option is cut into real geometry, weighed and estimated. When it's right, print the spec sheet or ask our New York atelier for a quote.</p>
+      <h1>Design your own wedding band, <em>live</em> in 3D.</h1>
+      <p>Every option is cut into real geometry, weighed and estimated as you go. When it's right, reserve it with a deposit or send it to a designer first.</p>
     </div>
     <span class="bb-chip" id="bbChip"></span>
     <span class="bb-hint">Drag to rotate · Scroll to zoom</span>
@@ -624,11 +627,29 @@ body.tryon-lock{overflow:hidden}
   </aside>
 </main>
 
+<section class="bb-after bb-styles" aria-labelledby="bbStylesTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Made to order</span>
+      <h2 class="serif" id="bbStylesTitle">Wedding band styles we make</h2>
+      <p>Estimates for 14k gold start at $251, for a 2 × 1.2 mm band in US size 4. Platinum and diamonds are quoted individually, and every band is made by hand in New York.</p>
+    </div>
+    <div class="gcards">
+      <div class="gcard"><h3>Profiles</h3><p>Court, flat, D-shape, knife edge, beveled, concave or full round, from 2 to 8 mm wide and 1.2 to 2.6 mm deep. You can also import a cross-section of your own.</p></div>
+      <div class="gcard"><h3>Fit &amp; edges</h3><p>Comfort fit, rounded inside so it slips on easily, or a flat, traditional interior. Each edge can be rounded, beveled, sharp or milgrain.</p></div>
+      <div class="gcard"><h3>Metals &amp; tones</h3><p>14k or 18k yellow, white or rose gold, or platinum 950. One metal, two-tone or three-tone, each zone in its own metal and finish. One band, or a His &amp; Hers pair.</p></div>
+      <div class="gcard"><h3>Finishes</h3><p>Polished, satin, hammered, matte, brushed, sandblast, ice or bark. A wave can add a fine groove that meanders around the band, or a two-tone seam that waves.</p></div>
+      <div class="gcard"><h3>Eternity settings</h3><p>Full, half, ⅓ or ¼ eternity, in a channel, pavé, shared prong, flush or bar setting, with round brilliant, princess, emerald or baguette diamonds in petite, classic or bold. Only what a setter can hold is offered.</p></div>
+      <div class="gcard"><h3>Engraving &amp; size</h3><p>Hand-engraved inside the band, up to 30 characters, in script, serif or modern lettering. Sizes in US, EU or UK, confirmed with you before production.</p></div>
+    </div>
+  </div>
+</section>
+
 <section class="bb-after">
   <div class="wrap">
     <div class="bb-steps">
-      <div><span class="eyebrow">01</span><h4>Design it here</h4><p>Everything you see is real geometry. The width, profile, edges and channel you choose are what we cut, to the tenth of a millimetre.</p></div>
-      <div><span class="eyebrow">02</span><h4>We refine it with you</h4><p>A designer reviews your band, confirms size and comfort, and sends a hand-finished render before anything is made.</p></div>
+      <div><span class="eyebrow">01</span><h4>Design it here</h4><p>Everything you see is real geometry. The width, profile, edges and channel you choose are what we cut, to the tenth of a millimeter.</p></div>
+      <div><span class="eyebrow">02</span><h4>We refine it with you</h4><p>A designer reviews your band and confirms the size and the final price with you. Nothing is made until you approve the final design.</p></div>
       <div><span class="eyebrow">03</span><h4>Made in New York</h4><p>Cast, set and polished by hand in our atelier, in your chosen metal, with diamonds that are ethically sourced.</p></div>
     </div>
   </div>
@@ -646,8 +667,8 @@ body.tryon-lock{overflow:hidden}
 <footer>
   <div class="wrap">
     <div class="fgrid">
-      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co." width="853" height="120"></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
-      <div class="fcol"><h5>What we make</h5><a href="commission.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="commission.html">Heirloom redesign</a></div>
+      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co." width="853" height="120" loading="lazy" decoding="async"></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="engagement-rings.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="custom-signet-rings.html">Signet rings</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="heirloom-redesign.html">Heirloom redesign</a></div>
       <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a></div>
       <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
     </div>

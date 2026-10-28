@@ -6,7 +6,20 @@
 <title>Custom Gemstone Rings & Pendants: Gallery | Azoir & Co.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=5">
+<link rel="stylesheet" href="azoir.css?v=11">
+<style>
+.page-hero .g-sub{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(24px,2.6vw,32px);line-height:1.2;color:var(--ink);margin:-8px auto 18px}
+.chips .chip{font-family:inherit;line-height:normal}
+.chips .chip:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.gallery .g[hidden]{display:none}
+.gallery .g-media{position:relative;overflow:hidden}
+.gallery .g:focus-within .gcap{opacity:1}
+.gallery .g-cta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:12px 16px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.04em;font-weight:500;color:var(--muted);text-wrap:balance;transition:color .25s}
+.gallery .g-cta i{font-style:normal;color:var(--blue);flex-shrink:0}
+.gallery .g-cta:hover{color:var(--blue)}
+.gallery .g-cta:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+@media(max-width:900px){.gallery .g-cta{display:block;padding:9px 11px;letter-spacing:0;line-height:1.4}.gallery .g-cta i{margin-left:3px}}
+</style>
 
 <meta name="description" content="Custom gemstone rings from past Azoir commissions: sapphire, emerald, marquise and toi et moi rings, plus a peridot pendant, each designed for one person.">
 <link rel="canonical" href="https://azoir.co/gallery.html">
@@ -28,7 +41,7 @@
 <body>
 
 <nav>
-  <a href="/" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."></a>
+  <a href="/" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co." width="853" height="120"></a>
   <div class="navlinks" id="navlinks">
     <a href="how.html">How it Works</a>
     <a href="gallery.html" class="active">Gallery</a>
@@ -41,28 +54,29 @@
 
 <header class="page-hero" style="padding-bottom:30px">
   <span class="eyebrow">Love in the making</span>
-  <h1 class="serif">Pieces we've <em>made</em>.</h1>
+  <h1 class="serif">Custom gemstone rings &amp; pendants</h1>
+  <p class="g-sub">Pieces we've <em>made</em>.</p>
   <p>A glimpse of past commissions. Every one began with a conversation — and became something that exists nowhere else.</p>
-  <div class="chips" style="margin-top:34px">
-    <span class="chip on">All</span><span class="chip">Engagement</span><span class="chip">Necklaces</span>
+  <div class="chips" role="group" aria-label="Filter the gallery" style="margin-top:34px">
+    <button type="button" class="chip on" data-filter="all" aria-pressed="true" aria-controls="pieces">All</button><button type="button" class="chip" data-filter="ring" aria-pressed="false" aria-controls="pieces">Engagement</button><button type="button" class="chip" data-filter="pendant" aria-pressed="false" aria-controls="pieces">Necklaces</button>
   </div>
 </header>
 
 <section style="padding-top:20px">
   <div class="wrap">
-    <div class="gallery">
-      <div class="g"><video autoplay muted loop playsinline poster="media/ring-spin-poster.webp"><source src="media/ring-spin.mp4" type="video/mp4"></video><div class="gcap">A commission, in motion</div></div>
-      <div class="g"><img src="media/blue-sapphire-ring.jpg" alt="Round blue sapphire in four prongs on a textured, sculpted yellow gold ring"><div class="gcap">Blue sapphire · sculpted gold</div></div>
-      <div class="g"><img src="media/pink-sapphire-ring.jpg" alt="Oval pink sapphire ring framed by gold blossoms and small round diamonds"><div class="gcap">Pink sapphire · in bloom</div></div>
-      <div class="g"><img src="media/green-marquise-ring.jpg" alt="Green marquise-cut stone in an openwork, textured yellow gold ring with two round side diamonds"><div class="gcap">Green marquise · with diamonds</div></div>
-      <div class="g"><video autoplay muted loop playsinline poster="media/pendant-loop-poster.webp"><source src="media/pendant-loop.mp4" type="video/mp4"></video><div class="gcap">A pendant, in motion</div></div>
-      <div class="g"><img src="media/emerald-band-ring.jpg" alt="Emerald-cut emerald in a milgrain bezel on a matte yellow gold band with star-set diamonds"><div class="gcap">Emerald · matte gold band</div></div>
-      <div class="g"><img src="media/purple-sapphire-ring.jpg" alt="Oval purple sapphire held by four claws in a textured, sculpted yellow gold ring"><div class="gcap">Purple sapphire · sculpted gold</div></div>
-      <div class="g"><img src="media/peridot-pendant.jpg" alt="Kite-shaped green peridot pendant in a gold bezel, with a small square diamond at the bail, on a gold chain"><div class="gcap">Peridot pendant · gold</div></div>
-      <div class="g"><img src="media/marquise-diamond-ring.jpg" alt="Marquise diamond ring with pointed gold end caps and nugget-textured yellow gold shoulders"><div class="gcap">Marquise diamond · nugget gold</div></div>
-      <div class="g"><video autoplay muted loop playsinline poster="media/yellow-pendant-poster.webp"><source src="media/yellow-pendant.mp4" type="video/mp4"></video><div class="gcap">Yellow gold pendant · in motion</div></div>
-      <div class="g"><img src="media/violet-floral-ring.jpg" alt="Oval violet stone set among white gold flowers and leaves on a slim band"><div class="gcap">Violet stone · white-gold blossom</div></div>
-      <div class="g"><img src="media/toi-et-moi-ring.jpg" alt="Toi et moi ring with clear pear and marquise stones on a twisting yellow gold band"><div class="gcap">Toi et moi · two stones</div></div>
+    <div class="gallery" id="pieces">
+      <div class="g" data-cat="bracelet"><div class="g-media"><video autoplay muted loop playsinline poster="media/ring-spin-poster.webp"><source src="media/ring-spin.mp4" type="video/mp4"></video><div class="gcap">A commission, in motion</div></div><a class="g-cta" href="commission.html?piece=Bracelet" aria-label="Start something like this: bracelet, in motion">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/blue-sapphire-ring.jpg" alt="Round blue sapphire in four prongs on a textured, sculpted yellow gold ring"><div class="gcap">Blue sapphire · sculpted gold</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: blue sapphire, sculpted gold">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/pink-sapphire-ring.jpg" alt="Oval pink sapphire ring framed by gold blossoms and small round diamonds"><div class="gcap">Pink sapphire · in bloom</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: pink sapphire, in bloom">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/green-marquise-ring.jpg" alt="Green marquise-cut stone in an openwork, textured yellow gold ring with two round side diamonds"><div class="gcap">Green marquise · with diamonds</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: green marquise, with diamonds">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="pendant"><div class="g-media"><video autoplay muted loop playsinline poster="media/pendant-loop-poster.webp"><source src="media/pendant-loop.mp4" type="video/mp4"></video><div class="gcap">A pendant, in motion</div></div><a class="g-cta" href="commission.html?piece=Necklace%20%2F%20pendant" aria-label="Start something like this: a pendant, in motion">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/emerald-band-ring.jpg" alt="Emerald-cut emerald in a milgrain bezel on a matte yellow gold band with star-set diamonds"><div class="gcap">Emerald · matte gold band</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: emerald, matte gold band">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/purple-sapphire-ring.jpg" alt="Oval purple sapphire held by four claws in a textured, sculpted yellow gold ring"><div class="gcap">Purple sapphire · sculpted gold</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: purple sapphire, sculpted gold">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="pendant"><div class="g-media"><img src="media/peridot-pendant.jpg" alt="Kite-shaped green peridot pendant in a gold bezel, with a small square diamond at the bail, on a gold chain"><div class="gcap">Peridot pendant · gold</div></div><a class="g-cta" href="commission.html?piece=Necklace%20%2F%20pendant" aria-label="Start something like this: peridot pendant, gold">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/marquise-diamond-ring.jpg" alt="Marquise diamond ring with pointed gold end caps and nugget-textured yellow gold shoulders"><div class="gcap">Marquise diamond · nugget gold</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: marquise diamond, nugget gold">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="pendant"><div class="g-media"><video autoplay muted loop playsinline poster="media/yellow-pendant-poster.webp"><source src="media/yellow-pendant.mp4" type="video/mp4"></video><div class="gcap">Yellow gold pendant · in motion</div></div><a class="g-cta" href="commission.html?piece=Necklace%20%2F%20pendant" aria-label="Start something like this: yellow gold pendant, in motion">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/violet-floral-ring.jpg" alt="Oval violet stone set among white gold flowers and leaves on a slim band"><div class="gcap">Violet stone · white-gold blossom</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: violet stone, white-gold blossom">Start something like this <i aria-hidden="true">→</i></a></div>
+      <div class="g" data-cat="ring"><div class="g-media"><img src="media/toi-et-moi-ring.jpg" alt="Toi et moi ring with clear pear and marquise stones on a twisting yellow gold band"><div class="gcap">Toi et moi · two stones</div></div><a class="g-cta" href="commission.html?piece=Engagement%20ring" aria-label="Start something like this: toi et moi, two stones">Start something like this <i aria-hidden="true">→</i></a></div>
     </div>
     <div style="text-align:center;margin-top:56px">
       <p style="color:var(--body);font-size:16px;margin-bottom:22px">Something here you love? We can make something just for you.</p>
@@ -74,8 +88,8 @@
 <footer>
   <div class="wrap">
     <div class="fgrid">
-      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co."></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
-      <div class="fcol"><h5>What we make</h5><a href="commission.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="commission.html">Necklaces & pendants</a><a href="commission.html">Earrings & bracelets</a><a href="commission.html">Heirloom redesign</a></div>
+      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co." width="853" height="120" loading="lazy" decoding="async"></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="engagement-rings.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="custom-signet-rings.html">Signet rings</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="heirloom-redesign.html">Heirloom redesign</a></div>
       <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a></div>
       <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
     </div>
@@ -83,7 +97,23 @@
   </div>
 </footer>
 
-
+<script>
+// Filter chips: show only the pieces whose data-cat matches the pressed chip.
+(function () {
+  var chips = [].slice.call(document.querySelectorAll(".chips .chip[data-filter]"));
+  var pieces = [].slice.call(document.querySelectorAll("#pieces .g"));
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var f = chip.getAttribute("data-filter");
+      chips.forEach(function (c) {
+        c.classList.toggle("on", c === chip);
+        c.setAttribute("aria-pressed", c === chip ? "true" : "false");
+      });
+      pieces.forEach(function (p) { p.hidden = f !== "all" && p.getAttribute("data-cat") !== f; });
+    });
+  });
+})();
+</script>
 <script src="/gallery-video.js" defer></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>

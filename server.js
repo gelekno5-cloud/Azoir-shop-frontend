@@ -1,6 +1,7 @@
 // Azoir & Co. — retail site server (static pages + paid commission inquiry)
 import express from "express";
 import crypto from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -490,6 +491,77 @@ async function deliverInquiry(session) {
 }
 
 app.get("/health", (_req, res) => res.send("ok"));
+
+// One URL per page (301, query string kept): the canonical tags and sitemap
+// name the .html files, so /index.html and /index → / (/x/index.html → /x/),
+// and an extensionless /about → /about.html — each only when that page is a
+// file under web/. API routes, "/", dotfiles and anything else pass on.
+const API_PATH = /^\/(inquiry|band-request|band-order|webhooks|health)(\/|$)/;
+function pageRedirect(req, res, next) {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (req.path === "/" || API_PATH.test(req.path)) return next();
+  let rel;
+  try { rel = decodeURIComponent(req.path); } catch { return next(); }
+  // Plain names only — no "//host", backslash, dot-segment, dotfile or null
+  // byte — so the Location below can only name a page on this site.
+  const segs = rel.split("/").slice(1);
+  if (rel.includes("\\") || rel.includes("\0") || segs.some((s) => s === "" || s.startsWith("."))) return next();
+  let name = segs.at(-1);
+  if (name === "index.html") name = "index";
+  else if (name.includes(".")) return next();
+  const dir = rel.slice(0, rel.lastIndexOf("/") + 1);
+  const file = path.join(WEB, dir, `${name}.html`);
+  if (!file.startsWith(WEB + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return next();
+  const q = req.originalUrl.indexOf("?");
+  // /index and /x/index(.html) go straight to their folder.
+  res.redirect(301, (name === "index" ? dir : `${dir}${name}.html`) + (q === -1 ? "" : req.originalUrl.slice(q)));
+}
+app.use(pageRedirect);
+
+// Addresses from the old Shopify store that Google still knows → the page that
+// replaced each one (301; Shopify's own query strings are dropped). Trade (b2b)
+// pages, cart and account have no retail counterpart and stay 404.
+const LEGACY = {
+  "/pages/about": "/about.html",
+  "/pages/contact": "/commission.html",
+  "/pages/custom-inquiry": "/commission.html",
+  "/pages/start-your-piece": "/commission.html",
+  "/pages/get-a-quote": "/commission.html",
+  "/pages/quote": "/commission.html",
+  "/pages/commission": "/commission.html",
+  "/pages/design-fee": "/commission.html",
+  "/pages/design-fee-page": "/commission.html",
+  "/pages/design-ring": "/commission.html",
+  "/pages/commission-ring": "/commission.html",
+  "/pages/commission-a-ring": "/commission.html",
+  "/pages/pages-commission-ring": "/commission.html",
+  "/pages/commission-necklace": "/commission.html?piece=Necklace%20%2F%20pendant",
+  "/pages/commission-pendant": "/commission.html?piece=Necklace%20%2F%20pendant",
+  "/pages/commission-bracelet": "/commission.html?piece=Bracelet",
+  "/pages/lookbook": "/gallery.html",
+  "/pages/faq": "/faq.html",
+  "/pages/care-maintenance": "/care.html",
+  "/pages/materials-guide": "/materials.html",
+  "/pages/ring-size-guide": "/ring-size.html",
+  "/pages/privacy-policy": "/privacy.html",
+  "/policies/privacy-policy": "/privacy.html",
+  "/pages/terms": "/terms.html",
+  "/policies/terms-of-service": "/terms.html",
+  "/pages/shipping-policy": "/shipping.html",
+  "/pages/shipping-production-policy": "/shipping.html",
+  "/pages/refund-policy": "/shipping.html",
+  "/policies/shipping-policy": "/shipping.html",
+  "/policies/refund-policy": "/shipping.html",
+  "/collections": "/gallery.html",
+  "/products/b2b-design-fee": "/commission.html",
+};
+app.use((req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  const p = req.path.toLowerCase().replace(/\/+$/, "");
+  const to = LEGACY[p] || (/^\/(collections|products)\/[\w-]+(\/|$)/.test(p) ? "/gallery.html" : null);
+  if (to) return res.redirect(301, to);
+  next();
+});
 
 // Static assets (media incl. hero.mp4 lives under web/media)
 // Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.

@@ -7,7 +7,7 @@
 <meta name="description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $251, made in New York.">
 <link rel="canonical" href="https://azoir.co/wedding-bands.html">
 <meta name="robots" content="max-image-preview:large">
-<meta name="theme-color" content="#5B7FD4">
+<meta name="theme-color" content="#FAF9F6">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
@@ -20,28 +20,28 @@
 {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://azoir.co/wedding-bands.html#webpage","url":"https://azoir.co/wedding-bands.html","name":"Design Your Own Wedding Band in 3D","description":"Design your own wedding band, live in 3D. Every option is cut into real geometry, weighed and estimated as you go. When it's right, reserve it with a deposit or send it to a designer first.","inLanguage":"en","isPartOf":{"@type":"WebSite","@id":"https://azoir.co/#website","name":"Azoir & Co.","url":"https://azoir.co/"},"publisher":{"@type":"Organization","@id":"https://azoir.co/#organization","name":"Azoir & Co.","url":"https://azoir.co/"},"breadcrumb":{"@id":"https://azoir.co/wedding-bands.html#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://azoir.co/wedding-bands.html#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://azoir.co/"},{"@type":"ListItem","position":2,"name":"Wedding bands","item":"https://azoir.co/wedding-bands.html"}]}]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="azoir.css?v=15">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
 <style>
 /* ── Band builder: studio layout ─────────────────────────────────────────── */
-.bb-app{--bb-ink:#14161C;--bb-ink2:#4B5060;--bb-mute:#8A8F9C;--bb-line:#E4E6EC;--bb-line2:#CDD1DB;--bb-paper:#F4F5F8;--bb-soft:#EEF0F5;
-  --bb-acc:#2B4DFF;--bb-acc-deep:#1230D9;--bb-tint:#DCE2FF;--bb-tint2:#EEF1FF;--bb-shadow:0 1px 2px rgba(20,22,40,.05),0 10px 30px -12px rgba(20,22,40,.16);
+.bb-app{--bb-ink:#242522;--bb-ink2:#55554F;--bb-mute:#8A877D;--bb-line:#E3DED5;--bb-line2:#CEC8BC;--bb-paper:#FAF9F6;--bb-soft:#F1EEE8;
+  --bb-acc:#682F3B;--bb-acc-deep:#542630;--bb-tint:#EBD8D6;--bb-tint2:#F5EBE9;--bb-shadow:0 1px 2px rgba(36,37,34,.05),0 10px 30px -12px rgba(36,37,34,.16);
   display:grid;grid-template-columns:minmax(0,1fr) 460px;min-height:100dvh;padding-top:72px;background:#fff;color:var(--bb-ink)}
 .bb-app *{box-sizing:border-box}
 .bb-app button{font-family:inherit}
 .bb-app :focus-visible{outline:2px solid var(--bb-acc);outline-offset:2px}
 /* stage */
 .bb-stage{position:sticky;top:72px;height:calc(100dvh - 72px);min-width:0;overflow:hidden;
-  background:radial-gradient(110% 85% at 50% 40%,#ffffff 0%,#f5f6f9 55%,#e9ebf1 100%)}
+  background:radial-gradient(110% 85% at 50% 40%,#ffffff 0%,#f6f4ef 55%,#ece8e0 100%)}
 .bb-viewer{position:absolute;inset:0;touch-action:none}
 .bb-viewer canvas{display:block;width:100%!important;height:100%!important}
-.bb-stage::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(20,22,40,.06)}
+.bb-stage::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(36,37,34,.06)}
 .bb-intro{position:absolute;left:40px;top:34px;max-width:440px;pointer-events:none;z-index:2}
 .bb-kicker{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bb-acc);font-weight:600;margin-bottom:10px}
-.bb-intro h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,3vw,42px);line-height:1.02;letter-spacing:-.01em;margin:0 0 10px;color:var(--bb-ink);text-wrap:balance}
+.bb-intro h1{font-family:'Instrument Serif',Georgia,serif;font-weight:500;font-size:clamp(30px,3vw,42px);line-height:1.02;letter-spacing:-.01em;margin:0 0 10px;color:var(--bb-ink);text-wrap:balance}
 .bb-intro h1 em{font-style:italic;color:var(--bb-acc)}
 .bb-intro p{font-size:13.5px;line-height:1.6;color:var(--bb-ink2);margin:0;max-width:32ch}
 .bb-chip{position:absolute;left:40px;bottom:34px;z-index:2;font-size:11.5px;letter-spacing:.06em;color:var(--bb-ink2);background:rgba(255,255,255,.9);
@@ -59,17 +59,17 @@
 .bb-panel{position:relative;display:flex;flex-direction:column;height:calc(100dvh - 72px);position:sticky;top:72px;background:#fff;border-left:1px solid var(--bb-line);min-width:0}
 .bb-panel [hidden],.bb-sheet [hidden]{display:none!important}
 .bb-head{padding:18px 26px 0}
-.bb-seg{display:flex;background:var(--bb-soft);border-radius:12px;padding:3px;gap:2px}
-.bb-segb{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:9px;padding:9px 10px;font-size:12.5px;font-weight:500;color:var(--bb-ink2);cursor:pointer;transition:.18s ease;white-space:nowrap;min-width:0}
+.bb-seg{display:flex;background:var(--bb-soft);border-radius:2px;padding:3px;gap:2px}
+.bb-segb{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:2px;padding:9px 10px;font-size:12.5px;font-weight:500;color:var(--bb-ink2);cursor:pointer;transition:.18s ease;white-space:nowrap;min-width:0}
 .bb-segb:hover{color:var(--bb-ink)}
-.bb-segb.on{background:#fff;color:var(--bb-acc);box-shadow:0 1px 3px rgba(20,22,40,.14)}
+.bb-segb.on{background:#fff;color:var(--bb-acc);box-shadow:0 1px 3px rgba(36,37,34,.14)}
 .bb-segb:active{transform:scale(.98)}
 .bb-segb .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex:none}
 .bb-pairrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .bb-note{font-size:12.5px;color:var(--bb-mute);margin:10px 0 0;line-height:1.55}
 .bb-note a{color:var(--bb-ink);text-decoration:underline;text-underline-offset:3px}
-.bb-notice{margin:14px 26px 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-acc);border-radius:10px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
-.bb-req-rows{border:1px solid var(--bb-line);border-radius:14px;background:#fff;padding:4px 16px}
+.bb-notice{margin:14px 26px 0;padding:12px 14px;border:1px solid var(--bb-line);border-left:3px solid var(--bb-acc);border-radius:2px;background:#fff;font-size:13px;line-height:1.55;color:var(--bb-ink)}
+.bb-req-rows{border:1px solid var(--bb-line);border-radius:2px;background:#fff;padding:4px 16px}
 .bb-req-rows .bb-row{padding:11px 0}
 .bb-req-rows .bb-row+.bb-row{border-top:1px solid var(--bb-line)}
 .bb-req-rows .bb-row.bb-row-dep b{color:var(--bb-acc);font-size:15px}
@@ -77,7 +77,7 @@
 .bb-req-lines b{color:var(--bb-ink);font-weight:600}
 .bb-field-col{flex-direction:column}
 .bb-field-col input,.bb-field-col textarea{width:100%;flex:none}
-.bb-field textarea{background:#fff;border:1px solid var(--bb-line);border-radius:12px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-height:84px;resize:vertical}
+.bb-field textarea{background:#fff;border:1px solid var(--bb-line);border-radius:2px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-height:84px;resize:vertical}
 .bb-field textarea:focus{border-color:var(--bb-acc);box-shadow:0 0 0 3px var(--bb-tint)}
 .bb-field input.bad,.bb-field textarea.bad{border-color:#C8323C;box-shadow:0 0 0 3px rgba(200,50,60,.12)}
 .bb-check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-size:13px;line-height:1.55;color:var(--bb-ink2);cursor:pointer}
@@ -103,14 +103,14 @@
 .bb-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .bb-opts.two{grid-template-columns:1fr 1fr}
 .bb-opts.four{grid-template-columns:repeat(4,1fr)}
-.bb-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 8px 10px;border:1px solid var(--bb-line);border-radius:10px;background:#fff;
+.bb-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 8px 10px;border:1px solid var(--bb-line);border-radius:2px;background:#fff;
   font-size:12.5px;color:var(--bb-ink);cursor:pointer;transition:border-color .18s ease,background .18s ease,transform .18s ease;font-weight:500;text-align:center;line-height:1.25}
 .bb-opt:hover{border-color:var(--bb-line2);background:var(--bb-paper);transform:none}
 .bb-opt:active{transform:scale(.98)}
 .bb-opt.on{border-color:var(--bb-acc);box-shadow:inset 0 0 0 1px var(--bb-acc);background:var(--bb-tint2);color:var(--bb-acc-deep)}
 .bb-opt:disabled{opacity:.38;cursor:not-allowed;transform:none}
 .bb-opt svg{width:64px;height:36px;display:block}
-.bb-opt svg path{fill:#E9EBF0;stroke:var(--bb-ink);stroke-width:1.1;stroke-linejoin:round}
+.bb-opt svg path{fill:#EDE9E1;stroke:var(--bb-ink);stroke-width:1.1;stroke-linejoin:round}
 .bb-opt.on svg path{fill:var(--bb-tint);stroke:var(--bb-acc)}
 .bb-opt.on svg circle.mg{fill:var(--bb-acc)}
 .bb-opt svg circle{stroke:var(--bb-ink)}
@@ -129,18 +129,18 @@
 .bb-range input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--bb-acc) var(--p,50%),var(--bb-line2) var(--p,50%))}
 .bb-range input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--bb-line2)}
 .bb-range input[type=range]::-moz-range-progress{height:3px;background:var(--bb-acc)}
-.bb-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--bb-acc);margin-top:-9.5px;box-shadow:0 2px 8px rgba(43,77,255,.3);cursor:grab;transition:transform .18s ease,box-shadow .18s ease}
-.bb-range input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--bb-acc);box-shadow:0 2px 8px rgba(43,77,255,.3);cursor:grab}
-.bb-range input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 6px var(--bb-tint),0 2px 8px rgba(43,77,255,.3)}
+.bb-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--bb-acc);margin-top:-9.5px;box-shadow:0 2px 8px rgba(104,47,59,.3);cursor:grab;transition:transform .18s ease,box-shadow .18s ease}
+.bb-range input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--bb-acc);box-shadow:0 2px 8px rgba(104,47,59,.3);cursor:grab}
+.bb-range input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 6px var(--bb-tint),0 2px 8px rgba(104,47,59,.3)}
 .bb-range input[type=range]:active::-webkit-slider-thumb{transform:scale(1.1);cursor:grabbing;background:var(--bb-acc)}
 .bb-range input[type=range]:focus-visible{outline:none}
-.bb-range input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 6px var(--bb-tint),0 2px 8px rgba(43,77,255,.3)}
-.bb-bubble{position:absolute;top:-2px;left:calc(11px + (100% - 22px) * var(--pf,.5));transform:translateX(-50%);background:var(--bb-acc);color:#fff;font-size:11.5px;font-weight:600;letter-spacing:.02em;padding:4px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;transition:left .06s linear}
+.bb-range input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 6px var(--bb-tint),0 2px 8px rgba(104,47,59,.3)}
+.bb-bubble{position:absolute;top:-2px;left:calc(11px + (100% - 22px) * var(--pf,.5));transform:translateX(-50%);background:var(--bb-acc);color:#fff;font-size:11.5px;font-weight:600;letter-spacing:.02em;padding:4px 9px;border-radius:2px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;transition:left .06s linear}
 .bb-bubble::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--bb-acc)}
 .bb-g h3 span.bb-vhide{position:absolute;left:-9999px}
 .bb-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--bb-mute);margin-top:2px}
 .bb-field{display:flex;gap:10px}
-.bb-field input,.bb-field select{background:#fff;border:1px solid var(--bb-line);border-radius:12px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-width:0}
+.bb-field input,.bb-field select{background:#fff;border:1px solid var(--bb-line);border-radius:2px;color:var(--bb-ink);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;min-width:0}
 .bb-field input{flex:1}
 .bb-field select{flex:1}
 .bb-field input:focus,.bb-field select:focus{border-color:var(--bb-acc);box-shadow:0 0 0 3px var(--bb-tint)}
@@ -165,10 +165,10 @@
 .bb-qr .bb-modal-x{position:absolute;top:16px;right:16px}
 .bb-trybar{display:none;align-items:center;justify-content:space-between;gap:8px;position:absolute;top:0;left:0;right:0;height:48px;padding:0 8px 0 4px;z-index:5;background:#fff;border-bottom:1px solid var(--bb-line)}
 .bb-trybar>div{display:flex;gap:4px;align-items:center}
-.bb-trybtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--bb-ink);padding:8px 10px;border-radius:8px;cursor:pointer}
+.bb-trybtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--bb-ink);padding:8px 10px;border-radius:2px;cursor:pointer}
 .bb-trybtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 body.tryon-lock{overflow:hidden}
-.bb-import{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px dashed var(--bb-line2);border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--bb-ink);transition:.18s ease}
+.bb-import{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px dashed var(--bb-line2);border-radius:2px;cursor:pointer;font-size:12.5px;color:var(--bb-ink);transition:.18s ease}
 .bb-import:hover{border-color:var(--bb-acc);background:var(--bb-tint2)}
 .bb-import input{position:absolute;width:1px;height:1px;opacity:0}
 .bb-import span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -180,7 +180,7 @@ body.tryon-lock{overflow:hidden}
 .sw-bark{background:repeating-linear-gradient(90deg,#c9c2b4 0 2px,#e2dcd0 2px 5px,#d3cdc0 5px 7px)}
 .bb-modal-x{width:36px;height:36px;border:0;border-radius:50%;background:var(--bb-soft);font-size:20px;cursor:pointer;color:var(--bb-ink)}
 .bb-next{margin:26px 0 6px}
-.bb-nextbtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bb-line2);background:var(--bb-paper);color:var(--bb-ink);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease}
+.bb-nextbtn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bb-line2);background:var(--bb-paper);color:var(--bb-ink);border-radius:2px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease}
 .bb-nextbtn:hover{background:var(--bb-tint2);border-color:var(--bb-acc);color:var(--bb-acc-deep)}
 .bb-nextbtn:active{transform:scale(.99)}
 .bb-nextbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -199,46 +199,46 @@ body.tryon-lock{overflow:hidden}
 .bb-bar-info{min-width:0;flex:1}
 .bb-bar-info b{display:block;font-weight:600;font-size:15px;line-height:1.2;color:var(--bb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bb-bar-info span{display:block;font-size:12px;color:var(--bb-mute);margin-top:3px;font-variant-numeric:tabular-nums;line-height:1.4}
-.bb-cta{flex:none;display:inline-flex;align-items:center;gap:10px;border:0;background:var(--bb-acc);color:#fff;border-radius:12px;padding:14px 18px 14px 20px;font-size:13.5px;font-weight:600;letter-spacing:.01em;cursor:pointer;transition:background .18s ease,transform .18s ease,box-shadow .18s ease;box-shadow:0 8px 20px -10px rgba(43,77,255,.55)}
+.bb-cta{flex:none;display:inline-flex;align-items:center;gap:10px;border:0;background:var(--bb-acc);color:#fff;border-radius:2px;padding:14px 18px 14px 20px;font-size:13.5px;font-weight:600;letter-spacing:.01em;cursor:pointer;transition:background .18s ease,transform .18s ease,box-shadow .18s ease;box-shadow:0 8px 20px -10px rgba(104,47,59,.55)}
 .bb-cta svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease}
-.bb-cta:hover{background:var(--bb-acc-deep);box-shadow:0 12px 26px -10px rgba(43,77,255,.65)}
+.bb-cta:hover{background:var(--bb-acc-deep);box-shadow:0 12px 26px -10px rgba(104,47,59,.65)}
 .bb-cta:hover svg{transform:translateX(3px)}
 .bb-cta:active{transform:scale(.98)}
 .bb-bar-info em{display:block;font-style:normal;font-size:12.5px;font-weight:600;color:var(--bb-ink);margin-top:4px;font-variant-numeric:tabular-nums}
 .bb-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.bb-preset{text-align:left;border:1px solid var(--bb-line);border-radius:10px;background:var(--bb-paper);padding:10px 12px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--bb-ink);cursor:pointer;transition:.18s ease;line-height:1.3}
+.bb-preset{text-align:left;border:1px solid var(--bb-line);border-radius:2px;background:var(--bb-paper);padding:10px 12px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--bb-ink);cursor:pointer;transition:.18s ease;line-height:1.3}
 .bb-preset small{display:block;font-weight:400;font-size:11px;color:var(--bb-mute);margin-top:2px}
 .bb-preset:hover{border-color:var(--bb-acc);background:var(--bb-tint2)}
 .bb-preset:active{transform:scale(.98)}
 .bb-estnote{font-size:12px;color:var(--bb-mute);line-height:1.55;margin:12px 0 4px}
 /* below the app */
-.bb-after{background:#F4F5F8;padding:70px 0 60px;border-top:1px solid #E4E6EC}
+.bb-after{background:#F1EEE8;padding:70px 0 60px;border-top:1px solid #DDD8D0}
 .bb-steps{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:34px}
-.bb-steps .eyebrow,.bb-styles .eyebrow{color:#2B4DFF}
+.bb-steps .eyebrow,.bb-styles .eyebrow{color:#682F3B}
 .bb-styles .sec-head{margin-bottom:44px}
 .bb-styles .gcard{padding:28px 26px}
-.bb-styles .gcard h3{font-size:18px;font-weight:600;margin:0 0 8px;color:#14161C}
-.bb-steps h4{font-size:20px;font-weight:600;margin:10px 0 8px;color:#14161C;letter-spacing:-.01em}
-.bb-steps p{font-size:14px;line-height:1.65;color:#4B5060;max-width:36ch}
+.bb-styles .gcard h3{font-size:18px;font-weight:600;margin:0 0 8px;color:#242522}
+.bb-steps h4{font-size:20px;font-weight:600;margin:10px 0 8px;color:#242522;letter-spacing:-.01em}
+.bb-steps p{font-size:14px;line-height:1.65;color:#55554F;max-width:36ch}
 /* spec sheet — a dedicated print view */
-.bb-sheet{position:fixed;inset:0;z-index:1000;background:#fff;overflow:auto;display:none;color:#0f172a;-webkit-overflow-scrolling:touch}
+.bb-sheet{position:fixed;inset:0;z-index:1000;background:#fff;overflow:auto;display:none;color:#242522;-webkit-overflow-scrolling:touch}
 .bb-sheet.open{display:block}
-.bb-sheet-bar{position:sticky;top:0;z-index:1;display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;background:rgba(255,255,255,.94);border-bottom:1px solid #e7e3dc}
+.bb-sheet-bar{position:sticky;top:0;z-index:1;display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;background:rgba(255,255,255,.94);border-bottom:1px solid #DDD8D0}
 .bb-doc{max-width:860px;margin:0 auto;padding:36px 28px 60px;font-size:13px;line-height:1.5}
-.bb-doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #0f172a;padding-bottom:16px;margin-bottom:22px}
+.bb-doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #242522;padding-bottom:16px;margin-bottom:22px}
 .bb-doc-head img{height:24px;display:block;margin-bottom:10px}
-.bb-doc-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#64748b;font-weight:600}
-.bb-doc-meta{text-align:right;font-size:12px;color:#475569;line-height:1.5}
-.bb-doc-meta b{display:block;font-size:17px;color:#0f172a;letter-spacing:.1em;font-weight:600}
-.bb-doc-snap{display:block;width:100%;max-height:320px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:26px;background:#fff}
+.bb-doc-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#777771;font-weight:600}
+.bb-doc-meta{text-align:right;font-size:12px;color:#55554F;line-height:1.5}
+.bb-doc-meta b{display:block;font-size:17px;color:#242522;letter-spacing:.1em;font-weight:600}
+.bb-doc-snap{display:block;width:100%;max-height:320px;object-fit:contain;border:1px solid #DDD8D0;border-radius:2px;margin-bottom:26px;background:#fff}
 .bb-doc-band{display:grid;grid-template-columns:270px 1fr;gap:10px 24px;margin-bottom:28px;break-inside:avoid;page-break-inside:avoid}
-.bb-doc-band h2{grid-column:1/-1;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;margin:0 0 2px;color:#0f172a}
+.bb-doc-band h2{grid-column:1/-1;font-family:'Instrument Serif',Georgia,serif;font-size:24px;font-weight:500;margin:0 0 2px;color:#242522}
 .bb-doc-sec svg{max-width:100%;height:auto;display:block}
 .bb-doc table{width:100%;border-collapse:collapse;align-self:start}
-.bb-doc td{padding:6px 0;border-bottom:1px solid #e2e8f0;vertical-align:top}
-.bb-doc td:first-child{color:#64748b;width:36%;padding-right:12px}
-.bb-doc-foot{margin-top:26px;font-size:11px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:12px;line-height:1.6}
-.bb-doc-link{word-break:break-all;color:#94a3b8}
+.bb-doc td{padding:6px 0;border-bottom:1px solid #DDD8D0;vertical-align:top}
+.bb-doc td:first-child{color:#777771;width:36%;padding-right:12px}
+.bb-doc-foot{margin-top:26px;font-size:11px;color:#777771;border-top:1px solid #DDD8D0;padding-top:12px;line-height:1.6}
+.bb-doc-link{word-break:break-all;color:#9A978E}
 @media print{
   body>*:not(.bb-sheet){display:none!important}
   body{background:#fff;overflow:visible}
@@ -252,7 +252,7 @@ body.tryon-lock{overflow:hidden}
   .bb-app{grid-template-columns:minmax(0,1fr);padding-top:64px;min-height:0}
   .bb-stage{position:sticky;top:64px;height:46dvh;min-height:300px;z-index:3;box-shadow:0 10px 30px rgba(50,40,20,.10)}
   .bb-intro{left:18px;top:16px;max-width:60%}
-  .bb-intro h1,.bb-intro p{display:none}
+  .bb-intro{display:none} /* the view toggle sits centred on top; the kicker collided with it */
   .bb-chip{left:14px;bottom:20px;max-width:calc(100% - 230px)}
   .bb-hint{display:none}
   .bb-tools{bottom:14px;left:auto;right:14px;transform:none}
@@ -295,14 +295,19 @@ body.tryon-lock{overflow:hidden}
 </head>
 <body>
 <nav>
-  <a href="/" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co." width="853" height="120"></a>
   <div class="navlinks" id="navlinks">
-    <a href="how.html">How it Works</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="wedding-bands.html" class="active">Wedding Bands</a>
-    <a href="about.html">About</a>
-    <a href="commission.html" class="btn-fill sm">Begin a Commission</a>
+    <div class="nav-l">
+      <a href="/gallery.html">Work</a>
+      <a href="/commission.html">Commission</a>
+      <a href="/wedding-bands.html" class="active">Wedding Bands</a>
+    </div>
+    <div class="nav-r">
+      <a href="/how.html">Process</a>
+      <a href="/about.html">About</a>
+      <a href="/commission.html" class="nav-cta">Begin a Commission</a>
+    </div>
   </div>
+  <a href="/" class="brand">AZOIR &amp; CO.</a>
   <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
 </nav>
 
@@ -476,13 +481,13 @@ body.tryon-lock{overflow:hidden}
         <div class="bb-g">
           <h3 id="bbMetalH">Metal</h3>
           <div class="bb-opts four">
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw" style="background:#d19f37"></span>14k Yellow</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw" style="background:#cbcbcb"></span>14k White</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw" style="background:#dc987b"></span>14k Rose</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw" style="background:#cfcece"></span>Platinum</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw" style="background:#d19f37"></span>18k Yellow</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw" style="background:#cbcbcb"></span>18k White</button>
-            <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw" style="background:#dc987b"></span>18k Rose</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14y" aria-pressed="false"><span class="sw sw-yellow-gold" style="background-color:#d19f37"></span>14k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14w" aria-pressed="false"><span class="sw sw-white-gold" style="background-color:#cbcbcb"></span>14k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="14r" aria-pressed="false"><span class="sw sw-rose-gold" style="background-color:#dc987b"></span>14k Rose</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="pt" aria-pressed="false"><span class="sw sw-platinum" style="background-color:#cfcece"></span>Platinum</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18y" aria-pressed="false"><span class="sw sw-yellow-gold" style="background-color:#d19f37"></span>18k Yellow</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18w" aria-pressed="false"><span class="sw sw-white-gold" style="background-color:#cbcbcb"></span>18k White</button>
+            <button type="button" class="bb-opt" data-opt="metal" data-v="18r" aria-pressed="false"><span class="sw sw-rose-gold" style="background-color:#dc987b"></span>18k Rose</button>
           </div>
         </div>
 
@@ -536,7 +541,7 @@ body.tryon-lock{overflow:hidden}
         <div class="bb-g">
           <h3>Stone shape</h3>
           <div class="bb-opts" id="bbShapes">
-            <button type="button" class="bb-opt" data-opt="shape" data-v="round" aria-pressed="false"><svg viewBox="0 0 64 36"><circle cx="32" cy="18" r="13" fill="#E9EBF0" stroke-width="1.1"/><path d="M32 5 L32 31 M19 18 L45 18 M22.8 8.8 L41.2 27.2 M41.2 8.8 L22.8 27.2" fill="none" stroke-width=".7"/></svg>Round</button>
+            <button type="button" class="bb-opt" data-opt="shape" data-v="round" aria-pressed="false"><svg viewBox="0 0 64 36"><circle cx="32" cy="18" r="13" fill="#EDE9E1" stroke-width="1.1"/><path d="M32 5 L32 31 M19 18 L45 18 M22.8 8.8 L41.2 27.2 M41.2 8.8 L22.8 27.2" fill="none" stroke-width=".7"/></svg>Round</button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="princess" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M21 5 H43 L45 7 V29 L43 31 H21 L19 29 V7 Z"/><path d="M19 7 L45 29 M45 7 L19 29" fill="none" stroke-width=".7"/></svg>Princess</button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="emerald" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M21 7 H43 L47 11 V25 L43 29 H21 L17 25 V11 Z"/><path d="M24 11 H40 L43 13 V23 L40 25 H24 L21 23 V13 Z M27 15 H37 V21 H27 Z" fill="none" stroke-width=".7"/></svg>Emerald<small>Set across the band</small></button>
             <button type="button" class="bb-opt" data-opt="shape" data-v="baguette" aria-pressed="false"><svg viewBox="0 0 64 36"><path d="M18 11 H46 V25 H18 Z"/><path d="M22 14 H42 V22 H22 Z" fill="none" stroke-width=".7"/></svg>Baguette<small>Set across the band</small></button>
@@ -667,7 +672,7 @@ body.tryon-lock{overflow:hidden}
 <footer>
   <div class="wrap">
     <div class="fgrid">
-      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co." width="853" height="120" loading="lazy" decoding="async"></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div><a href="/" class="fbrand">AZOIR &amp; CO.</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
       <div class="fcol"><h5>What we make</h5><a href="engagement-rings.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="custom-signet-rings.html">Signet rings</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="heirloom-redesign.html">Heirloom redesign</a></div>
       <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a><a href="/journal/">Journal</a></div>
       <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>

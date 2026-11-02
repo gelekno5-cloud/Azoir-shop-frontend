@@ -7,13 +7,13 @@
 <link rel="preload" as="image" href="media/hero-film-poster.jpg" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="azoir.css?v=15">
 
 <meta name="description" content="Custom fine jewelry designed one-on-one, sketched by hand, rendered in 3D and crafted in New York: engagement rings, wedding bands and heirloom redesigns.">
 <link rel="canonical" href="https://azoir.co/">
 <meta name="robots" content="max-image-preview:large">
-<meta name="theme-color" content="#5B7FD4">
+<meta name="theme-color" content="#FAF9F6">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
@@ -29,39 +29,61 @@
 </script>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Azoir &amp; Co. | Custom Jewelry &amp; Engagement Rings, New York"><meta name="twitter:description" content="Custom fine jewelry designed one-on-one, sketched by hand, rendered in 3D and crafted in New York: engagement rings, wedding bands and heirloom redesigns."><meta name="twitter:image" content="https://azoir.co/media/og-image.jpg"><meta name="twitter:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band">
+<style>
+/* Page-scoped: skip link, numbered section labels, scroll reveals (homepage only) */
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--ink);color:var(--paper);padding:12px 18px;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.skip:focus{left:0}
+.sec-label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--oxblood);font-weight:500}
+@media(prefers-reduced-motion:no-preference){
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+  .rv.in{opacity:1;transform:none}
+}
+</style>
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav>
-  <a href="/" class="brand"><img src="media/azoir-logo.png" alt="AZOIR &amp; Co." width="853" height="120"></a>
   <div class="navlinks" id="navlinks">
-    <a href="how.html">How it Works</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="wedding-bands.html">Wedding Bands</a>
-    <a href="about.html">About</a>
-    <a href="commission.html" class="btn-fill sm">Begin a Commission</a>
+    <div class="nav-l">
+      <a href="gallery.html">Work</a>
+      <a href="commission.html">Commission</a>
+      <a href="wedding-bands.html">Wedding Bands</a>
+    </div>
+    <div class="nav-r">
+      <a href="how.html">Process</a>
+      <a href="about.html">About</a>
+      <a href="commission.html" class="nav-cta">Begin a Commission</a>
+    </div>
   </div>
+  <a href="/" class="brand">AZOIR &amp; CO.</a>
   <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
 </nav>
+
+<main id="main">
 
 <header class="hero-film" aria-roledescription="carousel" aria-label="Featured">
   <div class="film-track">
     <div class="film is-active" aria-roledescription="slide" aria-label="1 of 2">
       <video class="film-media" muted playsinline preload="auto" poster="media/hero-film-poster.jpg" aria-hidden="true"><source src="media/hero-film.mp4" type="video/mp4"></video>
       <div class="wrap film-copy">
-        <span class="eyebrow">Bespoke Fine Jewelry · New York</span>
-        <h1 class="serif">Make the piece <em>no one</em> else has.</h1>
-        <p class="sub">Work one-on-one with our designers on a piece that's truly yours — a ring, a necklace, an heirloom reborn. Sketched by hand, rendered in 3D, crafted in New York.</p>
-        <a href="commission.html" class="btn-fill">Begin a commission</a>
+        <span class="eyebrow">Bespoke Fine Jewelry / New York</span>
+        <h1 class="serif">An expression <em>of you.</em></h1>
+        <p class="sub">One-of-a-kind jewelry, imagined together and brought to life in New York. Sketched by hand, rendered in 3D, crafted in our atelier.</p>
+        <div class="film-ctas">
+          <a href="commission.html" class="btn-fill">Begin a Commission</a>
+          <a href="gallery.html" class="btn-outline">Explore Our Work</a>
+        </div>
       </div>
     </div>
     <div class="film film-bands" aria-roledescription="slide" aria-label="2 of 2" aria-hidden="true" inert>
       <video class="film-media" data-end="4.6" muted playsinline preload="metadata" poster="media/hero-bands-poster.jpg" aria-hidden="true"><source src="media/hero-bands.mp4" type="video/mp4"></video>
       <div class="wrap film-copy">
-        <span class="eyebrow">Wedding Bands · Made in New York</span>
-        <h2 class="serif">Two bands. <em>One</em> story.</h2>
-        <p class="sub">Build your wedding bands online — choose the width, finish and metal, see the price as you go. We handcraft them in New York.</p>
-        <a href="wedding-bands.html" class="btn-fill">Design your bands</a>
+        <span class="eyebrow">Wedding Bands / Made in New York</span>
+        <h2 class="serif">Two bands. <em>One story.</em></h2>
+        <p class="sub">Design your wedding bands online — choose the profile, width, finish and metal, and see the price as you go. We handcraft them in New York.</p>
+        <div class="film-ctas"><a href="wedding-bands.html" class="btn-fill">Design Your Bands</a></div>
       </div>
     </div>
   </div>
@@ -73,161 +95,173 @@
 </header>
 <script src="hero-film.js?v=6" defer></script>
 
+<div class="ed-foot">
+  <span class="sec-label">01 / A Study in Form</span>
+  <span>Scroll &darr;</span>
+</div>
+
 <div class="doors">
-  <div class="wrap row">
-    <a class="door" href="engagement-rings.html"><b>Engagement ring <i>→</i></b><span>Designed around your stone and your story</span></a>
-    <a class="door" href="wedding-bands.html"><b>Wedding bands <i>→</i></b><span>Build yours in 3D · 14k from $251</span></a>
-    <a class="door" href="heirloom-redesign.html"><b>Heirloom redesign <i>→</i></b><span>New life for a piece you already love</span></a>
-    <a class="door" href="commission.html"><b>Something else <i>→</i></b><span>Necklaces, earrings, signets and more</span></a>
+  <div class="wrap row" style="padding:0">
+    <a class="door" href="engagement-rings.html"><b>Engagement rings <i>&rarr;</i></b><span>Designed around your stone and your story</span></a>
+    <a class="door" href="wedding-bands.html"><b>Wedding bands <i>&rarr;</i></b><span>Design yours in 3D &middot; 14k from $251</span></a>
+    <a class="door" href="heirloom-redesign.html"><b>Heirloom redesign <i>&rarr;</i></b><span>New life for a piece you already love</span></a>
+    <a class="door" href="commission.html"><b>Something else <i>&rarr;</i></b><span>Necklaces, earrings, signets and more</span></a>
   </div>
 </div>
 
 <div class="pillars">
   <div class="wrap row">
-    <div class="pill"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2.2 6 5.5 6 7.5 6 9 7.2 12 10c3-2.8 4.5-4 6.5-4 3.3 0 4.7 3.5 3 6.5C19 16.5 12 21 12 21z"/></svg><span>A human touch</span></div>
-    <div class="pill"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21V12h6v9"/></svg><span>Not found in stores</span></div>
-    <div class="pill"><svg viewBox="0 0 24 24"><path d="M11 3c-4 3-7 6-7 10a7 7 0 0 0 14 0c0-2-1-4-2-5"/><path d="M11 3c1 3 4 4 4 8"/></svg><span>Ethically sourced</span></div>
-    <div class="pill"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1L12 16.7 5.7 21l2.3-7.1-6-4.5h7.6z"/></svg><span>Happiness guaranteed</span></div>
-    <div class="pill"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 10-10-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span>Hand-drawn sketches</span></div>
+    <div class="pill"><span>Designed one-on-one</span></div>
+    <div class="pill"><span>Not found in stores</span></div>
+    <div class="pill"><span>Ethically sourced</span></div>
+    <div class="pill"><span>Hand-drawn sketches</span></div>
+    <div class="pill"><span>Made in New York</span></div>
   </div>
 </div>
 
 <section>
-  <div class="wrap split">
-    <div class="split-media"><img src="media/violet-floral-ring.jpg" alt="Violet stone ring in a white gold floral setting"></div>
+  <div class="wrap split rv">
     <div>
-      <span class="eyebrow">What we do</span>
-      <h2 class="serif">We don't sell you jewelry.<br>We help you make it.</h2>
-      <p>Most jewelers hand you a case and ask you to choose. We start with a blank page and a conversation — then design something that could only ever be yours. A ring, a pendant, earrings, an heirloom made new.</p>
+      <span class="sec-label">02 / Our Philosophy</span>
+      <h2 class="serif" style="margin-top:18px">Made for one.<br>Never for everyone.</h2>
+      <p>Most jewelers hand you a case and ask you to choose. We start with a blank page and a conversation — a collaborative design experience for people who value individuality, artistry and lasting craft.</p>
       <div class="checks">
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Designed with you, not chosen from a shelf</div>
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Three concepts and a 3D render before we craft</div>
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Crafted by hand in New York</div>
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Sterling, 10–24K gold, platinum · lab-grown & natural diamonds</div>
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Designed with you, not chosen from a shelf</div>
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Three concepts and a 3D render before we craft</div>
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Sterling, 10&ndash;24K gold, platinum &middot; lab-grown &amp; natural diamonds</div>
+      </div>
+      <div style="margin-top:34px"><a href="how.html" class="btn-ghost">Our approach</a></div>
+    </div>
+    <div class="split-media"><img src="media/violet-floral-ring.jpg" alt="Violet stone ring in a white gold floral setting" loading="lazy" decoding="async"></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="rv" style="max-width:560px;margin-bottom:clamp(40px,5vw,64px)">
+      <span class="sec-label">03 / Selected Works</span>
+      <h2 class="serif" style="font-size:clamp(34px,3.8vw,54px);line-height:1.06;margin-top:18px">Objects of significance.</h2>
+      <p style="font-size:15.5px;line-height:1.75;color:var(--ink-2);margin-top:16px">A curated look at recent commissions. Every one began with a conversation — and became something that exists nowhere else.</p>
+    </div>
+    <div class="works-grid rv">
+      <figure class="wpiece w-a"><video autoplay muted loop playsinline poster="media/ring-spin-poster.webp" aria-label="A commissioned ring turning in the light"><source src="media/ring-spin.mp4" type="video/mp4"></video><figcaption>A commission, in motion</figcaption></figure>
+      <div class="works-col">
+        <figure class="wpiece"><img src="media/blue-sapphire-ring.jpg" alt="Round blue sapphire in four prongs on a textured, sculpted yellow gold ring" loading="lazy" decoding="async"><figcaption>Blue sapphire &middot; sculpted gold</figcaption></figure>
+        <figure class="wpiece"><img src="media/toi-et-moi-ring.jpg" alt="Toi et moi ring with clear pear and marquise stones on a twisting yellow gold band" loading="lazy" decoding="async"><figcaption>Toi et moi &middot; two stones</figcaption></figure>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="stones" style="padding-top:40px">
-  <div class="wrap">
-    <span class="eyebrow">What we make</span>
-    <h2 class="serif" style="font-size:clamp(30px,3.6vw,46px);margin-top:12px">Rings are just the beginning.</h2>
-    <p style="font-size:16px;color:var(--body);max-width:520px;margin:16px auto 0;line-height:1.7">If it can be worn, it can be made. From a first engagement ring to an heirloom given new life — every piece begins the same way, with you.</p>
-    <div class="chips" style="margin-top:34px">
+    <div class="works-after rv">
+      <p>If it can be worn, it can be made. From a first engagement ring to an heirloom given new life, every piece begins the same way — with you.</p>
+      <a href="gallery.html" class="btn-ghost">View the gallery</a>
+    </div>
+    <div class="chips rv" style="justify-content:flex-start;margin-top:26px">
       <a class="chip" href="commission.html?piece=Engagement%20ring">Engagement Rings</a><a class="chip" href="wedding-bands.html">Wedding Bands</a><a class="chip" href="commission.html?piece=Necklace%20%2F%20pendant">Necklaces</a>
       <a class="chip" href="commission.html?piece=Necklace%20%2F%20pendant">Pendants</a><a class="chip" href="commission.html?piece=Earrings">Earrings</a><a class="chip" href="commission.html?piece=Bracelet">Bracelets</a>
-      <a class="chip" href="commission.html?piece=Signet%20ring">Signet Rings</a><a class="chip" href="commission.html?piece=Something%20else">Cufflinks</a><a class="chip" href="commission.html?piece=Heirloom%20redesign">Heirloom Redesign</a>
+      <a class="chip" href="commission.html?piece=Signet%20ring">Signet Rings</a><a class="chip" href="commission.html?piece=Heirloom%20redesign">Heirloom Redesign</a>
     </div>
   </div>
 </section>
 
-<section class="bands-home">
-  <div class="wrap split rev">
-    <div class="split-media band-spec">
-      <div class="spec">
+<section style="padding-bottom:clamp(120px,12vw,180px)">
+  <div class="wrap studio-grid rv">
+    <div>
+      <span class="sec-label">04 / Design Studio</span>
+      <h2 class="serif" style="font-size:clamp(32px,3.6vw,50px);line-height:1.06;margin-top:18px">Your band.<br>Your proportions.</h2>
+      <p style="font-size:15.5px;line-height:1.8;color:var(--ink-2);margin-top:20px;max-width:46ch">A precise, interactive way to design a wedding band that is distinctly yours. Choose the profile, width, metal and finish in our 3D builder — the estimate updates with every change, and we handcraft the result in New York.</p>
+      <div class="checks">
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>14k gold from $251 &middot; a classic 4&nbsp;mm band is about $651</div>
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Design a matching pair, add engraving or diamonds</div>
+        <div class="check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Platinum and diamonds quoted individually by the atelier</div>
+      </div>
+      <div class="band-cta"><a href="wedding-bands.html" class="btn-fill">Design Your Band</a></div>
+    </div>
+    <div class="studio-media">
+      <img src="media/hero-bands-poster.jpg" alt="Two handcrafted wedding bands, side by side" loading="lazy" decoding="async">
+      <div class="spec" aria-label="Example band specification">
         <svg class="spec-profile" viewBox="0 0 120 44" aria-hidden="true"><path d="M8 38V27Q60 -6 112 27V38Q60 31 8 38Z"/></svg>
         <div class="spec-title serif">Classic court band</div>
         <dl>
-          <div><dt>Width</dt><dd>4 mm</dd></div>
-          <div><dt>Depth</dt><dd>1.8 mm</dd></div>
+          <div><dt>Profile</dt><dd>Court</dd></div>
+          <div><dt>Width</dt><dd>4.0 mm</dd></div>
           <div><dt>Metal</dt><dd>14k yellow gold</dd></div>
           <div><dt>Finish</dt><dd>Polished</dd></div>
-          <div><dt>Size</dt><dd>US 7</dd></div>
         </dl>
-        <div class="spec-est"><span>Estimate</span><b>$651</b></div>
-        <p class="spec-note">Metal by weight at $120/g plus $100 labor. Confirmed by the atelier before casting.</p>
+        <div class="spec-est"><span>Estimated price</span><b>$651</b></div>
       </div>
-    </div>
-    <div>
-      <span class="eyebrow">Wedding bands</span>
-      <h2 class="serif">Design your band.<br>See the price as you go.</h2>
-      <p>Choose the profile, width, metal, finish and engraving in our 3D builder. The estimate updates with every change, and you can order your band straight from it.</p>
-      <div class="checks">
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>14k gold from $251 · a classic 4 mm band is about $651</div>
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Design a matching pair, add engraving or diamonds</div>
-        <div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>18k priced by its gold content · platinum and diamonds quoted individually</div>
-      </div>
-      <div class="band-cta"><a href="wedding-bands.html" class="btn-fill">Build your band</a></div>
     </div>
   </div>
 </section>
 
-<section class="process">
+<section class="band">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">How it works</span>
-      <h2 class="serif">Four steps, one perfect piece.</h2>
-      <p>It begins with a conversation. From there we sketch, design, review, and refine — until it's exactly right.</p>
+    <div class="sec-head rv">
+      <span class="sec-label">05 / The Process</span>
+      <h2 class="serif">From thought to form.</h2>
+      <p>A look inside our New York atelier, where ideas, materials and craft come together. It begins with a conversation; from there we sketch, design, review and refine until it is exactly right.</p>
     </div>
-    <div class="steps">
-      <div class="stp"><span class="dot"></span><div class="n">01</div><h4>Style exploration</h4><p>Share your inspiration, your materials, your story. We listen first — no templates, no pressure.</p></div>
-      <div class="stp"><span class="dot"></span><div class="n">02</div><h4>Concepts & 3D</h4><p>Three design concepts, then a professional CAD render so you see your piece from every angle.</p></div>
-      <div class="stp"><span class="dot"></span><div class="n">03</div><h4>Details, perfected</h4><p>Up to two rounds of revisions and a feasibility review. You approve the final design before we begin.</p></div>
-      <div class="stp"><span class="dot"></span><div class="n">04</div><h4>Crafted by hand</h4><p>Cast, set, and finished in New York. Delivered insured, in our signature packaging.</p></div>
+    <div class="steps rv">
+      <div class="stp"><div class="n">Step 01</div><h4>Style exploration</h4><p>Share your inspiration, your materials, your story. We listen first — no templates, no pressure.</p></div>
+      <div class="stp"><div class="n">Step 02</div><h4>Concepts &amp; 3D</h4><p>Three design concepts, then a professional CAD render so you see your piece from every angle.</p></div>
+      <div class="stp"><div class="n">Step 03</div><h4>Details, perfected</h4><p>Up to two rounds of revisions and a feasibility review. You approve the final design before we begin.</p></div>
+      <div class="stp"><div class="n">Step 04</div><h4>Crafted by hand</h4><p>Cast, set and finished in New York. Delivered insured, in our signature packaging.</p></div>
     </div>
-    <div style="text-align:center;margin-top:48px"><a href="how.html" class="btn-outline">See the full process</a></div>
-  </div>
-</section>
-
-<section id="work">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Love in the making</span>
-      <h2 class="serif">A few of the pieces we've made.</h2>
-    </div>
-    <div class="gallery">
-      <div class="g"><video autoplay muted loop playsinline poster="media/ring-spin-poster.webp"><source src="media/ring-spin.mp4" type="video/mp4"></video></div>
-      <div class="g"><img src="media/blue-sapphire-ring.jpg" alt="Blue sapphire ring in sculpted yellow gold" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/emerald-band-ring.jpg" alt="Emerald ring on a matte gold band with star-set diamonds" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/green-marquise-ring.jpg" alt="Green marquise stone ring with side diamonds in gold" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/pink-sapphire-ring.jpg" alt="Pink sapphire ring with gold blossoms and diamonds" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/marquise-diamond-ring.jpg" alt="Marquise diamond ring with gold nugget shoulders" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/peridot-pendant.jpg" alt="Green peridot pendant with a diamond bail on a gold chain" loading="lazy" decoding="async"></div>
-      <div class="g"><img src="media/purple-sapphire-ring.jpg" alt="Purple oval stone in a sculpted yellow gold ring" loading="lazy" decoding="async"></div>
-    </div>
-    <div style="text-align:center;margin-top:44px"><a href="gallery.html" class="btn-ghost">See the full gallery →</a></div>
+    <div class="rv" style="text-align:center;margin-top:clamp(40px,5vw,56px)"><a href="how.html" class="btn-outline">See the Process</a></div>
   </div>
 </section>
 
 <section id="promise">
-  <div class="wrap testi">
+  <div class="wrap testi rv">
     <div class="testi-imgs">
       <div class="a"><img src="media/ring-signet.jpg" alt="A 3D render of a polished ring spelling AZOIR in block letters on a curb-chain band" loading="lazy" decoding="async"></div>
       <div class="b"><img src="media/cad-wire.jpg" alt="3D CAD wireframe of an emerald-cut solitaire ring with a pavé band, before casting" loading="lazy" decoding="async"></div>
       <div class="c"><img src="media/study-orb.jpg" alt="A material study from the studio: a dark sculpted form of concentric swirls" loading="lazy" decoding="async"></div>
     </div>
     <div>
-      <span class="eyebrow">Our promise</span>
-      <blockquote class="serif">"Every commission is led, start to finish, by the person who designs it. No account managers, no queue — just a conversation, a sketch, and a piece that could only ever be yours."</blockquote>
-      <cite><b>Azoir &amp; Co.</b> · The atelier · New York</cite>
-      <div style="margin-top:26px"><a href="how.html" class="btn-ghost">See how a commission works →</a></div>
+      <span class="sec-label">06 / The Atelier</span>
+      <blockquote class="serif" style="margin-top:20px">&ldquo;Every commission is led, start to finish, by the person who designs it. No account managers, no queue — just a conversation, a sketch, and a piece that could only ever be yours.&rdquo;</blockquote>
+      <cite><b>Azoir &amp; Co.</b> The atelier, New York</cite>
+      <div style="margin-top:30px"><a href="about.html" class="btn-ghost">The private atelier experience</a></div>
     </div>
   </div>
 </section>
 
 <section class="final">
-  <div class="wrap">
-    <span class="eyebrow">Ready when you are</span>
-    <h2 class="serif" style="margin-top:16px">Let's make yours.</h2>
-    <p>Whatever you're imagining — a ring, a gift, a piece all your own — tell us. A $60 design fee, credited toward your final price, opens your commission with a designer, and we'll reply within one business day.</p>
-    <a href="commission.html" class="btn-fill">Begin a commission</a>
+  <div class="wrap rv">
+    <span class="sec-label">07 / An Invitation</span>
+    <h2 class="serif" style="margin-top:20px">Let&rsquo;s make yours.</h2>
+    <p>Whatever you&rsquo;re imagining — a ring, a gift, a piece all your own — tell us. A $60 design fee, credited toward your final price, opens your commission with a designer, and we reply within one business day.</p>
+    <a href="commission.html" class="btn-fill">Begin a Commission</a>
   </div>
 </section>
+
+</main>
 
 <footer>
   <div class="wrap">
     <div class="fgrid">
-      <div><a href="/" class="fbrand"><img src="media/azoir-logo-white.png" alt="AZOIR &amp; Co." width="853" height="120" loading="lazy" decoding="async"></a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div><a href="/" class="fbrand">AZOIR &amp; CO.</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
       <div class="fcol"><h5>What we make</h5><a href="engagement-rings.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="custom-signet-rings.html">Signet rings</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="heirloom-redesign.html">Heirloom redesign</a></div>
       <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a><a href="/journal/">Journal</a></div>
       <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
     </div>
-    <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
+    <div class="fbot"><span>&copy; 2026 Azoir &amp; Co. &middot; New York</span><span><a href="/terms.html">Terms</a> &middot; <a href="/privacy.html">Privacy</a> &middot; <a href="/shipping.html">Shipping &amp; Returns</a> &middot; <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
 
-
+<script>
+// Scroll reveals (homepage only). Inert under prefers-reduced-motion: the .rv
+// transition is scoped to no-preference, so adding .in is a no-op there.
+(function () {
+  var els = [].slice.call(document.querySelectorAll(".rv"));
+  if (!("IntersectionObserver" in window)) { els.forEach(function (el) { el.classList.add("in"); }); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
 <script src="/gallery-video.js" defer></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>

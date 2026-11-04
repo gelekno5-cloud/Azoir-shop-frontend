@@ -1380,7 +1380,7 @@ function renderQuote() {
   const showTax = !q.quoteNeeded && (q.taxMode === "stripe" || q.taxCents > 0);
   $("bbReqTaxRow").hidden = !showTax;
   $("bbReqTaxLabel").textContent = q.taxTitle || "Tax";
-  $("bbReqTax").textContent = q.taxMode === "stripe" ? "Added to the balance" : `${usd2(q.taxCents)}${q.taxIncluded ? " · included" : ""}`;
+  $("bbReqTax").textContent = q.taxMode === "stripe" ? "Added at payment, for your address" : `${usd2(q.taxCents)}${q.taxIncluded ? " · included" : ""}`;
   $("bbReqTotalRow").hidden = q.totalCents == null || (!q.discount && !q.shipping && !showTax);
   if (q.totalCents != null) $("bbReqTotal").textContent = `${usd2(q.totalCents)} · estimate`;
   const atMinimum = !q.quoteNeeded && Math.round((q.estimateCents || 0) * DEPOSIT.rate) < DEPOSIT.minCents;

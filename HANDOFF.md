@@ -258,3 +258,29 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
   - Against a stand-in for the Moksh API: sign-in, orders, address add, and pricing (code + NY tax + free shipping).
   - With fake Stripe/Supabase: a request with a code redeems and opens checkout; a bad code stops before any row is saved.
   - No live card run.
+
+## 2026-11-04 — announcements and the sign-up pop-up (branch `claude/promos`)
+
+- **Setup:** both are set in the Moksh admin (`/app/announcements`, `/app/signup-popup`, Moksh PR #75). azoir.co shows them through `web/promo.js`, which is loaded on every page after `nav.js`. **New pages must include `<script src="/promo.js?v=1" defer></script>`.**
+- **Server (`commerce.js` `mountPromos`):**
+  - `GET /api/promos` relays the backend's `/promos`, cached for 60 s. If the backend is down it keeps serving the last good copy.
+  - `POST /api/signup` relays a sign-up, with 5 per IP per 15 min.
+  - **Bot checks:** a filled honeypot (`website`) or a form sent under 2 s after the pop-up opened (`opened_ms`) gets a fake success and is never sent on.
+- **Top bar:** a fixed bar above the nav. It sets `--promo-h`, and the `nav` top and `body` padding follow it.
+  - Several messages rotate every 6 s; rotation pauses on hover or focus and is off under reduced motion.
+  - The copy-code button and the close button are both inside the bar.
+  - A closed message is remembered by its `version` (`azoir_promo_dismissed`), so editing it in the admin shows it again.
+- **Homepage banner:** inserted after `header.hero-film`, or at `#promoBanner` if a page has that element.
+- **Pop-up:**
+  - Opens after the admin's delay; on every page or the homepage only.
+  - It's a dialog: Escape closes it, focus stays inside, and focus returns to where it was when it closes.
+  - Closing it hides it for `reshowDays`. After a sign-up it's never shown again on that browser (`azoir_popup`).
+  - The welcome code is shown once with a copy button; the backend emails it too.
+- **Styles:** injected by `promo.js` itself, so `azoir.css` is unchanged.
+- **Ship order:** merge Moksh #75 first; its migration is already live. Until it's deployed, `/api/promos` is empty and nothing shows.
+- **Tested locally** against the Moksh API stand-in (launch configs `moksh-stub` and `azoir-connect`):
+  - bar rotation and code copy
+  - homepage banner
+  - pop-up sign-up with the code
+  - the pop-up not returning after sign-up
+  - the builder page with the bar, on phone and desktop

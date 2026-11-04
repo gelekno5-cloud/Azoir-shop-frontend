@@ -181,3 +181,36 @@ export function mountAccountApi(app) {
 
   app.use("/account/api", r);
 }
+
+// ── Announcements + sign-up pop-up: /api/promos and /api/signup ──────────────
+// /api/promos is the same for everyone, so it's cached here for a minute (and an outage serves the
+// last good copy). /api/signup relays a sign-up with this site's own per-IP limit and bot checks.
+
+let promoCache = { at: 0, body: { announcements: [], popup: null } };
+const signupLimit = limiter(5, 15 * 60_000);
+
+export function mountPromos(app) {
+  app.get("/api/promos", async (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=60");
+    if (Date.now() - promoCache.at > 60_000) {
+      const out = await mokshApi("/promos", { timeoutMs: 4000 });
+      if (out.status === 200 && out.body && Array.isArray(out.body.announcements)) promoCache = { at: Date.now(), body: out.body };
+      else promoCache.at = Date.now() - 45_000; // retry in ~15 s, keep serving the last good copy
+    }
+    res.json(promoCache.body);
+  });
+
+  app.post("/api/signup", express.json({ limit: "8kb" }), async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    const b = req.body || {};
+    // Bots: a filled honeypot or a form sent within 2 s of the pop-up opening looks done but does nothing.
+    if (String(b.website || "").trim() || !(Number(b.opened_ms) >= 2000)) return res.status(201).json({ subscribed: true, offer: null, already: false });
+    if (signupLimit(req.ip || "unknown")) return res.status(429).json({ error: "too_many_requests" });
+    const body = {
+      popupId: String(b.popupId || "").slice(0, 40), email: String(b.email || "").slice(0, 254), consent: b.consent === true,
+      first_name: b.first_name, last_name: b.last_name, phone: b.phone, birthday: b.birthday, interest: b.interest,
+    };
+    const out = await mokshApi("/signups", { method: "POST", body });
+    res.status(out.status).json(out.body);
+  });
+}

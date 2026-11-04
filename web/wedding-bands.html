@@ -73,6 +73,13 @@
 .bb-req-rows .bb-row{padding:11px 0}
 .bb-req-rows .bb-row+.bb-row{border-top:1px solid var(--bb-line)}
 .bb-req-rows .bb-row.bb-row-dep b{color:var(--bb-acc);font-size:15px}
+.bb-req-rows .bb-row b{text-align:right}
+.bb-req-ship select{flex:1.4}
+.bb-req-ship input{flex:1}
+.bb-req-code input{text-transform:uppercase;letter-spacing:.08em}
+.bb-req-code .bb-nextbtn{flex:none;width:auto}
+.bb-field+.bb-field{margin-top:8px}
+#bbReqCodeMsg.ok{color:var(--bb-acc)}
 .bb-req-lines{margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--bb-ink2)}
 .bb-req-lines b{color:var(--bb-ink);font-weight:600}
 .bb-field-col{flex-direction:column}
@@ -306,6 +313,7 @@ body.tryon-lock{overflow:hidden}
     <div class="nav-r">
       <a href="/how.html">Process</a>
       <a href="/about.html">About</a>
+      <a href="/account.html">Account</a>
       <a href="/commission.html" class="nav-cta">Begin a Commission</a>
     </div>
   </div>
@@ -592,10 +600,32 @@ body.tryon-lock{overflow:hidden}
           <p class="bb-req-lines" id="bbReqSummary"></p>
           <div class="bb-req-rows">
             <div class="bb-row"><span>Price estimate</span><b id="bbReqEst"></b></div>
+            <div class="bb-row" id="bbReqDiscRow" hidden><span id="bbReqDiscLabel">Code</span><b id="bbReqDisc"></b></div>
+            <div class="bb-row" id="bbReqShipRow"><span>Shipping</span><b id="bbReqShip">Choose where it ships</b></div>
+            <div class="bb-row" id="bbReqTaxRow" hidden><span id="bbReqTaxLabel">Tax</span><b id="bbReqTax"></b></div>
+            <div class="bb-row" id="bbReqTotalRow" hidden><span>Estimated total</span><b id="bbReqTotal"></b></div>
             <div class="bb-row bb-row-dep"><span>Deposit today</span><b id="bbReqDeposit"></b></div>
             <div class="bb-row"><span>Balance before production</span><b id="bbReqBalance"></b></div>
           </div>
           <p class="bb-note" id="bbReqTerms">The deposit reserves your band and is applied to the final price. It is refundable until you approve the final design. Metal is priced by weight at the atelier's current rate; diamonds and platinum are quoted by a designer.</p>
+        </div>
+        <div class="bb-g">
+          <h3>Delivery &amp; offers</h3>
+          <div class="bb-field bb-req-ship">
+            <select id="bbReqCountry" autocomplete="country" aria-label="Ships to (country)">
+              <option value="US" selected>United States</option><option value="CA">Canada</option><option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option><option value="IE">Ireland</option><option value="FR">France</option><option value="DE">Germany</option>
+              <option value="IT">Italy</option><option value="ES">Spain</option><option value="NL">Netherlands</option><option value="CH">Switzerland</option>
+              <option value="AE">United Arab Emirates</option><option value="IN">India</option><option value="SG">Singapore</option>
+              <option value="HK">Hong Kong</option><option value="JP">Japan</option><option value="">Another country</option>
+            </select>
+            <input type="text" id="bbReqRegion" autocomplete="address-level1" maxlength="40" placeholder="State (e.g. NY)" aria-label="State or province">
+          </div>
+          <div class="bb-field bb-req-code">
+            <input type="text" id="bbReqCode" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Discount code" aria-label="Discount code">
+            <button type="button" class="bb-nextbtn" id="bbReqCodeApply">Apply</button>
+          </div>
+          <p class="bb-note" id="bbReqCodeMsg" hidden></p>
         </div>
         <div class="bb-g">
           <h3>Your details</h3>
@@ -629,6 +659,7 @@ body.tryon-lock{overflow:hidden}
       <input type="hidden" name="spec"><input type="hidden" name="spec_text"><input type="hidden" name="hash">
       <input type="hidden" name="name"><input type="hidden" name="email"><input type="hidden" name="phone"><input type="hidden" name="notes">
       <input type="hidden" name="deposit_cents"><input type="hidden" name="fg_ts">
+      <input type="hidden" name="discount_code"><input type="hidden" name="country"><input type="hidden" name="region">
       <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
     </form>
   </aside>
@@ -682,7 +713,7 @@ body.tryon-lock{overflow:hidden}
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=38"></script>
+<script type="module" src="band-builder.js?v=39"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 </body>

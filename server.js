@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { mountAccountApi, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -327,6 +328,53 @@ function bandDepositOf(order) {
   return { quoteNeeded, estimateCents, depositCents, balanceCents: estimateCents == null ? null : Math.max(0, estimateCents - depositCents), notes: typeof d.notes === "string" ? d.notes : "" };
 }
 
+/**
+ * The money for a request: the design's estimate through the Moksh Diam quote (discount code,
+ * shipping zone, tax), the deposit on the discounted estimate, and the balance — what's left of the
+ * total. Unpriced designs (diamonds, platinum) keep the flat deposit; a code is then noted for the
+ * atelier, not applied. If the backend can't be reached, the plain estimate stands and a code is
+ * refused rather than silently dropped.
+ */
+async function priceBandRequest(priced, { code, country, region, email }) {
+  const listCents = priced.quoteNeeded ? null : priced.metalCents + priced.laborCents;
+  const base = { listCents, quoteNeeded: priced.quoteNeeded, discount: null, discountError: null, shipping: null, taxCents: 0, taxMode: "none", taxIncluded: false, taxTitle: null, country };
+  if (listCents == null) {
+    const depositCents = bandDepositCents(null);
+    return { ...base, estimateCents: null, totalCents: null, depositCents, balanceCents: null, notedCode: code || null };
+  }
+  const q = await quoteBand({ estimateCents: listCents, title: `Wedding band${priced.spec.pair ? "s" : ""} ${priced.spec.ref}`, code, country, region, email });
+  if (!q.ok) {
+    const depositCents = bandDepositCents(listCents);
+    return { ...base, estimateCents: listCents, totalCents: listCents, depositCents, balanceCents: Math.max(0, listCents - depositCents),
+      discountError: code ? { code, message: "Codes can't be checked right now — try again in a minute, or continue without it." } : null };
+  }
+  const estimateCents = listCents - (q.discount ? q.discount.cents : 0);
+  const depositCents = Math.min(bandDepositCents(estimateCents), q.totalCents);
+  return {
+    ...base, estimateCents, totalCents: q.totalCents, depositCents, balanceCents: Math.max(0, q.totalCents - depositCents),
+    discount: q.discount, discountError: q.discountError, shipping: q.shipping, taxCents: q.taxCents, taxMode: q.taxMode, taxIncluded: q.taxIncluded, taxTitle: q.taxTitle,
+  };
+}
+
+// Live pricing for the Request step (JSON). Read-only: nothing is saved or counted here.
+const quoteHits = new Map();
+app.post("/band-quote", express.json({ limit: "64kb" }), async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const ip = req.ip || "unknown", now = Date.now();
+  const seen = (quoteHits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
+  if (seen.length >= 60) return res.status(429).json({ error: "too_many_requests" });
+  seen.push(now); quoteHits.set(ip, seen);
+  if (quoteHits.size > 5000) for (const [k, v] of quoteHits) if (v.every((t) => now - t > WINDOW_MS)) quoteHits.delete(k);
+  const priced = priceBandSpec(typeof req.body?.spec === "string" ? req.body.spec : JSON.stringify(req.body?.spec ?? null));
+  if (priced.reject) return res.status(422).json({ error: priced.reject });
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const p = await priceBandRequest(priced, {
+    code: normaliseCode(req.body?.discount_code), country: normaliseCountry(req.body?.country), region: String(req.body?.region || "").trim().slice(0, 40) || null,
+    email: EMAIL_RE.test(email) ? email : null,
+  });
+  res.json(p);
+});
+
 /** Honeypot, the builder's page stamp (≥ 4 s old) and the per-IP window — no max age: people design for hours. */
 function bandBotVerdict(req) {
   if (String(req.body?.website_url || "").trim() !== "") return "honeypot";
@@ -354,14 +402,25 @@ function shipToText(ship) {
   return [ship.name, a.line1, a.line2, [a.city, [a.state, a.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", "), a.country].filter(Boolean).join("\n");
 }
 
+/** "code WELCOME10 −$98.00 · shipping $25.00 · tax $86.94" from spec.deposit, for emails. */
+function bandPriceParts(order) {
+  const d = (order.spec && order.spec.deposit) || {};
+  const bits = [];
+  if (d.discount && d.discount.code) bits.push(`code ${d.discount.code} −${money(d.discount.cents || 0)}`);
+  if (d.shipping) bits.push(`${d.shipping.name || "shipping"} ${d.shipping.cents ? money(d.shipping.cents) : "free"}`);
+  if (d.tax && d.tax.cents) bits.push(`${d.tax.title || "tax"} ${money(d.tax.cents)}${d.tax.included ? " included" : ""}`);
+  return { text: bits.join(" · "), notedCode: d.notedCode || null };
+}
+
 async function sendBandOrderEmails(order, session) {
   const summary = order.spec?.bands ? priceBandSpec(JSON.stringify(order.spec)).summary || "Wedding band" : "Wedding band";
   const ship = shipToText(order.ship_to);
   const dep = bandDepositOf(order);
   const paid = Number.isFinite(session.amount_total) ? session.amount_total : dep.depositCents;
+  const parts = bandPriceParts(order);
   const priceLine = dep.quoteNeeded
-    ? "Price: to be quoted (diamonds or platinum) — the deposit is the flat minimum"
-    : `Estimate: ${money(dep.estimateCents)} (estimate only) · balance ≈ ${money(dep.balanceCents)} after the price is confirmed`;
+    ? `Price: to be quoted (diamonds or platinum) — the deposit is the flat minimum${parts.notedCode ? ` · customer entered code ${parts.notedCode}` : ""}`
+    : `Estimate: ${money(dep.estimateCents)} (estimate only${parts.text ? `; ${parts.text}` : ""}) · balance ≈ ${money(dep.balanceCents)} after the price is confirmed`;
   const designLink = order.design_url;
   const adminLink = `${ADMIN_URL}/app/band-orders/${order.id}`;
   const text =
@@ -383,7 +442,7 @@ async function sendBandOrderEmails(order, session) {
   const p = "font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#475569;margin:0 0 14px";
   const custPrice = dep.quoteNeeded
     ? "Because your design includes diamonds or platinum, a designer will quote the final price for you before anything is made."
-    : `Your current estimate is ${money(dep.estimateCents)} — an estimate, not a final price. Once a designer confirms the price with you, we invoice the balance (about ${money(dep.balanceCents)}) before production begins.`;
+    : `Your current estimate is ${money(dep.estimateCents)}${parts.text ? ` (${parts.text})` : ""} — an estimate, not a final price. Once a designer confirms the price with you, we invoice the balance (about ${money(dep.balanceCents)}) before production begins.`;
   const arHtml =
     `<div style="max-width:520px;margin:0 auto">` +
     `<p style="font-family:Georgia,serif;font-size:22px;color:#18181B">Thank you${first ? `, ${esc(first)}` : ""}.</p>` +
@@ -496,7 +555,7 @@ app.get("/health", (_req, res) => res.send("ok"));
 // name the .html files, so /index.html and /index → / (/x/index.html → /x/),
 // and an extensionless /about → /about.html — each only when that page is a
 // file under web/. API routes, "/", dotfiles and anything else pass on.
-const API_PATH = /^\/(inquiry|band-request|band-order|webhooks|health)(\/|$)/;
+const API_PATH = /^\/(inquiry|band-request|band-order|band-quote|account\/api|webhooks|health)(\/|$)/;
 function pageRedirect(req, res, next) {
   if (req.method !== "GET" && req.method !== "HEAD") return next();
   if (req.path === "/" || API_PATH.test(req.path)) return next();
@@ -562,6 +621,9 @@ app.use((req, res, next) => {
   if (to) return res.redirect(301, to);
   next();
 });
+
+// My account — /account/api/* relays to the Moksh Diam customer API (commerce.js).
+mountAccountApi(app);
 
 // Static assets (media incl. hero.mp4 lives under web/media)
 // Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.
@@ -661,13 +723,24 @@ async function bandRequest(req, res) {
   if (!name || !EMAIL_RE.test(email)) return back("fields");
   if (!process.env.STRIPE_SECRET_KEY) { console.error("[band] STRIPE_SECRET_KEY unset"); return back("error"); }
   const { spec, metalCents, laborCents, summary, quoteNeeded } = priced;
-  const estimateCents = quoteNeeded ? null : metalCents + laborCents;
-  const depositCents = bandDepositCents(estimateCents);
-  const balanceCents = estimateCents == null ? null : Math.max(0, estimateCents - depositCents);
+  const code = normaliseCode(req.body?.discount_code);
+  const pricing = await priceBandRequest(priced, {
+    code, country: normaliseCountry(req.body?.country), region: clean(req.body?.region).slice(0, 40) || null, email,
+  });
+  // A code the customer typed must either apply or stop the request — never vanish quietly.
+  if (code && !quoteNeeded && !pricing.discount) return back(`code&code=${encodeURIComponent(code)}`);
+  const { depositCents, balanceCents } = pricing;
   // What the browser showed is not trusted for the charge, but a mismatch is worth a log line.
   const shown = Number(req.body?.deposit_cents);
   if (Number.isFinite(shown) && shown !== depositCents) console.log(`[band] deposit shown ${shown} ≠ computed ${depositCents} (${spec.ref})`);
-  spec.deposit = { depositCents, estimateCents, balanceCents, quoteNeeded, isEstimate: true, rate: BAND_DEPOSIT_RATE, minCents: BAND_DEPOSIT_MIN_CENTS, notes };
+  // estimateCents is what the customer owes in all (after a code, with shipping and tax), so
+  // bandDepositOf's balance = estimate − deposit holds; the parts are kept beside it.
+  spec.deposit = {
+    depositCents, estimateCents: pricing.totalCents, balanceCents, quoteNeeded, isEstimate: true, rate: BAND_DEPOSIT_RATE, minCents: BAND_DEPOSIT_MIN_CENTS, notes,
+    listCents: pricing.listCents, discount: pricing.discount, notedCode: pricing.notedCode || null, shipping: pricing.shipping,
+    tax: { cents: pricing.taxCents, mode: pricing.taxMode, included: pricing.taxIncluded, title: pricing.taxTitle }, country: pricing.country,
+  };
+  const estimateCents = pricing.estimateCents; // merchandise after the code — the order's subtotal
   const origin = `${req.protocol}://${req.get("host")}`;
   const designUrl = `${origin}/wedding-bands.html#${String(req.body?.hash || "").replace(/^#/, "").slice(0, 2000)}`;
   let order;
@@ -677,7 +750,7 @@ async function bandRequest(req, res) {
       body: {
         design_ref: spec.ref, design_url: designUrl, spec, spec_text: clean(req.body?.spec_text) || null,
         customer_name: name, email, phone,
-        metal_cents: quoteNeeded ? 0 : metalCents, labor_cents: quoteNeeded ? 0 : laborCents, subtotal_cents: estimateCents || 0, shipping_cents: 0, currency: "USD", status: "pending_payment",
+        metal_cents: quoteNeeded ? 0 : metalCents, labor_cents: quoteNeeded ? 0 : laborCents, subtotal_cents: estimateCents || 0, shipping_cents: (pricing.shipping && pricing.shipping.cents) || 0, currency: "USD", status: "pending_payment",
       },
     });
     order = rows && rows[0];
@@ -686,7 +759,18 @@ async function bandRequest(req, res) {
     console.error("[band] could not save the request", e.message);
     return back("error");
   }
-  await bandEvent(order.id, "placed", "customer", { data: { design_ref: spec.ref, pair: !!spec.pair, deposit_cents: depositCents, estimate_cents: estimateCents, quote_needed: quoteNeeded } });
+  if (pricing.discount) {
+    // Count the code now, against this request; a checkout that fails or expires gives it back.
+    let result = "error";
+    try {
+      result = await redeemDiscount(sb, { code: pricing.discount.code, orderId: order.id, email, subtotalCents: pricing.listCents, amountCents: pricing.discount.cents });
+    } catch (e) { console.error("[band] redeem_discount failed", e.message); }
+    if (result !== "redeemed" && result !== "existing") {
+      await sb(`band_orders?id=eq.${order.id}&status=eq.pending_payment`, { method: "PATCH", body: { status: "cancelled", updated_at: new Date().toISOString() } }).catch(() => {});
+      return back(`code&code=${encodeURIComponent(pricing.discount.code)}`);
+    }
+  }
+  await bandEvent(order.id, "placed", "customer", { data: { design_ref: spec.ref, pair: !!spec.pair, deposit_cents: depositCents, estimate_cents: pricing.totalCents, quote_needed: quoteNeeded, discount_code: pricing.discount?.code ?? null, discount_cents: pricing.discount?.cents ?? 0, shipping_cents: pricing.shipping?.cents ?? 0, tax_cents: pricing.taxCents } });
   const what = spec.pair ? "wedding bands" : "wedding band";
   const params = {
     mode: "payment",
@@ -696,7 +780,7 @@ async function bandRequest(req, res) {
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][unit_amount]": String(depositCents),
     "line_items[0][price_data][product_data][name]": `Deposit — ${what} ${spec.ref}`,
-    "line_items[0][price_data][product_data][description]": `${quoteNeeded ? "Flat deposit; the price is quoted by the atelier" : `${Math.round(BAND_DEPOSIT_RATE * 100)}% of the ${money(estimateCents)} estimate`}. ${summary}`.slice(0, 500),
+    "line_items[0][price_data][product_data][description]": `${quoteNeeded ? "Flat deposit; the price is quoted by the atelier" : `${Math.round(BAND_DEPOSIT_RATE * 100)}% of the ${money(estimateCents)} estimate${pricing.discount ? ` (code ${pricing.discount.code})` : ""}`}. ${summary}`.slice(0, 500),
     "metadata[mode]": BAND_MODE,
     "metadata[band_order_id]": order.id,
     "metadata[design_ref]": spec.ref,
@@ -713,6 +797,7 @@ async function bandRequest(req, res) {
   } catch (e) {
     console.error("[band] checkout error", e);
     await sb(`band_orders?id=eq.${order.id}&status=eq.pending_payment`, { method: "PATCH", body: { status: "cancelled", updated_at: new Date().toISOString() } }).catch(() => {});
+    if (pricing.discount) await releaseDiscount(sb, order.id);
     back(e.code === "email_invalid" || e.param === "customer_email" ? "fields" : "error");
   }
 }
@@ -759,7 +844,10 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (r
       // Never paid: the row stays pending_payment (the admin's Abandoned tab); only the timeline says why.
       const id = session.metadata.band_order_id;
       const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment&select=id`);
-      if (rows && rows.length) await bandEvent(id, "expired", "stripe");
+      if (rows && rows.length) {
+        await bandEvent(id, "expired", "stripe");
+        await releaseDiscount(sb, id); // a code held by an abandoned checkout is free again
+      }
     }
   } catch (e) {
     console.error("[webhook] delivery error", e);

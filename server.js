@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mountAccountApi, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
+import { mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -555,7 +555,7 @@ app.get("/health", (_req, res) => res.send("ok"));
 // name the .html files, so /index.html and /index → / (/x/index.html → /x/),
 // and an extensionless /about → /about.html — each only when that page is a
 // file under web/. API routes, "/", dotfiles and anything else pass on.
-const API_PATH = /^\/(inquiry|band-request|band-order|band-quote|account\/api|webhooks|health)(\/|$)/;
+const API_PATH = /^\/(inquiry|band-request|band-order|band-quote|account\/api|api\/promos|api\/signup|webhooks|health)(\/|$)/;
 function pageRedirect(req, res, next) {
   if (req.method !== "GET" && req.method !== "HEAD") return next();
   if (req.path === "/" || API_PATH.test(req.path)) return next();
@@ -624,6 +624,8 @@ app.use((req, res, next) => {
 
 // My account — /account/api/* relays to the Moksh Diam customer API (commerce.js).
 mountAccountApi(app);
+// Announcements and the sign-up pop-up — /api/promos, /api/signup (commerce.js).
+mountPromos(app);
 
 // Static assets (media incl. hero.mp4 lives under web/media)
 // Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.

@@ -284,3 +284,14 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
   - pop-up sign-up with the code
   - the pop-up not returning after sign-up
   - the builder page with the bar, on phone and desktop
+
+## 2026-11-04 — Stripe Tax on the band deposit (branch `claude/deposit-stripe-tax`)
+
+- When the admin's tax mode is **Stripe Tax**, the deposit checkout sends:
+  - `automatic_tax[enabled]`
+  - `billing_address_collection=required`
+  - the line's `tax_behavior` (inclusive if prices include tax)
+- Moksh PR #76 does the same for the balance, which also collects the shipping address. Together, the band is taxed on its full price.
+- **If Stripe refuses** (Stripe Tax not activated), the deposit is charged without tax and a `payment_failed` admin notification says so.
+- **Request step:** the tax row reads "Added at payment, for your address" (`band-builder.js?v=40`).
+- **Tested with fake Stripe/Supabase:** tax on; tax refused (fallback + notice); manual mode unchanged.

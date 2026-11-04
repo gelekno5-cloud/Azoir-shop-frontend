@@ -792,8 +792,22 @@ async function bandRequest(req, res) {
     success_url: `${origin}/band-request/paid?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/wedding-bands.html?order=cancelled`,
   };
+  // Stripe Tax (the admin's tax mode): the deposit is taxed for the customer's billing address, as the
+  // balance is later, so the two together are taxed on the full price.
+  const taxParams = pricing.taxMode === "stripe"
+    ? { "automatic_tax[enabled]": "true", billing_address_collection: "required", "line_items[0][price_data][tax_behavior]": pricing.taxIncluded ? "inclusive" : "exclusive" }
+    : {};
   try {
-    const session = await stripe("checkout/sessions", params);
+    let session;
+    try {
+      session = await stripe("checkout/sessions", { ...params, ...taxParams });
+    } catch (e) {
+      if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
+      // Stripe Tax isn't switched on in the Stripe account: take the deposit without it, and say so.
+      console.error("[band] Stripe Tax refused, charging the deposit without it:", e.message);
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so the deposit for ${order.order_number} was charged without tax. Turn on Stripe Tax in the Stripe dashboard, or pick another tax mode under Shipping & tax.` } }).catch(() => {});
+      session = await stripe("checkout/sessions", params);
+    }
     await sb(`band_orders?id=eq.${order.id}`, { method: "PATCH", body: { stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() } });
     res.redirect(303, session.url);
   } catch (e) {

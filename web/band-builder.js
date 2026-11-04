@@ -1336,7 +1336,64 @@ function syncRequest(est, dep) {
   $("bbReqDeposit").textContent = `${usd(dep.depositCents)}${dep.quoteNeeded ? " · flat deposit" : ` · ${Math.round(DEPOSIT.rate * 100)}% of the estimate`}`;
   $("bbReqBalance").textContent = dep.quoteNeeded ? "Quoted before production" : `≈ ${usd(dep.balanceCents)} · confirmed first`;
   $("bbReqPayLabel").textContent = `Continue to secure payment · ${usd(dep.depositCents)}`;
+  if (ui.tab === "request") refreshQuote();
 }
+
+// Live pricing from the server: the discount code, shipping to the chosen country and tax come
+// from the Azoir admin's settings (Moksh Diam), and the server's deposit is the one charged.
+const usd2 = (cents) => "$" + (cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 });
+let reqQuote = null, quoteSeq = 0, quoteTimer = 0, appliedCode = "";
+function quoteInputs() {
+  return { country: $("bbReqCountry").value, region: $("bbReqRegion").value.trim(), code: appliedCode, email: $("bbReqEmail").value.trim() };
+}
+function refreshQuote(now = false) {
+  clearTimeout(quoteTimer);
+  quoteTimer = setTimeout(async () => {
+    const seq = ++quoteSeq, inp = quoteInputs();
+    try {
+      const r = await fetch("/band-quote", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spec: JSON.stringify(specJSON()), discount_code: inp.code, country: inp.country, region: inp.region, email: inp.email }) });
+      if (seq !== quoteSeq) return;
+      reqQuote = r.ok ? await r.json() : null;
+    } catch { if (seq === quoteSeq) reqQuote = null; }
+    renderQuote();
+  }, now ? 0 : 350);
+}
+function renderQuote() {
+  const q = reqQuote, msg = $("bbReqCodeMsg");
+  $("bbReqRegion").hidden = !["US", "CA", "AU"].includes($("bbReqCountry").value);
+  if (!q) { $("bbReqDiscRow").hidden = true; $("bbReqTaxRow").hidden = true; $("bbReqTotalRow").hidden = true; return; }
+  // Code
+  if (q.discount) {
+    $("bbReqDiscRow").hidden = false;
+    $("bbReqDiscLabel").textContent = `Code ${q.discount.code}`;
+    $("bbReqDisc").textContent = q.discount.cents ? `−${usd2(q.discount.cents)}` : q.discount.freeShipping ? "Free shipping" : "Applied";
+    msg.textContent = q.discount.title ? `${q.discount.title} — applied.` : "Code applied."; msg.className = "bb-note ok"; msg.hidden = false;
+  } else {
+    $("bbReqDiscRow").hidden = true;
+    if (q.notedCode) { msg.textContent = `We'll apply ${q.notedCode} when a designer quotes your price.`; msg.className = "bb-note ok"; msg.hidden = false; }
+    else if (q.discountError) { msg.textContent = q.discountError.message; msg.className = "bb-note bb-err"; msg.hidden = false; }
+    else msg.hidden = true;
+  }
+  // Shipping and tax (added to the balance, not the deposit)
+  $("bbReqShip").textContent = q.shipping ? `${q.shipping.name} · ${q.shipping.cents ? usd2(q.shipping.cents) : "free"}` : q.quoteNeeded ? "Quoted with the price" : "Arranged by the atelier";
+  const showTax = !q.quoteNeeded && (q.taxMode === "stripe" || q.taxCents > 0);
+  $("bbReqTaxRow").hidden = !showTax;
+  $("bbReqTaxLabel").textContent = q.taxTitle || "Tax";
+  $("bbReqTax").textContent = q.taxMode === "stripe" ? "Added to the balance" : `${usd2(q.taxCents)}${q.taxIncluded ? " · included" : ""}`;
+  $("bbReqTotalRow").hidden = q.totalCents == null || (!q.discount && !q.shipping && !showTax);
+  if (q.totalCents != null) $("bbReqTotal").textContent = `${usd2(q.totalCents)} · estimate`;
+  const atMinimum = !q.quoteNeeded && Math.round((q.estimateCents || 0) * DEPOSIT.rate) < DEPOSIT.minCents;
+  $("bbReqDeposit").textContent = `${usd(q.depositCents)}${q.quoteNeeded ? " · flat deposit" : atMinimum ? " · minimum deposit" : ` · ${Math.round(DEPOSIT.rate * 100)}% of the estimate`}`;
+  $("bbReqBalance").textContent = q.quoteNeeded ? "Quoted before production" : `≈ ${usd(q.balanceCents)} · confirmed first`;
+  $("bbReqPayLabel").textContent = `Continue to secure payment · ${usd(q.depositCents)}`;
+  if (ui.tab === "request") $("bbRequestLabel").textContent = `Pay ${usd(q.depositCents)} deposit`;
+}
+$("bbReqCodeApply").addEventListener("click", () => { appliedCode = $("bbReqCode").value.trim().toUpperCase().replace(/\s+/g, ""); refreshQuote(true); });
+$("bbReqCode").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("bbReqCodeApply").click(); } });
+$("bbReqCode").addEventListener("input", () => { if (!$("bbReqCode").value.trim() && appliedCode) { appliedCode = ""; refreshQuote(true); } });
+$("bbReqCountry").addEventListener("change", () => refreshQuote(true));
+$("bbReqRegion").addEventListener("input", () => refreshQuote());
 function openRequest() {
   ui.tab = "request"; syncUI();
   const sc = $("bbScroll");
@@ -1681,7 +1738,10 @@ function placeOrder() {
   f.spec_text.value = specText();
   f.hash.value = location.hash.slice(1);
   f.name.value = name; f.email.value = email; f.phone.value = $("bbReqPhone").value.trim(); f.notes.value = $("bbReqNotes").value.trim();
-  f.deposit_cents.value = String(spec.estimate.depositCents);
+  f.deposit_cents.value = String(reqQuote ? reqQuote.depositCents : spec.estimate.depositCents);
+  // A code typed but never applied still goes with the request: the server applies it or says why not.
+  const typed = $("bbReqCode").value.trim().toUpperCase().replace(/\s+/g, "");
+  f.discount_code.value = typed || appliedCode; f.country.value = $("bbReqCountry").value; f.region.value = $("bbReqRegion").value.trim();
   try { localStorage.setItem("azoir_band_last", location.hash.slice(1)); } catch {}
   $("bbRequest").disabled = true; $("bbReqPay").disabled = true; // one checkout per click
   $("bbReqPayLabel").textContent = "Opening secure payment…";
@@ -1710,10 +1770,11 @@ window.addEventListener("pageshow", () => { $("bbRequest").disabled = false; $("
     weight: "That band's weight didn't check out against its dimensions. Adjust the width or depth slightly and try again, or send the design to a designer.",
     busy: "That was quick — please wait a moment and try again.",
     error: "We couldn't open the payment page just now. Your design is saved; please try again in a minute or email hello@azoir.co.",
+    code: `The code ${(q.get("code") || "").slice(0, 40)} can't be used on this request — it may have expired or been used up. No payment was taken; your design is saved, so try again without it.`,
   }[code];
   if (msg) { const n = $("bbNotice"); n.textContent = msg; n.hidden = false; }
-  if (code === "fields") ui.tab = "request";
-  q.delete("order"); const rest = q.toString();
+  if (code === "fields" || code === "code") ui.tab = "request";
+  q.delete("order"); q.delete("code"); const rest = q.toString();
   try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch {}
 })();
 

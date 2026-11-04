@@ -235,3 +235,26 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - **Admin side (Moksh repo, PR `feat/band-orders`):** `/app/band-orders` (tabs New / In production / Ready to ship / Shipped / Complete / Cancelled / Abandoned, search), `/app/band-orders/:id` (spec per band, start production → ready → ship with tracking + customer email, Stripe refund / cancel-and-refund, notes, timeline) and the **order PDF** at `/app/band-orders/:id/order.pdf` (house letterhead; receipt + bench work order in one).
 - Env on azoir-retail: nothing new required (`SUPABASE_*`, `STRIPE_*`, `RESEND_API_KEY` already set). Optional `ADMIN_URL` (default `https://mokshdiam.com`) for the link in the atelier email.
 - Tested end to end locally against stubbed Stripe/Supabase/Resend (`node --import=<stub> server.js`); **no live card run yet**.
+
+## 2026-11-04 — azoir.co connected to the commerce backend (branch `claude/connect-commerce`)
+
+- **Backend:** the Moksh Diam admin (mokshdiam.com) now has customers, discount codes, shipping zones, tax and email templates (Moksh PRs #70–#73). azoir.co uses them through `commerce.js`; the Supabase project is the same shared one (`avmcksqllodvspbtcmgf`). The old Edge Functions in `supabase/` are untouched.
+- **Band checkout (Request step):** new "Delivery & offers" group with a country, a state and a discount code. `POST /band-quote` (JSON, read-only, 60/10 min per IP) prices the spec with `priceBandSpec`, then sends the estimate to Moksh's `POST /api/storefront/v1/cart/quote` as a `customLines` item. That returns the code's discount, the zone's shipping and the tax.
+  - **Deposit:** 25% of the *discounted* estimate (min $250). Shipping and tax go into the balance.
+  - **Unpriced designs:** a code is noted for the atelier, not applied.
+  - **Backend down:** the plain estimate stands, and a typed code is refused with a message.
+- **`/band-request`:** re-prices the same way and refuses a code that doesn't apply (`?order=code&code=X`). After saving the row it calls `rpc/redeem_discount` (order_ref `band:<id>`). A failed checkout, and `checkout.session.expired`, call `rpc/release_discount`. The Moksh admin also releases a code use when a band order is cancelled.
+  - **`spec.deposit` now holds:** `estimateCents` = the total owed (after the code, plus shipping and tax), `listCents`, `discount`, `shipping`, `tax`, `country`, `notedCode`.
+  - **Order columns:** `subtotal_cents` = the discounted estimate; `shipping_cents` = the shipping quote.
+  - **Emails:** the deposit emails list the code, shipping and tax.
+- **My account (`/account.html` + `account.js`, "Account" in every page's nav):**
+  - Sign in by an emailed 6-digit code (sent by Moksh, template editable in the admin).
+  - Then: orders (band orders + retail commissions by email), details and marketing opt-in, addresses, saved pieces.
+  - **Proxy:** `/account/api/*` (`mountAccountApi`) relays to Moksh's customer API. The access token lives in an httpOnly `azoir_customer` cookie (SameSite=Lax, Secure on https).
+  - **Request rules:** non-GET requests must be JSON; DELETE must be same-origin. Per-IP limits apply (6 codes / 12 sign-ins per 15 min).
+- **Env:** optional `MOKSH_API_URL` (defaults to `ADMIN_URL`, then https://mokshdiam.com).
+- **Ship order:** merge Moksh #73 (custom lines in the quote) **before** deploying this. Until then the quote can't price bands, so the plain estimate shows and codes are refused.
+- **Tested locally:**
+  - Against a stand-in for the Moksh API: sign-in, orders, address add, and pricing (code + NY tax + free shipping).
+  - With fake Stripe/Supabase: a request with a code redeems and opens checkout; a bad code stops before any row is saved.
+  - No live card run.

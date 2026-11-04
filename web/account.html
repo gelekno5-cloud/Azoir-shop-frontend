@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My account | Azoir & Co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="azoir.css?v=16">
+
+<meta name="description" content="Sign in to your Azoir &amp; Co. account to see your orders, saved addresses and wishlist.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#FAF9F6">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<style>
+.acct{max-width:760px;margin:0 auto;padding:clamp(130px,14vw,170px) clamp(22px,5.5vw,40px) 90px}
+.acct h1{font-size:clamp(34px,5vw,48px);margin:10px 0 10px}
+.acct .lede{color:var(--ink-2);line-height:1.6;margin-bottom:28px}
+.acct-card{border:1px solid var(--hairline);background:#fff;padding:24px;margin-bottom:18px}
+.acct-card h2{font-family:'Instrument Serif',Georgia,serif;font-size:24px;margin-bottom:14px}
+.acct-field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--stone)}
+.acct-field input,.acct-field select{font:inherit;font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);background:#fff;border:1px solid var(--hairline-2);border-radius:0;padding:12px 14px}
+.acct-field input:focus,.acct-field select:focus{outline:none;border-color:var(--oxblood)}
+.acct-field input:disabled{background:var(--paper-2);color:var(--stone)}
+.acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.acct-check{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2);margin:4px 0 16px}
+.acct-msg{font-size:14px;line-height:1.5;color:var(--ink-2)}
+.acct-msg.err{color:#A3263A}
+p.acct-msg{margin-top:10px}
+.acct-code{font-family:ui-monospace,Menlo,monospace;font-size:22px!important;letter-spacing:.4em!important;text-align:center}
+.acct-row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid var(--hairline);font-size:14.5px}
+.acct-row:first-child{border-top:0;padding-top:0}
+.acct-row small{display:block;color:var(--stone);font-size:12.5px;margin-top:2px}
+.acct-row .amt{white-space:nowrap;text-align:right}
+.acct-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:6px}
+.acct-link{background:none;border:0;padding:0;font:inherit;font-size:13px;color:var(--oxblood);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.acct-empty{color:var(--stone);font-size:14.5px;line-height:1.6}
+.acct-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.acct [hidden]{display:none!important}
+@media(max-width:560px){.acct-grid{grid-template-columns:minmax(0,1fr)}.acct-card{padding:18px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navlinks" id="navlinks">
+    <div class="nav-l">
+      <a href="/gallery.html">Work</a>
+      <a href="/commission.html">Commission</a>
+      <a href="/wedding-bands.html">Wedding Bands</a>
+    </div>
+    <div class="nav-r">
+      <a href="/how.html">Process</a>
+      <a href="/about.html">About</a>
+      <a href="/account.html" class="active">Account</a>
+      <a href="/commission.html" class="nav-cta">Begin a Commission</a>
+    </div>
+  </div>
+  <a href="/" class="brand">AZOIR &amp; CO.</a>
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
+</nav>
+
+
+<main class="acct" id="acct">
+  <span class="eyebrow">Azoir &amp; Co.</span>
+  <div class="acct-top"><h1 class="serif" id="acctTitle">Your account</h1><button type="button" class="acct-link" id="acctSignOut" hidden>Sign out</button></div>
+  <p class="lede" id="acctLede">Sign in with your email and we'll send you a one-time code — no password needed. New here? The same code creates your account.</p>
+
+  <section class="acct-card" id="acctSignIn" hidden>
+    <form id="acctEmailForm" novalidate>
+      <label class="acct-field">Email<input type="email" id="acctEmail" autocomplete="email" required maxlength="254"></label>
+      <button class="btn-fill" type="submit" id="acctEmailBtn">Send my code</button>
+    </form>
+    <form id="acctCodeForm" novalidate hidden>
+      <p class="acct-msg" id="acctCodeSent"></p>
+      <label class="acct-field" style="margin-top:14px">6-digit code<input type="text" id="acctCode" class="acct-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+      <div class="acct-actions"><button class="btn-fill" type="submit" id="acctCodeBtn">Sign in</button><button type="button" class="acct-link" id="acctRestart">Use another email</button></div>
+    </form>
+    <p class="acct-msg err" id="acctSignInErr" role="alert" hidden></p>
+  </section>
+
+  <div id="acctBody" hidden>
+    <section class="acct-card">
+      <h2>Orders</h2>
+      <div id="acctOrders"><p class="acct-empty">Loading…</p></div>
+    </section>
+
+    <section class="acct-card">
+      <h2>Details</h2>
+      <form id="acctProfile" novalidate>
+        <div class="acct-grid">
+          <label class="acct-field">First name<input id="pFirst" autocomplete="given-name" maxlength="80"></label>
+          <label class="acct-field">Last name<input id="pLast" autocomplete="family-name" maxlength="80"></label>
+          <label class="acct-field">Email<input id="pEmail" type="email" disabled></label>
+          <label class="acct-field">Phone<input id="pPhone" type="tel" autocomplete="tel" maxlength="40"></label>
+        </div>
+        <label class="acct-check"><input type="checkbox" id="pMarketing"> Send me news of new collections and private events</label>
+        <div class="acct-actions"><button class="btn-outline sm" type="submit">Save details</button><span class="acct-msg" id="pMsg" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="acct-card">
+      <div class="acct-top"><h2>Addresses</h2><button type="button" class="acct-link" id="aAdd">Add an address</button></div>
+      <div id="acctAddresses"></div>
+      <form id="acctAddrForm" novalidate hidden style="margin-top:16px">
+        <div class="acct-grid">
+          <label class="acct-field">Name<input name="name" autocomplete="name" maxlength="120"></label>
+          <label class="acct-field">Company (optional)<input name="company" autocomplete="organization" maxlength="120"></label>
+          <label class="acct-field" style="grid-column:1/-1">Address<input name="address1" autocomplete="address-line1" maxlength="200" required></label>
+          <label class="acct-field" style="grid-column:1/-1">Apartment, suite (optional)<input name="address2" autocomplete="address-line2" maxlength="200"></label>
+          <label class="acct-field">City<input name="city" autocomplete="address-level2" maxlength="120" required></label>
+          <label class="acct-field">State / province<input name="province" autocomplete="address-level1" maxlength="80"></label>
+          <label class="acct-field">ZIP / postal code<input name="zip" autocomplete="postal-code" maxlength="20"></label>
+          <label class="acct-field">Country code<input name="countryCode" autocomplete="country" maxlength="2" value="US" required></label>
+          <label class="acct-field">Phone (optional)<input name="phone" autocomplete="tel" maxlength="40"></label>
+        </div>
+        <label class="acct-check"><input type="checkbox" name="isDefault"> Use as my default address</label>
+        <div class="acct-actions"><button class="btn-outline sm" type="submit">Save address</button><button type="button" class="acct-link" id="aCancel">Cancel</button><span class="acct-msg err" id="aMsg" role="alert"></span></div>
+      </form>
+    </section>
+
+    <section class="acct-card">
+      <h2>Saved pieces</h2>
+      <div id="acctWishlist"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><a href="/" class="fbrand">AZOIR &amp; CO.</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="engagement-rings.html">Engagement rings</a><a href="wedding-bands.html">Wedding bands</a><a href="custom-signet-rings.html">Signet rings</a><a href="commission.html">Necklaces &amp; pendants</a><a href="commission.html">Earrings &amp; bracelets</a><a href="heirloom-redesign.html">Heirloom redesign</a></div>
+      <div class="fcol"><h5>Company</h5><a href="how.html">How it works</a><a href="about.html">About us</a><a href="gallery.html">Gallery</a><a href="faq.html">FAQ</a><a href="/journal/">Journal</a></div>
+      <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
+    </div>
+    <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
+  </div>
+</footer>
+
+
+<script src="/analytics.js" defer></script>
+<script src="nav.js?v=1" defer></script>
+<script src="account.js?v=1" defer></script>
+</body>
+</html>

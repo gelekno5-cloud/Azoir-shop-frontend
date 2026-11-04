@@ -21,7 +21,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=15">
+<link rel="stylesheet" href="azoir.css?v=16">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
@@ -116,6 +116,8 @@
 .bb-opt svg circle{stroke:var(--bb-ink)}
 .bb-opt svg circle.mg{fill:var(--bb-ink);stroke:none}
 .bb-opt .sw{width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.1);box-shadow:inset -5px -6px 9px rgba(0,0,0,.14),inset 4px 5px 7px rgba(255,255,255,.75)}
+/* photo metal swatches: the rendered sphere carries its own shading — no overlay */
+.bb-opt .sw.sw-yellow-gold,.bb-opt .sw.sw-white-gold,.bb-opt .sw.sw-rose-gold,.bb-opt .sw.sw-platinum{width:40px;height:40px;box-shadow:none;border-color:rgba(0,0,0,.07)}
 .sw-polished{background:linear-gradient(135deg,#fff 0%,#cfcbc3 35%,#f4f2ee 50%,#b9b4aa 70%,#e9e6e0 100%)}
 .sw-satin{background:repeating-linear-gradient(90deg,#d9d5cd 0 1px,#eceae5 1px 3px)}
 .sw-hammered{background:radial-gradient(circle at 30% 30%,#f2efe9 0 18%,#cfcac0 19% 30%,transparent 31%),radial-gradient(circle at 70% 65%,#f2efe9 0 18%,#cfcac0 19% 30%,transparent 31%),#e2ded6}

@@ -325,16 +325,18 @@ footer{background:var(--ink);color:#B9B6AD;padding:clamp(60px,7vw,88px) 0 40px}
 .wcard:hover{border-color:var(--ink)}
 .wcard.on{border-color:var(--oxblood);background:var(--blue-tint);box-shadow:inset 0 0 0 1px var(--oxblood)}
 .wcard .sw{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0}
-/* Rendered material swatches (web/media/swatches) — the sphere fills the circle */
-.sw-yellow-gold,.sw-white-gold,.sw-rose-gold,.sw-platinum,.sw-silver,.sw-diamond,.sw-lab-diamond,.sw-sapphire{background-size:cover;background-position:center}
-.sw-yellow-gold{background-image:url(media/swatches/metal-yellow-gold.webp)}
-.sw-white-gold{background-image:url(media/swatches/metal-white-gold.webp)}
-.sw-rose-gold{background-image:url(media/swatches/metal-rose-gold.webp)}
-.sw-platinum{background-image:url(media/swatches/metal-platinum.webp)}
-.sw-silver{background-image:url(media/swatches/metal-silver.webp)}
-.sw-diamond{background-image:url(media/swatches/stone-diamond.webp)}
-.sw-lab-diamond{background-image:url(media/swatches/stone-lab-diamond.webp)}
-.sw-sapphire{background-image:url(media/swatches/stone-sapphire.webp)}
+/* Rendered material swatches (web/media/swatches) — the sphere fills the circle.
+   !important on purpose: band-builder.js resets each metal swatch with an inline
+   `style.background` shorthand at init, which would wipe the texture otherwise. */
+.sw-yellow-gold,.sw-white-gold,.sw-rose-gold,.sw-platinum,.sw-silver,.sw-diamond,.sw-lab-diamond,.sw-sapphire{background-size:cover!important;background-position:center!important}
+.sw-yellow-gold{background-image:url(media/swatches/metal-yellow-gold.webp)!important}
+.sw-white-gold{background-image:url(media/swatches/metal-white-gold.webp)!important}
+.sw-rose-gold{background-image:url(media/swatches/metal-rose-gold.webp)!important}
+.sw-platinum{background-image:url(media/swatches/metal-platinum.webp)!important}
+.sw-silver{background-image:url(media/swatches/metal-silver.webp)!important}
+.sw-diamond{background-image:url(media/swatches/stone-diamond.webp)!important}
+.sw-lab-diamond{background-image:url(media/swatches/stone-lab-diamond.webp)!important}
+.sw-sapphire{background-image:url(media/swatches/stone-sapphire.webp)!important}
 .wiz-cards.nudge{animation:wizShake .5s}
 @keyframes wizShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .wizard textarea{width:100%;background:none;border:1px solid var(--hairline-2);border-radius:0;color:var(--ink);

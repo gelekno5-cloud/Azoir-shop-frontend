@@ -176,6 +176,7 @@
     sold_out: 'This piece has just sold. We are sorry to have missed you.',
     no_shipping_to_country: "We don't ship to that country yet. Write to hello@azoir.co and we'll arrange it.",
     invalid_address: 'Please check the address: name, street, city, postal code and country are needed.',
+    state_required: 'Please add your state. US sales tax goes by state.',
     invalid_email: 'Please enter a valid email address.',
     size_required: 'Please choose a size.',
     too_many_requests: 'Too many attempts. Please wait a few minutes and try again.'
@@ -220,7 +221,7 @@
       f[n].setAttribute('aria-invalid', bad ? 'true' : 'false');
       if (bad && !missing) missing = f[n];
     });
-    if (missing) { fail(missing.name === 'email' ? MESSAGES.invalid_email : MESSAGES.invalid_address); missing.focus(); return; }
+    if (missing) { fail(missing.name === 'email' ? MESSAGES.invalid_email : missing.name === 'province' ? MESSAGES.state_required : MESSAGES.invalid_address); missing.focus(); return; }
     pay.disabled = true;
     pay.textContent = 'Reserving your piece…';
     post('/shop/api/checkout', {
@@ -232,7 +233,8 @@
       if (r.status === 200 && r.body.url) { location.href = r.body.url; return; }
       pay.disabled = false;
       pay.textContent = 'Continue to payment';
-      fail(MESSAGES[r.body.error] || "We couldn't start the payment just now. Please try again in a moment.");
+      // A code this page doesn't know yet still shows the server's own wording when it sends one.
+      fail(MESSAGES[r.body.error] || (r.status === 422 && r.body.message) || "We couldn't start the payment just now. Please try again in a moment.");
       if (r.body.error === 'sold_out') { form.hidden = true; $('pcSold').hidden = false; }
     }).catch(function () {
       pay.disabled = false;

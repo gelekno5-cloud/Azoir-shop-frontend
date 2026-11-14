@@ -87,8 +87,8 @@
   function renderOrders(list) {
     const el = $("acctOrders");
     if (!list) { el.innerHTML = `<p class="acct-empty">Your orders couldn't be loaded just now.</p>`; return; }
-    if (!list.length) { el.innerHTML = `<p class="acct-empty">No orders yet. When you reserve a <a href="/wedding-bands.html" style="text-decoration:underline">wedding band</a> or commission a piece with this email, it appears here.</p>`; return; }
-    el.innerHTML = list.map((o) => `<div class="acct-row"><div><b>${esc(o.number)}</b> · ${esc(o.kind === "band" ? "Wedding band" : "Commission")}<small>${esc(o.statusLabel)} · ${esc(date(o.processedAt))}</small></div><div class="amt">${o.totalPrice ? esc(money(o.totalPrice)) : "Price to be confirmed"}${o.refunded ? `<small>${esc(money(o.refunded))} refunded</small>` : ""}</div></div>`).join("");
+    if (!list.length) { el.innerHTML = `<p class="acct-empty">No orders yet. When you reserve a <a href="/wedding-bands.html" style="text-decoration:underline">wedding band</a>, buy a <a href="/ready-to-ship" style="text-decoration:underline">Ready to Ship</a> piece or commission one with this email, it appears here.</p>`; return; }
+    el.innerHTML = list.map((o) => `<div class="acct-row"><div><b>${esc(o.number)}</b> · ${esc(o.kind === "band" ? "Wedding band" : o.kind === "stock" ? "Ready to Ship" : "Commission")}<small>${esc(o.statusLabel)} · ${esc(date(o.processedAt))}</small></div><div class="amt">${o.totalPrice ? esc(money(o.totalPrice)) : "Price to be confirmed"}${o.refunded ? `<small>${esc(money(o.refunded))} refunded</small>` : ""}</div></div>`).join("");
   }
 
   function renderWishlist(list) {

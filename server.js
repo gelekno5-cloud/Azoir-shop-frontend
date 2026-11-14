@@ -301,7 +301,7 @@ function priceBandSpec(raw) {
     }
     let zoneGrams = 0, boundDensity = 0;
     for (const z of b.zones) {
-      if (!z || !(z.metal in BAND_RATES) || !str(z.metalName, 40) || !str(z.finishName, 40)) return { reject: "invalid" };
+      if (!z || !Object.hasOwn(BAND_RATES, z.metal) || !str(z.metalName, 40) || !str(z.finishName, 40)) return { reject: "invalid" };
       const g = num(z.weightG, 0, 120);
       if (g == null) return { reject: "invalid" };
       if (BAND_RATES[z.metal] == null) quoteNeeded = true;

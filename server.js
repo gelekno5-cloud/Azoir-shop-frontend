@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
+import { mountShop } from "./shop.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -626,6 +627,8 @@ app.use((req, res, next) => {
 mountAccountApi(app);
 // Announcements and the sign-up pop-up — /api/promos, /api/signup (commerce.js).
 mountPromos(app);
+// Ready to Ship — /shop/api/* and /ready-to-ship/:handle relay to the backend's Azoir store (shop.js).
+mountShop(app, { webDir: WEB });
 
 // Static assets (media incl. hero.mp4 lives under web/media)
 // Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.

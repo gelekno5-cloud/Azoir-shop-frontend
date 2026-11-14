@@ -91,7 +91,9 @@
     var cmp = $('pcCompare');
     cmp.hidden = !variant.compareAtPrice;
     cmp.textContent = variant.compareAtPrice ? money(variant.compareAtPrice) : '';
-    var ok = variant.availableForSale;
+    // Back from Stripe: the piece reads as sold only because this shopper's own checkout still holds
+    // it. Checking out again releases that hold first, so keep Buy available.
+    var ok = variant.availableForSale || /[?&]cancelled=1/.test(location.search);
     $('pcBuy').hidden = !ok || !$('pcForm').hidden;
     $('pcSold').hidden = ok;
     if (!ok) $('pcForm').hidden = true;
@@ -212,7 +214,8 @@
     e.preventDefault();
     err.hidden = true;
     var f = form.elements, missing = null;
-    ['email', 'name', 'line1', 'city', 'postalCode'].forEach(function (n) {
+    // US sales tax goes by state, so a US address needs one.
+    ['email', 'name', 'line1', 'city', 'postalCode'].concat(f.countryCode.value === 'US' ? ['province'] : []).forEach(function (n) {
       var bad = !f[n].value.trim() || (n === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f[n].value.trim()));
       f[n].setAttribute('aria-invalid', bad ? 'true' : 'false');
       if (bad && !missing) missing = f[n];

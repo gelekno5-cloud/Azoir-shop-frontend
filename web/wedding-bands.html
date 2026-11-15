@@ -241,12 +241,44 @@ body.tryon-lock{overflow:hidden}
 .bb-doc-meta{text-align:right;font-size:12px;color:#55554F;line-height:1.5}
 .bb-doc-meta b{display:block;font-size:17px;color:#242522;letter-spacing:.1em;font-weight:600}
 .bb-doc-snap{display:block;width:100%;max-height:320px;object-fit:contain;border:1px solid #DDD8D0;border-radius:2px;margin-bottom:26px;background:#fff}
-.bb-doc-band{display:grid;grid-template-columns:270px 1fr;gap:10px 24px;margin-bottom:28px;break-inside:avoid;page-break-inside:avoid}
-.bb-doc-band h2{grid-column:1/-1;font-family:'Instrument Serif',Georgia,serif;font-size:24px;font-weight:500;margin:0 0 2px;color:#242522}
+.bb-doc-band{margin-bottom:34px;padding:0}
+.bb-doc-band+.bb-doc-band{border-top:1px solid #242522;padding-top:26px}
+.bb-doc-ref{display:none;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#777771;margin-bottom:6px}
+.bb-doc-band h2{font-family:'Instrument Serif',Georgia,serif;font-size:26px;font-weight:500;margin:0 0 12px;color:#242522;break-after:avoid;page-break-after:avoid}
+.bb-doc-keep{break-inside:avoid;page-break-inside:avoid}
+/* make to: the numbers the bench works from */
+.bb-doc-make{display:grid;grid-template-columns:1.25fr repeat(4,minmax(0,1fr));border-top:1px solid #242522;border-bottom:1px solid #242522;margin-bottom:16px}
+.bb-doc-make>div{min-width:0;padding:10px 12px 12px;border-left:1px solid #DDD8D0;display:grid;grid-template-rows:subgrid;grid-row:span 2} /* label row + figure row shared by every cell: a wrapped label cannot drop one figure */
+.bb-doc-make>div:first-child{border-left:0;padding-left:0}
+.bb-doc-make dt,.bb-doc-group h3,.bb-doc figcaption{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#777771;font-weight:600}
+.bb-doc-make dd{margin-top:4px;font-family:'Instrument Serif',Georgia,serif;font-size:32px;line-height:1.05;font-variant-numeric:lining-nums;color:#242522}
+.bb-doc-make dd span,.bb-doc-make dd small{font-family:'Inter',system-ui,sans-serif;font-size:12px;line-height:1.4;color:#55554F}
+.bb-doc-make dd span{margin-left:5px}
+.bb-doc-make dd small{display:block;margin-top:4px}
+/* pictures: the three-quarter view large, the other views small beside it */
+.bb-doc-pics{display:grid;grid-template-columns:3fr 2fr;gap:12px;align-items:start;margin-bottom:22px}
+.bb-doc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bb-doc figure{min-width:0}
+.bb-doc figure img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;border:1px solid #DDD8D0;border-radius:2px;background:#fff}
+.bb-doc figcaption{margin-top:5px;font-size:10px}
+/* drawing + facts: a float, not a grid, so a long block can break across printed pages */
+.bb-doc-body,.bb-doc-facts{display:flow-root}
+.bb-doc-sec{float:left;width:340px;margin:0 28px 10px 0}
 .bb-doc-sec svg{max-width:100%;height:auto;display:block}
-.bb-doc table{width:100%;border-collapse:collapse;align-self:start}
-.bb-doc td{padding:6px 0;border-bottom:1px solid #DDD8D0;vertical-align:top}
-.bb-doc td:first-child{color:#777771;width:36%;padding-right:12px}
+.bb-doc-group{margin-bottom:18px;break-inside:avoid;page-break-inside:avoid}
+.bb-doc-group h3{padding-bottom:6px;border-bottom:1px solid #242522}
+.bb-doc-group dl>div{display:grid;grid-template-columns:38% minmax(0,1fr);gap:12px;padding:6px 0;border-bottom:1px solid #DDD8D0}
+.bb-doc-group dt{color:#777771}
+.bb-doc-group dd{overflow-wrap:anywhere}
+.bb-doc-eng{font-size:24px;line-height:1.15}
+.bb-doc-eng-script{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500}
+.bb-doc-eng-serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500}
+.bb-doc-eng-sans{font-family:'DM Sans',system-ui,sans-serif;font-weight:400;font-size:20px}
+.bb-doc-zones{width:100%;border-collapse:collapse;font-size:12.5px}
+.bb-doc-zones th,.bb-doc-zones td{padding:6px 10px 6px 0;border-bottom:1px solid #DDD8D0;text-align:left;vertical-align:top}
+.bb-doc-zones th{font-weight:400;color:#777771;vertical-align:bottom}
+.bb-doc-zones th:last-child,.bb-doc-zones td:last-child{padding-right:0;text-align:right}
+.bb-doc-zones td:last-child{white-space:nowrap}
 .bb-doc-foot{margin-top:26px;font-size:11px;color:#777771;border-top:1px solid #DDD8D0;padding-top:12px;line-height:1.6}
 .bb-doc-link{word-break:break-all;color:#9A978E}
 @media print{
@@ -255,7 +287,22 @@ body.tryon-lock{overflow:hidden}
   .bb-sheet{position:static;display:block;overflow:visible}
   .bb-sheet-bar{display:none}
   .bb-doc{max-width:none;padding:0}
+  .bb-doc-ref{display:block}
+  .bb-doc-band+.bb-doc-band{break-before:page;page-break-before:always;border-top:0;padding-top:0}
   @page{margin:14mm}
+}
+/* screen only: a printed page is narrower than 900px and keeps the wide layout */
+@media screen and (max-width:900px){
+  .bb-doc{padding:26px 18px 48px}
+  .bb-doc-make{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bb-doc-make>div{border-left:0;border-top:1px solid #DDD8D0;padding-left:0}
+  .bb-doc-make>div:first-child{grid-column:1/-1;border-top:0}
+  .bb-doc-make>div:nth-child(odd):not(:first-child){border-left:1px solid #DDD8D0;padding-left:12px}
+  .bb-doc-make dd{font-size:28px}
+  .bb-doc-pics{grid-template-columns:minmax(0,1fr)}
+  .bb-doc-hero{max-width:560px}
+  .bb-doc-tiles{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .bb-doc-sec{float:none;width:auto;margin:0 0 14px}
 }
 @media(max-width:1100px){.bb-app{grid-template-columns:minmax(0,1fr) 400px}.bb-intro{max-width:340px}}
 @media(max-width:900px){
@@ -277,7 +324,6 @@ body.tryon-lock{overflow:hidden}
   .bb-pairrow{grid-template-columns:1fr}
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
-  .bb-doc-band{grid-template-columns:1fr}
   .bb-viewseg{top:10px;right:auto;left:50%;transform:translateX(-50%)}
   .bb-app.tryon-full .bb-stage{position:fixed;inset:0;height:100dvh;min-height:0;z-index:70;box-shadow:none}
   .bb-app.tryon-full .bb-viewseg{display:none}
@@ -714,7 +760,7 @@ body.tryon-lock{overflow:hidden}
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=41"></script>
+<script type="module" src="band-builder.js?v=42"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 <script src="/promo.js?v=1" defer></script>

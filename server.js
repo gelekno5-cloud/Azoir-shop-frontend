@@ -692,6 +692,14 @@ app.post("/inquiry", async (req, res) => {
   }
 });
 
+// Design fee link for a commission that arrived by email, DM or phone. The atelier hands out
+// azoir.co/start/<token>; the pay page itself is served by the admin.
+app.get("/start/:token", (req, res) => {
+  const token = String(req.params.token || "");
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return res.redirect("/commission.html");
+  res.redirect(`${ADMIN_URL}/pay/fee/${token}`);
+});
+
 // Stripe success redirect. A failed lookup still thanks the customer — the
 // webhook delivers a paid request regardless.
 app.get("/inquiry/paid", async (req, res) => {

@@ -11,9 +11,9 @@
   var AWAY = "Our concierge is away from the desk — email hello@azoir.co and a designer will reply within one business day.";
   var EMAIL = "hello@azoir.co";
   var PATHS = ["/commission.html", "/wedding-bands.html", "/ring-size.html", "/materials.html",
-    "/care.html", "/shipping.html", "/faq.html", "/how.html", "/gallery.html"];
+    "/care.html", "/shipping.html", "/faq.html", "/how.html", "/gallery.html", "/about.html"];
   // Exact matches only: the longest token wins at each position.
-  var LINK_RE = /(\/(?:commission|wedding-bands|ring-size|materials|care|shipping|faq|how|gallery)\.html|hello@azoir\.co)/g;
+  var LINK_RE = /(\/(?:commission|wedding-bands|ring-size|materials|care|shipping|faq|how|gallery|about)\.html|hello@azoir\.co)/g;
   var KEY_HIST = "cz.history", KEY_OPEN = "cz.open";
 
   // sessionStorage can be unavailable (privacy modes) — degrade to in-memory.
@@ -82,7 +82,8 @@
 
   // ── Rendering ──────────────────────────────────────────────────────────────
   function linkify(el, text) {
-    var parts = String(text).split(LINK_RE);
+    // Backstop: strip any **bold** markers the model slips in before linking.
+    var parts = String(text).replace(/\*\*(.+?)\*\*/g, "$1").split(LINK_RE);
     for (var i = 0; i < parts.length; i++) {
       var part = parts[i];
       if (!part) continue;
@@ -138,6 +139,7 @@
     panel.hidden = false; // the [hidden] guard only matters before the stylesheet loads
     sset(KEY_OPEN, "1");
     renderAll();
+    if (busy) showThinking(); // a request is in flight — renderAll wiped the dots
     // A forced reflow commits the current styles before the class flips, so the
     // transition has a start state — synchronous, and unlike rAF it also runs
     // in background tabs (rAF is suspended there).
@@ -164,6 +166,7 @@
   });
   panel.querySelector(".cz-close").addEventListener("click", closePanel);
   document.addEventListener("keydown", function (e) {
+    if (e.isComposing || e.defaultPrevented) return; // IME, or another handler owns this key
     if (e.key === "Escape" && isOpen()) closePanel();
   });
 
@@ -195,10 +198,17 @@
     input.value = "";
     setBusy(true);
     showThinking();
+    // A stalled request must not wedge the widget busy forever — abort at 30s
+    // where the browser supports it; the abort lands in the catch below.
+    var signal;
+    try {
+      if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) signal = AbortSignal.timeout(30000);
+    } catch (err) { /* older browsers: no timeout */ }
     fetch("/api/concierge", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ message: text, history: prior }),
+      signal: signal,
     })
       .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
       .then(function (d) {

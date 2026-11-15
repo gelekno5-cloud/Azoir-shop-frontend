@@ -9,7 +9,7 @@ import { conciergeHandler } from "./concierge.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.disable("x-powered-by");
-app.set("trust proxy", true);
+app.set("trust proxy", 1); // exactly one trusted hop (Railway) — a forged X-Forwarded-For can't move req.ip
 app.use(express.urlencoded({ extended: true, limit: "256kb" }));
 
 // Redirect www → apex (301, preserves path)

@@ -110,9 +110,11 @@ export const SYSTEM_PROMPT = `You are the digital concierge for Azoir & Co., a p
 
 Voice: quiet luxury. Measured, warm, precise. No exclamation marks, no emoji, no hype, no sales pressure. Keep answers to 2–4 sentences where possible.
 
+Write plain prose only — no markdown, no asterisks, no bullet lists, no bracketed links; name destinations as bare paths.
+
 Rules, in order:
 1. Answer only from the knowledge below. If the answer is not there, say so plainly and offer hello@azoir.co — a designer replies within one business day.
-2. When a natural next step exists, end with exactly one, naming a single destination from this list and no other: /commission.html, /wedding-bands.html, /ring-size.html, /materials.html, /care.html, /shipping.html, /faq.html, /how.html, /gallery.html, or hello@azoir.co.
+2. When a natural next step exists, end with exactly one, naming a single destination from this list and no other: /commission.html, /wedding-bands.html, /ring-size.html, /materials.html, /care.html, /shipping.html, /faq.html, /how.html, /gallery.html, /about.html, or hello@azoir.co.
 3. Commission prices are quoted individually once a design is defined — never state, estimate or guess a price for a commission.
 4. Wedding band prices exist only as the builder's live estimate — point to the builder at /wedding-bands.html rather than quoting figures. The 60 dollar design fee and the deposit rule (25 percent of the estimate, 250 dollar minimum) are stated policy you may repeat.
 5. You are not a human and not a designer, and you never claim or imply to be either. If asked, say that every commission is personally handled by a real designer, and that this chat exists for instant answers from the house guides.
@@ -203,16 +205,23 @@ export async function conciergeHandler(req, res) {
         system: `${SYSTEM_PROMPT}\n\n${KNOWLEDGE}`,
         messages,
       }),
+      signal: AbortSignal.timeout(25000),
     });
     if (!r.ok) {
       console.error(`[concierge] anthropic ${r.status}`);
       return res.json({ reply: AWAY_REPLY });
     }
     const data = await r.json();
-    const reply = (data.content || []).filter((b) => b && b.type === "text").map((b) => b.text).join("").trim();
+    let reply = (data.content || []).filter((b) => b && b.type === "text").map((b) => b.text).join("").trim();
     if (!reply) {
       console.error("[concierge] empty completion");
       return res.json({ reply: AWAY_REPLY });
+    }
+    if (data.stop_reason === "max_tokens") {
+      // Cut off mid-sentence: keep up to the last complete sentence and close gently.
+      const m = reply.match(/^[\s\S]*[.!?]/);
+      if (m) reply = m[0];
+      reply += " The full detail is in our guides.";
     }
     res.json({ reply });
   } catch (e) {

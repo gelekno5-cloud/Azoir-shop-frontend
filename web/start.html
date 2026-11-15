@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design fee | Azoir &amp; Co.</title>
+<!-- Template for GET /start/<token> (server.js fills the {{…}} slots). The address is a private
+     link, so the page is never indexed, sends no referrer and loads no analytics. -->
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#FAF9F6">
+<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/media/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/azoir.css?v=17">
+<style>
+.fee{padding:clamp(128px,14vw,176px) 0 clamp(72px,9vw,120px);text-align:center}
+.fee h1{font-size:clamp(36px,4.6vw,60px);line-height:1.05;margin:16px auto 0;max-width:18ch;text-wrap:balance;overflow-wrap:anywhere}
+.fee-piece{font-size:14px;line-height:1.6;color:var(--ink-2);margin-top:14px;overflow-wrap:anywhere}
+.fee-card{max-width:440px;margin:36px auto 0;padding:clamp(22px,4vw,30px);background:#fff;border:1px solid var(--hairline);text-align:left}
+.fee-row{display:flex;justify-content:space-between;gap:20px;font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--hairline)}
+.fee-card p{font-size:14.5px;line-height:1.75;color:var(--ink-2)}
+.fee-card p + p{margin-top:14px}
+.fee-card form{margin-top:22px}
+.fee-card .btn-fill{width:100%;font-family:inherit}
+.fee-card .fee-secure{font-size:12.5px;color:var(--stone);text-align:center;margin-top:12px}
+.fee-card .fee-alert{color:#A3263A}
+.fee-card .btn-outline{margin-top:20px}
+.fee-card a:not([class]),.fee-help a{color:var(--oxblood);text-decoration:underline;text-underline-offset:3px}
+.fee-help{font-size:13px;color:var(--stone);margin-top:26px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="navlinks" id="navlinks">
+    <div class="nav-l">
+      <a href="/gallery.html">Work</a>
+      <a href="/commission.html">Commission</a>
+      <a href="/wedding-bands.html">Wedding Bands</a>
+      <a href="/ready-to-ship.html">Ready to Ship</a>
+    </div>
+    <div class="nav-r">
+      <a href="/how.html">Process</a>
+      <a href="/about.html">About</a>
+      <a href="/account.html">Account</a>
+      <a href="/commission.html" class="nav-cta">Begin a Commission</a>
+    </div>
+  </div>
+  <a href="/" class="brand">AZOIR &amp; CO.</a>
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
+</nav>
+
+<main class="fee">
+  <div class="wrap">
+    <span class="eyebrow">{{EYEBROW}}</span>
+    <h1 class="serif">{{HEADING}}</h1>
+    {{PIECE}}
+    <div class="fee-card">
+      {{CARD}}
+    </div>
+    <p class="fee-help">Questions? <a href="mailto:hello@azoir.co">hello@azoir.co</a></p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><a href="/" class="fbrand">AZOIR &amp; CO.</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="/engagement-rings.html">Engagement rings</a><a href="/wedding-bands.html">Wedding bands</a><a href="/custom-signet-rings.html">Signet rings</a><a href="/commission.html">Necklaces &amp; pendants</a><a href="/commission.html">Earrings &amp; bracelets</a><a href="/heirloom-redesign.html">Heirloom redesign</a></div>
+      <div class="fcol"><h5>Company</h5><a href="/how.html">How it works</a><a href="/about.html">About us</a><a href="/gallery.html">Gallery</a><a href="/faq.html">FAQ</a><a href="/journal/">Journal</a></div>
+      <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
+    </div>
+    <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
+  </div>
+</footer>
+<script src="/nav.js?v=1" defer></script>
+</body>
+</html>

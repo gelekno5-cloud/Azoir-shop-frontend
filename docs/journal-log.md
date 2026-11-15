@@ -1,0 +1,7 @@
+| date | slug | topic / target query | report | sources checked |
+| --- | --- | --- | --- | --- |
+| — | redesign-inherited-jewelry | what to do with inherited jewelry | — | — |
+| — | lab-grown-vs-natural-diamonds | lab-grown vs natural diamonds | — | — |
+| — | custom-engagement-ring-cost | how much does a custom engagement ring cost | — | — |
+| 2026-11-14 | colored-engagement-rings | colored gemstone engagement rings | November 2, 2026 | — |
+| 2026-11-14 | signet-ring-symbols | what to put on a signet ring / signet ring symbols | November 9, 2026 | https://www.jckonline.com/editorial-article/kinn-studio-dare-to-dream/ ; https://www.chaincatcher.com/en/article/2302856 ; https://en.wikipedia.org/wiki/Coat_of_arms |

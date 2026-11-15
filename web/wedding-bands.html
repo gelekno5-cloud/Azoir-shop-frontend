@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Design Your Own Wedding Band in 3D | Azoir & Co.</title>
-<meta name="description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $251, made in New York.">
+<meta name="description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $457, made in New York.">
 <link rel="canonical" href="https://azoir.co/wedding-bands.html">
 <meta name="robots" content="max-image-preview:large">
 <meta name="theme-color" content="#FAF9F6">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/media/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Azoir &amp; Co.">
-<meta property="og:title" content="Design Your Own Wedding Band in 3D | Azoir &amp; Co."><meta property="og:description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $251, made in New York.">
+<meta property="og:title" content="Design Your Own Wedding Band in 3D | Azoir &amp; Co."><meta property="og:description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $457, made in New York.">
 <meta property="og:url" content="https://azoir.co/wedding-bands.html"><meta property="og:image" content="https://azoir.co/media/og-image.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band"><meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Design Your Own Wedding Band in 3D | Azoir &amp; Co."><meta name="twitter:description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $251, made in New York."><meta name="twitter:image" content="https://azoir.co/media/og-image.jpg"><meta name="twitter:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band">
+<meta name="twitter:title" content="Design Your Own Wedding Band in 3D | Azoir &amp; Co."><meta name="twitter:description" content="Design your own wedding band in 3D: profile, width, metal, finish, diamonds and engraving, with live price estimates. 14k gold from $457, made in New York."><meta name="twitter:image" content="https://azoir.co/media/og-image.jpg"><meta name="twitter:image:alt" content="A polished silver-tone ring spelling AZOIR in block letters on a curb-chain band">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://azoir.co/wedding-bands.html#webpage","url":"https://azoir.co/wedding-bands.html","name":"Design Your Own Wedding Band in 3D","description":"Design your own wedding band, live in 3D. Every option is cut into real geometry, weighed and estimated as you go. When it's right, reserve it with a deposit or send it to a designer first.","inLanguage":"en","isPartOf":{"@type":"WebSite","@id":"https://azoir.co/#website","name":"Azoir & Co.","url":"https://azoir.co/"},"publisher":{"@type":"Organization","@id":"https://azoir.co/#organization","name":"Azoir & Co.","url":"https://azoir.co/"},"breadcrumb":{"@id":"https://azoir.co/wedding-bands.html#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://azoir.co/wedding-bands.html#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://azoir.co/"},{"@type":"ListItem","position":2,"name":"Wedding bands","item":"https://azoir.co/wedding-bands.html"}]}]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=16">
+<link rel="stylesheet" href="azoir.css?v=17">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
 </script>
@@ -73,6 +74,13 @@
 .bb-req-rows .bb-row{padding:11px 0}
 .bb-req-rows .bb-row+.bb-row{border-top:1px solid var(--bb-line)}
 .bb-req-rows .bb-row.bb-row-dep b{color:var(--bb-acc);font-size:15px}
+.bb-req-rows .bb-row b{text-align:right}
+.bb-req-ship select{flex:1.4}
+.bb-req-ship input{flex:1}
+.bb-req-code input{text-transform:uppercase;letter-spacing:.08em}
+.bb-req-code .bb-nextbtn{flex:none;width:auto}
+.bb-field+.bb-field{margin-top:8px}
+#bbReqCodeMsg.ok{color:var(--bb-acc)}
 .bb-req-lines{margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--bb-ink2)}
 .bb-req-lines b{color:var(--bb-ink);font-weight:600}
 .bb-field-col{flex-direction:column}
@@ -233,12 +241,44 @@ body.tryon-lock{overflow:hidden}
 .bb-doc-meta{text-align:right;font-size:12px;color:#55554F;line-height:1.5}
 .bb-doc-meta b{display:block;font-size:17px;color:#242522;letter-spacing:.1em;font-weight:600}
 .bb-doc-snap{display:block;width:100%;max-height:320px;object-fit:contain;border:1px solid #DDD8D0;border-radius:2px;margin-bottom:26px;background:#fff}
-.bb-doc-band{display:grid;grid-template-columns:270px 1fr;gap:10px 24px;margin-bottom:28px;break-inside:avoid;page-break-inside:avoid}
-.bb-doc-band h2{grid-column:1/-1;font-family:'Instrument Serif',Georgia,serif;font-size:24px;font-weight:500;margin:0 0 2px;color:#242522}
+.bb-doc-band{margin-bottom:34px;padding:0}
+.bb-doc-band+.bb-doc-band{border-top:1px solid #242522;padding-top:26px}
+.bb-doc-ref{display:none;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#777771;margin-bottom:6px}
+.bb-doc-band h2{font-family:'Instrument Serif',Georgia,serif;font-size:26px;font-weight:500;margin:0 0 12px;color:#242522;break-after:avoid;page-break-after:avoid}
+.bb-doc-keep{break-inside:avoid;page-break-inside:avoid}
+/* make to: the numbers the bench works from */
+.bb-doc-make{display:grid;grid-template-columns:1.25fr repeat(4,minmax(0,1fr));border-top:1px solid #242522;border-bottom:1px solid #242522;margin-bottom:16px}
+.bb-doc-make>div{min-width:0;padding:10px 12px 12px;border-left:1px solid #DDD8D0;display:grid;grid-template-rows:subgrid;grid-row:span 2} /* label row + figure row shared by every cell: a wrapped label cannot drop one figure */
+.bb-doc-make>div:first-child{border-left:0;padding-left:0}
+.bb-doc-make dt,.bb-doc-group h3,.bb-doc figcaption{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#777771;font-weight:600}
+.bb-doc-make dd{margin-top:4px;font-family:'Instrument Serif',Georgia,serif;font-size:32px;line-height:1.05;font-variant-numeric:lining-nums;color:#242522}
+.bb-doc-make dd span,.bb-doc-make dd small{font-family:'Inter',system-ui,sans-serif;font-size:12px;line-height:1.4;color:#55554F}
+.bb-doc-make dd span{margin-left:5px}
+.bb-doc-make dd small{display:block;margin-top:4px}
+/* pictures: the three-quarter view large, the other views small beside it */
+.bb-doc-pics{display:grid;grid-template-columns:3fr 2fr;gap:12px;align-items:start;margin-bottom:22px}
+.bb-doc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bb-doc figure{min-width:0}
+.bb-doc figure img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;border:1px solid #DDD8D0;border-radius:2px;background:#fff}
+.bb-doc figcaption{margin-top:5px;font-size:10px}
+/* drawing + facts: a float, not a grid, so a long block can break across printed pages */
+.bb-doc-body,.bb-doc-facts{display:flow-root}
+.bb-doc-sec{float:left;width:340px;margin:0 28px 10px 0}
 .bb-doc-sec svg{max-width:100%;height:auto;display:block}
-.bb-doc table{width:100%;border-collapse:collapse;align-self:start}
-.bb-doc td{padding:6px 0;border-bottom:1px solid #DDD8D0;vertical-align:top}
-.bb-doc td:first-child{color:#777771;width:36%;padding-right:12px}
+.bb-doc-group{margin-bottom:18px;break-inside:avoid;page-break-inside:avoid}
+.bb-doc-group h3{padding-bottom:6px;border-bottom:1px solid #242522}
+.bb-doc-group dl>div{display:grid;grid-template-columns:38% minmax(0,1fr);gap:12px;padding:6px 0;border-bottom:1px solid #DDD8D0}
+.bb-doc-group dt{color:#777771}
+.bb-doc-group dd{overflow-wrap:anywhere}
+.bb-doc-eng{font-size:24px;line-height:1.15}
+.bb-doc-eng-script{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500}
+.bb-doc-eng-serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500}
+.bb-doc-eng-sans{font-family:'DM Sans',system-ui,sans-serif;font-weight:400;font-size:20px}
+.bb-doc-zones{width:100%;border-collapse:collapse;font-size:12.5px}
+.bb-doc-zones th,.bb-doc-zones td{padding:6px 10px 6px 0;border-bottom:1px solid #DDD8D0;text-align:left;vertical-align:top}
+.bb-doc-zones th{font-weight:400;color:#777771;vertical-align:bottom}
+.bb-doc-zones th:last-child,.bb-doc-zones td:last-child{padding-right:0;text-align:right}
+.bb-doc-zones td:last-child{white-space:nowrap}
 .bb-doc-foot{margin-top:26px;font-size:11px;color:#777771;border-top:1px solid #DDD8D0;padding-top:12px;line-height:1.6}
 .bb-doc-link{word-break:break-all;color:#9A978E}
 @media print{
@@ -247,7 +287,22 @@ body.tryon-lock{overflow:hidden}
   .bb-sheet{position:static;display:block;overflow:visible}
   .bb-sheet-bar{display:none}
   .bb-doc{max-width:none;padding:0}
+  .bb-doc-ref{display:block}
+  .bb-doc-band+.bb-doc-band{break-before:page;page-break-before:always;border-top:0;padding-top:0}
   @page{margin:14mm}
+}
+/* screen only: a printed page is narrower than 900px and keeps the wide layout */
+@media screen and (max-width:900px){
+  .bb-doc{padding:26px 18px 48px}
+  .bb-doc-make{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bb-doc-make>div{border-left:0;border-top:1px solid #DDD8D0;padding-left:0}
+  .bb-doc-make>div:first-child{grid-column:1/-1;border-top:0}
+  .bb-doc-make>div:nth-child(odd):not(:first-child){border-left:1px solid #DDD8D0;padding-left:12px}
+  .bb-doc-make dd{font-size:28px}
+  .bb-doc-pics{grid-template-columns:minmax(0,1fr)}
+  .bb-doc-hero{max-width:560px}
+  .bb-doc-tiles{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .bb-doc-sec{float:none;width:auto;margin:0 0 14px}
 }
 @media(max-width:1100px){.bb-app{grid-template-columns:minmax(0,1fr) 400px}.bb-intro{max-width:340px}}
 @media(max-width:900px){
@@ -269,7 +324,6 @@ body.tryon-lock{overflow:hidden}
   .bb-pairrow{grid-template-columns:1fr}
   .bb-field{flex-wrap:wrap}
   .bb-field select{flex:1 1 100%}
-  .bb-doc-band{grid-template-columns:1fr}
   .bb-viewseg{top:10px;right:auto;left:50%;transform:translateX(-50%)}
   .bb-app.tryon-full .bb-stage{position:fixed;inset:0;height:100dvh;min-height:0;z-index:70;box-shadow:none}
   .bb-app.tryon-full .bb-viewseg{display:none}
@@ -306,6 +360,7 @@ body.tryon-lock{overflow:hidden}
     <div class="nav-r">
       <a href="/how.html">Process</a>
       <a href="/about.html">About</a>
+      <a href="/account.html">Account</a>
       <a href="/commission.html" class="nav-cta">Begin a Commission</a>
     </div>
   </div>
@@ -592,10 +647,32 @@ body.tryon-lock{overflow:hidden}
           <p class="bb-req-lines" id="bbReqSummary"></p>
           <div class="bb-req-rows">
             <div class="bb-row"><span>Price estimate</span><b id="bbReqEst"></b></div>
+            <div class="bb-row" id="bbReqDiscRow" hidden><span id="bbReqDiscLabel">Code</span><b id="bbReqDisc"></b></div>
+            <div class="bb-row" id="bbReqShipRow"><span>Shipping</span><b id="bbReqShip">Choose where it ships</b></div>
+            <div class="bb-row" id="bbReqTaxRow" hidden><span id="bbReqTaxLabel">Tax</span><b id="bbReqTax"></b></div>
+            <div class="bb-row" id="bbReqTotalRow" hidden><span>Estimated total</span><b id="bbReqTotal"></b></div>
             <div class="bb-row bb-row-dep"><span>Deposit today</span><b id="bbReqDeposit"></b></div>
             <div class="bb-row"><span>Balance before production</span><b id="bbReqBalance"></b></div>
           </div>
           <p class="bb-note" id="bbReqTerms">The deposit reserves your band and is applied to the final price. It is refundable until you approve the final design. Metal is priced by weight at the atelier's current rate; diamonds and platinum are quoted by a designer.</p>
+        </div>
+        <div class="bb-g">
+          <h3>Delivery &amp; offers</h3>
+          <div class="bb-field bb-req-ship">
+            <select id="bbReqCountry" autocomplete="country" aria-label="Ships to (country)">
+              <option value="US" selected>United States</option><option value="CA">Canada</option><option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option><option value="IE">Ireland</option><option value="FR">France</option><option value="DE">Germany</option>
+              <option value="IT">Italy</option><option value="ES">Spain</option><option value="NL">Netherlands</option><option value="CH">Switzerland</option>
+              <option value="AE">United Arab Emirates</option><option value="IN">India</option><option value="SG">Singapore</option>
+              <option value="HK">Hong Kong</option><option value="JP">Japan</option><option value="">Another country</option>
+            </select>
+            <input type="text" id="bbReqRegion" autocomplete="address-level1" maxlength="40" placeholder="State (e.g. NY)" aria-label="State or province">
+          </div>
+          <div class="bb-field bb-req-code">
+            <input type="text" id="bbReqCode" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Discount code" aria-label="Discount code">
+            <button type="button" class="bb-nextbtn" id="bbReqCodeApply">Apply</button>
+          </div>
+          <p class="bb-note" id="bbReqCodeMsg" hidden></p>
         </div>
         <div class="bb-g">
           <h3>Your details</h3>
@@ -629,6 +706,7 @@ body.tryon-lock{overflow:hidden}
       <input type="hidden" name="spec"><input type="hidden" name="spec_text"><input type="hidden" name="hash">
       <input type="hidden" name="name"><input type="hidden" name="email"><input type="hidden" name="phone"><input type="hidden" name="notes">
       <input type="hidden" name="deposit_cents"><input type="hidden" name="fg_ts">
+      <input type="hidden" name="discount_code"><input type="hidden" name="country"><input type="hidden" name="region">
       <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
     </form>
   </aside>
@@ -639,7 +717,7 @@ body.tryon-lock{overflow:hidden}
     <div class="sec-head">
       <span class="eyebrow">Made to order</span>
       <h2 class="serif" id="bbStylesTitle">Wedding band styles we make</h2>
-      <p>Estimates for 14k gold start at $251, for a 2 × 1.2 mm band in US size 4. Platinum and diamonds are quoted individually, and every band is made by hand in New York.</p>
+      <p>Estimates for 14k gold start at $457, for a 2 × 1.2 mm band in US size 4. Platinum and diamonds are quoted individually, and every band is made by hand in New York.</p>
     </div>
     <div class="gcards">
       <div class="gcard"><h3>Profiles</h3><p>Court, flat, D-shape, knife edge, beveled, concave or full round, from 2 to 8 mm wide and 1.2 to 2.6 mm deep. You can also import a cross-section of your own.</p></div>
@@ -682,9 +760,10 @@ body.tryon-lock{overflow:hidden}
     <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
   </div>
 </footer>
-<script type="module" src="band-builder.js?v=38"></script>
+<script type="module" src="band-builder.js?v=43"></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
+<script src="/promo.js?v=1" defer></script>
 <script src="/concierge.js" defer></script>
 </body>
 </html>

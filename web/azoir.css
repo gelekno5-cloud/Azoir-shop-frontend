@@ -51,6 +51,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:60;display:grid;grid-template-co
 .navlinks a.active{color:var(--ink);border-bottom-color:var(--oxblood)}
 .navlinks a.nav-cta{border:1px solid var(--ink);padding:11px 18px;color:var(--ink)}
 .navlinks a.nav-cta:hover{background:var(--oxblood);border-color:var(--oxblood);color:#fff}
+/* Eight links on one line: never wrap a label; tighten between the mobile menu (≤900px) and wide screens. */
+.navlinks a{white-space:nowrap}
+@media(min-width:901px) and (max-width:1280px){
+  .nav-l,.nav-r{gap:16px}
+  .navlinks{font-size:10px;letter-spacing:.1em}
+  .navlinks a.nav-cta{padding:10px 12px}
+}
+@media(min-width:901px) and (max-width:1040px){
+  .nav-l,.nav-r{gap:11px}
+  .navlinks{letter-spacing:.06em}
+  .navlinks a.nav-cta{padding:9px 9px}
+  .brand{font-size:18px;letter-spacing:.18em;padding-left:.18em}
+}
 
 /* ── Home hero: full-page campaign films, copy + CTA overlaid (hero-film.js).
    Each film ends (or hits data-end) and the banner slides to the next — the

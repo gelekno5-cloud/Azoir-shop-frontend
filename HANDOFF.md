@@ -81,7 +81,7 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - **Wedding band builder (iJewel-style) — built, not yet committed/deployed:** `web/wedding-bands.html` + `web/band-builder.js`.
   Procedural three.js band (three 0.186.1 from jsdelivr via an import map — no build step): profile (court / flat / D-shape /
   knife edge / bevelled), comfort-fit or flat interior, width 2–8 mm, depth 1.2–2.6 mm, 7 metals, 4 finishes, channel-set
-  half/full eternity, US size 4–13 (uses the ring-size guide's chart), inside engraving (3 styles), live weight estimate from
+  half/full eternity, US size 4–16 (uses the ring-size guide's chart), inside engraving (3 styles), live weight estimate from
   the real swept volume (no prices — inquiry-only stays locked). Share link = URL hash; "Save image" = PNG; "Request this band"
   writes the spec into `azoir_wiz` localStorage and opens `commission.html` on step 2 with "Wedding bands" + metal preselected.
   "Wedding Bands" tab added to every page's nav (after Gallery) and a "Wedding bands" footer link; sitemap updated.
@@ -228,10 +228,70 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 
 ## 2026-10-17 session — band builder: prices + real orders (superseded by the deposit flow above)
 
-- **Price estimate in the builder** (owner's rule): 14k at **$120/g**, 18k scaled by fine-gold content ($154/g), **$100 labour per band**; platinum has no rate yet and diamonds are never estimated → those designs show "Quoted individually" / "+ diamonds". Rates live in `band-builder.js` (`PRICING`) and can be overridden in `band-catalog.json` under `"pricing"`. The estimate shows in the action bar, the full spec, the spec sheet and `spec.json`.
+- **Price estimate in the builder** (owner's rule): 14k at **$165/g**, 18k at **$210/g**, **$250 labour per band** (owner, 2026-11-14; was $120 / $154 / $100); platinum has no rate yet and diamonds are never estimated → those designs show "Quoted individually" / "+ diamonds". Rates live in `band-builder.js` (`PRICING`) and can be overridden in `band-catalog.json` under `"pricing"`. The estimate shows in the action bar, the full spec, the spec sheet and `spec.json`.
 - **Order flow (new):** a priced design (no diamonds, every zone's metal has a rate) gets **"Order this band · $X"** → `POST /band-order` → the server re-prices the spec from its per-zone weights with its own rates (`BAND_RATES`, `BAND_LABOR_CENTS`), bounds the weight against the ring's bounding annulus (45–135%), inserts a `pending_payment` row in the shared Supabase table **`band_orders`** (migration `2026-10-17-band-orders.sql` in the Moksh repo — must run before deploying this), then opens Stripe Checkout (card only, **shipping address US/CA/GB + phone collected by Stripe**, metadata `mode=azoir_band`, 2 h expiry). `GET /band-order/paid` and the webhook (`checkout.session.completed`) both call `deliverBandOrder`: compare-and-set the row to `paid` with the customer/shipping details, log events, email the atelier + a confirmation to the customer, write a `band_order` admin notification. `checkout.session.expired` logs an `expired` event (row stays on the admin's Abandoned tab). Thank-you page: `band-thanks.html?order=WB-…&ref=AZB-…`.
 - **Quote path:** unpriced designs (and the "Request a quote instead" link) still go to the commission wizard with the spec text + share link prefilled in the story → $60 design-fee gate as before. The old spec.json blob in the message is gone.
 - Back from a cancelled checkout: `?order=cancelled` restores the design from `localStorage.azoir_band_last` and shows a notice; `quote` / `weight` / `busy` / `error` have their own copy.
 - **Admin side (Moksh repo, PR `feat/band-orders`):** `/app/band-orders` (tabs New / In production / Ready to ship / Shipped / Complete / Cancelled / Abandoned, search), `/app/band-orders/:id` (spec per band, start production → ready → ship with tracking + customer email, Stripe refund / cancel-and-refund, notes, timeline) and the **order PDF** at `/app/band-orders/:id/order.pdf` (house letterhead; receipt + bench work order in one).
 - Env on azoir-retail: nothing new required (`SUPABASE_*`, `STRIPE_*`, `RESEND_API_KEY` already set). Optional `ADMIN_URL` (default `https://mokshdiam.com`) for the link in the atelier email.
 - Tested end to end locally against stubbed Stripe/Supabase/Resend (`node --import=<stub> server.js`); **no live card run yet**.
+
+## 2026-11-04 — azoir.co connected to the commerce backend (branch `claude/connect-commerce`)
+
+- **Backend:** the Moksh Diam admin (mokshdiam.com) now has customers, discount codes, shipping zones, tax and email templates (Moksh PRs #70–#73). azoir.co uses them through `commerce.js`; the Supabase project is the same shared one (`avmcksqllodvspbtcmgf`). The old Edge Functions in `supabase/` are untouched.
+- **Band checkout (Request step):** new "Delivery & offers" group with a country, a state and a discount code. `POST /band-quote` (JSON, read-only, 60/10 min per IP) prices the spec with `priceBandSpec`, then sends the estimate to Moksh's `POST /api/storefront/v1/cart/quote` as a `customLines` item. That returns the code's discount, the zone's shipping and the tax.
+  - **Deposit:** 25% of the *discounted* estimate (min $250). Shipping and tax go into the balance.
+  - **Unpriced designs:** a code is noted for the atelier, not applied.
+  - **Backend down:** the plain estimate stands, and a typed code is refused with a message.
+- **`/band-request`:** re-prices the same way and refuses a code that doesn't apply (`?order=code&code=X`). After saving the row it calls `rpc/redeem_discount` (order_ref `band:<id>`). A failed checkout, and `checkout.session.expired`, call `rpc/release_discount`. The Moksh admin also releases a code use when a band order is cancelled.
+  - **`spec.deposit` now holds:** `estimateCents` = the total owed (after the code, plus shipping and tax), `listCents`, `discount`, `shipping`, `tax`, `country`, `notedCode`.
+  - **Order columns:** `subtotal_cents` = the discounted estimate; `shipping_cents` = the shipping quote.
+  - **Emails:** the deposit emails list the code, shipping and tax.
+- **My account (`/account.html` + `account.js`, "Account" in every page's nav):**
+  - Sign in by an emailed 6-digit code (sent by Moksh, template editable in the admin).
+  - Then: orders (band orders + retail commissions by email), details and marketing opt-in, addresses, saved pieces.
+  - **Proxy:** `/account/api/*` (`mountAccountApi`) relays to Moksh's customer API. The access token lives in an httpOnly `azoir_customer` cookie (SameSite=Lax, Secure on https).
+  - **Request rules:** non-GET requests must be JSON; DELETE must be same-origin. Per-IP limits apply (6 codes / 12 sign-ins per 15 min).
+- **Env:** optional `MOKSH_API_URL` (defaults to `ADMIN_URL`, then https://mokshdiam.com).
+- **Ship order:** merge Moksh #73 (custom lines in the quote) **before** deploying this. Until then the quote can't price bands, so the plain estimate shows and codes are refused.
+- **Tested locally:**
+  - Against a stand-in for the Moksh API: sign-in, orders, address add, and pricing (code + NY tax + free shipping).
+  - With fake Stripe/Supabase: a request with a code redeems and opens checkout; a bad code stops before any row is saved.
+  - No live card run.
+
+## 2026-11-04 — announcements and the sign-up pop-up (branch `claude/promos`)
+
+- **Setup:** both are set in the Moksh admin (`/app/announcements`, `/app/signup-popup`, Moksh PR #75). azoir.co shows them through `web/promo.js`, which is loaded on every page after `nav.js`. **New pages must include `<script src="/promo.js?v=1" defer></script>`.**
+- **Server (`commerce.js` `mountPromos`):**
+  - `GET /api/promos` relays the backend's `/promos`, cached for 60 s. If the backend is down it keeps serving the last good copy.
+  - `POST /api/signup` relays a sign-up, with 5 per IP per 15 min.
+  - **Bot checks:** a filled honeypot (`website`) or a form sent under 2 s after the pop-up opened (`opened_ms`) gets a fake success and is never sent on.
+- **Top bar:** a fixed bar above the nav. It sets `--promo-h`, and the `nav` top and `body` padding follow it.
+  - Several messages rotate every 6 s; rotation pauses on hover or focus and is off under reduced motion.
+  - The copy-code button and the close button are both inside the bar.
+  - A closed message is remembered by its `version` (`azoir_promo_dismissed`), so editing it in the admin shows it again.
+- **Homepage banner:** inserted after `header.hero-film`, or at `#promoBanner` if a page has that element.
+- **Pop-up:**
+  - Opens after the admin's delay; on every page or the homepage only.
+  - It's a dialog: Escape closes it, focus stays inside, and focus returns to where it was when it closes.
+  - Closing it hides it for `reshowDays`. After a sign-up it's never shown again on that browser (`azoir_popup`).
+  - The welcome code is shown once with a copy button; the backend emails it too.
+- **Styles:** injected by `promo.js` itself, so `azoir.css` is unchanged.
+- **Ship order:** merge Moksh #75 first; its migration is already live. Until it's deployed, `/api/promos` is empty and nothing shows.
+- **Tested locally** against the Moksh API stand-in (launch configs `moksh-stub` and `azoir-connect`):
+  - bar rotation and code copy
+  - homepage banner
+  - pop-up sign-up with the code
+  - the pop-up not returning after sign-up
+  - the builder page with the bar, on phone and desktop
+
+## 2026-11-04 — Stripe Tax on the band deposit (branch `claude/deposit-stripe-tax`)
+
+- When the admin's tax mode is **Stripe Tax**, the deposit checkout sends:
+  - `automatic_tax[enabled]`
+  - `billing_address_collection=required`
+  - the line's `tax_behavior` (inclusive if prices include tax)
+- Moksh PR #76 does the same for the balance, which also collects the shipping address. Together, the band is taxed on its full price.
+- **If Stripe refuses** (Stripe Tax not activated), the deposit is charged without tax and a `payment_failed` admin notification says so.
+- **Request step:** the tax row reads "Added at payment, for your address" (`band-builder.js?v=40`).
+- **Tested with fake Stripe/Supabase:** tax on; tax refused (fallback + notice); manual mode unchanged.

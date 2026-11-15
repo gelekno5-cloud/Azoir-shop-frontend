@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<link rel="canonical" href="{{URL}}">
+<meta name="robots" content="max-image-preview:large">
+<meta name="theme-color" content="#FAF9F6">
+<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/media/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Azoir &amp; Co.">
+<meta property="og:title" content="{{TITLE}}"><meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{URL}}"><meta property="og:image" content="{{IMAGE}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/azoir.css?v=17">
+<link rel="stylesheet" href="/shop.css?v=1">
+</head>
+<body>
+<nav>
+  <div class="navlinks" id="navlinks">
+    <div class="nav-l">
+      <a href="/gallery.html">Work</a>
+      <a href="/commission.html">Commission</a>
+      <a href="/wedding-bands.html">Wedding Bands</a>
+      <a href="/ready-to-ship.html">Ready to Ship</a>
+    </div>
+    <div class="nav-r">
+      <a href="/how.html">Process</a>
+      <a href="/about.html">About</a>
+      <a href="/account.html">Account</a>
+      <a href="/commission.html" class="nav-cta">Begin a Commission</a>
+    </div>
+  </div>
+  <a href="/" class="brand">AZOIR &amp; CO.</a>
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span></button>
+</nav>
+
+<main class="wrap rts-piece" id="rtsPiece" data-shop="piece">
+  <p class="rts-crumb"><a href="/ready-to-ship.html">Ready to Ship</a> <span id="pcType"></span></p>
+  <p class="rts-status" id="pcStatus" role="status">Loading…</p>
+  <div class="rts-cols" id="pcBody" hidden>
+    <div class="rts-media">
+      <div class="rts-photo"><img id="pcPhoto" alt=""></div>
+      <div class="rts-thumbs" id="pcThumbs"></div>
+    </div>
+    <div class="rts-info">
+      <h1 class="serif" id="pcTitle"></h1>
+      <p class="rts-price"><span id="pcPrice"></span> <s id="pcCompare" hidden></s></p>
+      <p class="rts-desc" id="pcDesc"></p>
+      <dl class="rts-specs" id="pcSpecs"></dl>
+
+      <div id="pcOptions"></div>
+
+      <p class="rts-note" id="pcCancelled" hidden>Your payment wasn't completed, and nothing was charged. The piece is still here if you'd like it.</p>
+      <button type="button" class="btn-fill rts-buy" id="pcBuy">Buy now</button>
+      <p class="rts-sold" id="pcSold" hidden>This piece has sold. <a href="/commission.html">Commission one like it</a>.</p>
+
+      <form id="pcForm" class="rts-form" novalidate hidden>
+        <h2 class="serif">Where should we send it?</h2>
+        <div class="rts-fields">
+          <label class="rts-field full">Email<input name="email" type="email" autocomplete="email" maxlength="200" required></label>
+          <label class="rts-field full">Full name<input name="name" autocomplete="name" maxlength="120" required></label>
+          <label class="rts-field full">Address<input name="line1" autocomplete="address-line1" maxlength="160" required></label>
+          <label class="rts-field full">Apartment, suite (optional)<input name="line2" autocomplete="address-line2" maxlength="160"></label>
+          <label class="rts-field">City<input name="city" autocomplete="address-level2" maxlength="100" required></label>
+          <label class="rts-field">State / province<input name="province" autocomplete="address-level1" maxlength="60"></label>
+          <label class="rts-field">ZIP / postal code<input name="postalCode" autocomplete="postal-code" maxlength="20" required></label>
+          <label class="rts-field">Country
+            <select name="countryCode" autocomplete="country" required>
+              <option value="US" selected>United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+            </select>
+          </label>
+          <label class="rts-field full">Phone (for the courier, optional)<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+          <label class="rts-hp" aria-hidden="true">Company<input name="company" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <dl class="rts-totals" id="pcTotals" hidden></dl>
+        <p class="rts-err" id="pcErr" role="alert" hidden></p>
+        <button type="submit" class="btn-fill rts-buy" id="pcPay">Continue to payment</button>
+        <p class="rts-fine">You'll pay by card on Stripe's secure page. The piece is held for you for 30 minutes while you pay.</p>
+      </form>
+
+      <p class="rts-commission">Want it in gold or another size? <a href="/commission.html">Commission it</a>.</p>
+    </div>
+  </div>
+  <div class="rts-empty" id="pcMissing" hidden>
+    <h2 class="serif">This piece isn't available.</h2>
+    <p>It may have sold. See what's in stock, or have one made for you.</p>
+    <a href="/ready-to-ship.html" class="btn-fill">See Ready to Ship</a>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><a href="/" class="fbrand">AZOIR &amp; CO.</a><p>A private atelier for bespoke fine jewelry. Designed with you, crafted by hand in New York.</p></div>
+      <div class="fcol"><h5>What we make</h5><a href="/engagement-rings.html">Engagement rings</a><a href="/wedding-bands.html">Wedding bands</a><a href="/custom-signet-rings.html">Signet rings</a><a href="/commission.html">Necklaces &amp; pendants</a><a href="/commission.html">Earrings &amp; bracelets</a><a href="/heirloom-redesign.html">Heirloom redesign</a></div>
+      <div class="fcol"><h5>Company</h5><a href="/how.html">How it works</a><a href="/about.html">About us</a><a href="/gallery.html">Gallery</a><a href="/faq.html">FAQ</a><a href="/journal/">Journal</a></div>
+      <div class="fcol"><h5>Help</h5><a href="/ring-size.html">Ring size guide</a><a href="/care.html">Care &amp; maintenance</a><a href="/materials.html">Materials guide</a><a href="mailto:hello@azoir.co">hello@azoir.co</a><a href="https://www.instagram.com/azoir.nyc" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@azoir.co" target="_blank" rel="noopener">TikTok</a></div>
+    </div>
+    <div class="fbot"><span>© 2026 Azoir &amp; Co. · New York</span><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/shipping.html">Shipping &amp; Returns</a> · <a href="/accessibility.html">Accessibility</a></span></div>
+  </div>
+</footer>
+<script src="/analytics.js" defer></script>
+<script src="/nav.js?v=1" defer></script>
+<script src="/promo.js?v=1" defer></script>
+<script src="/shop.js?v=1" defer></script>
+</body>
+</html>

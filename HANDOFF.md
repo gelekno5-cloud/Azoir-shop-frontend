@@ -81,7 +81,7 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - **Wedding band builder (iJewel-style) — built, not yet committed/deployed:** `web/wedding-bands.html` + `web/band-builder.js`.
   Procedural three.js band (three 0.186.1 from jsdelivr via an import map — no build step): profile (court / flat / D-shape /
   knife edge / bevelled), comfort-fit or flat interior, width 2–8 mm, depth 1.2–2.6 mm, 7 metals, 4 finishes, channel-set
-  half/full eternity, US size 4–13 (uses the ring-size guide's chart), inside engraving (3 styles), live weight estimate from
+  half/full eternity, US size 4–16 (uses the ring-size guide's chart), inside engraving (3 styles), live weight estimate from
   the real swept volume (no prices — inquiry-only stays locked). Share link = URL hash; "Save image" = PNG; "Request this band"
   writes the spec into `azoir_wiz` localStorage and opens `commission.html` on step 2 with "Wedding bands" + metal preselected.
   "Wedding Bands" tab added to every page's nav (after Gallery) and a "Wedding bands" footer link; sitemap updated.

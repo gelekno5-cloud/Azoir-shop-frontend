@@ -6,7 +6,7 @@
 <title>Commission Custom Jewelry: Begin Your Design | Azoir & Co.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="azoir.css?v=16">
+<link rel="stylesheet" href="azoir.css?v=17">
 
 <meta name="description" content="Commission custom jewelry, from engagement rings and signets to heirloom redesigns. A $60 design fee, credited toward your final price, starts your design.">
 <link rel="canonical" href="https://azoir.co/commission.html">
@@ -50,7 +50,7 @@
 <header class="page-hero" style="padding:150px 0 24px">
   <span class="eyebrow">Begin a commission</span>
   <h1 class="serif">Let's design something <em>only yours</em>.</h1>
-  <p>A few quick questions — no commitment. A designer replies within one business day.</p>
+  <p>A few quick questions. A $60 design fee — credited toward your piece — sends your request to our atelier, and a designer replies within one business day.</p>
 </header>
 
 <section style="padding:10px 0 60px">
@@ -58,7 +58,7 @@
     <div class="wizard" id="wizard">
       <div class="wiz-progress">
         <div class="wiz-bar"><span id="wizBar"></span></div>
-        <div class="wiz-count" id="wizCount">Step 1 of 5</div>
+        <div class="wiz-count" id="wizCount">Step 1 of 7</div>
       </div>
 
       <!-- 1 · piece type -->
@@ -77,12 +77,11 @@
         </div>
       </div>
 
-      <!-- 2 · materials -->
+      <!-- 2 · metal -->
       <div class="wiz-step" data-step="2">
-        <h2 class="wiz-q serif">Metal &amp; stone</h2>
+        <h2 class="wiz-q serif">Which metal feels right?</h2>
         <p class="wiz-sub">Not sure yet? Perfectly fine — we'll guide you.</p>
-        <div class="wiz-label">Preferred metal</div>
-        <div class="wiz-cards sm" data-field="metal">
+        <div class="wiz-cards sm" data-field="metal" data-auto="1">
           <button type="button" class="wcard" data-v="Yellow gold"><span class="sw sw-yellow-gold" style="background-color:#E6C67A"></span>Yellow gold</button>
           <button type="button" class="wcard" data-v="White gold"><span class="sw sw-white-gold" style="background-color:#E8E8EA"></span>White gold</button>
           <button type="button" class="wcard" data-v="Rose gold"><span class="sw sw-rose-gold" style="background-color:#E6B0A0"></span>Rose gold</button>
@@ -90,23 +89,27 @@
           <button type="button" class="wcard" data-v="Sterling silver"><span class="sw sw-silver" style="background-color:#C8CACE"></span>Sterling silver</button>
           <button type="button" class="wcard" data-v="Not sure yet">Not sure yet</button>
         </div>
-        <div class="wiz-label" style="margin-top:26px">Stone</div>
-        <div class="wiz-cards sm" data-field="stone">
+      </div>
+
+      <!-- 3 · stone -->
+      <div class="wiz-step" data-step="3">
+        <h2 class="wiz-q serif">And the stone?</h2>
+        <p class="wiz-sub">Choose what you're drawn to — nothing is final yet.</p>
+        <div class="wiz-cards sm" data-field="stone" data-auto="1">
           <button type="button" class="wcard" data-v="Natural diamond"><span class="sw sw-diamond"></span>Natural diamond</button>
           <button type="button" class="wcard" data-v="Lab-grown diamond"><span class="sw sw-lab-diamond"></span>Lab-grown diamond</button>
           <button type="button" class="wcard" data-v="Colored gemstone"><span class="sw sw-sapphire"></span>Colored gemstone</button>
-          <button type="button" class="wcard" data-v="My own stone">My own stone</button>
+          <button type="button" class="wcard wc-tall" data-v="My own stone"><span>My own stone</span><span class="wc-sub">An heirloom or loose stone you already have</span></button>
           <button type="button" class="wcard" data-v="No stone">No stone</button>
           <button type="button" class="wcard" data-v="Not sure yet">Not sure yet</button>
         </div>
       </div>
 
-      <!-- 3 · budget & timeline -->
-      <div class="wiz-step" data-step="3">
-        <h2 class="wiz-q serif">Budget &amp; timeline</h2>
+      <!-- 4 · budget -->
+      <div class="wiz-step" data-step="4">
+        <h2 class="wiz-q serif">Do you have a budget in mind?</h2>
         <p class="wiz-sub">A ballpark is perfect — it helps us guide the design. Optional.</p>
-        <div class="wiz-label">Budget range</div>
-        <div class="wiz-cards sm" data-field="budget">
+        <div class="wiz-cards sm" data-field="budget" data-auto="1">
           <button type="button" class="wcard" data-v="Prefer not to say">Prefer not to say</button>
           <button type="button" class="wcard" data-v="Under $2,500">Under $2,500</button>
           <button type="button" class="wcard" data-v="$2,500–$5,000">$2,500–$5,000</button>
@@ -114,25 +117,38 @@
           <button type="button" class="wcard" data-v="$10,000–$25,000">$10,000–$25,000</button>
           <button type="button" class="wcard" data-v="$25,000+">$25,000+</button>
         </div>
-        <div class="wiz-label" style="margin-top:26px">Ideal timeline</div>
-        <div class="wiz-cards sm" data-field="timeline">
+      </div>
+
+      <!-- 5 · timeline -->
+      <div class="wiz-step" data-step="5">
+        <h2 class="wiz-q serif">When would you like it?</h2>
+        <p class="wiz-sub">A date in mind, or none at all — both are fine.</p>
+        <div class="wiz-cards sm" data-field="timeline" data-auto="1">
           <button type="button" class="wcard" data-v="As soon as possible">As soon as possible</button>
           <button type="button" class="wcard" data-v="1–3 months">1–3 months</button>
           <button type="button" class="wcard" data-v="3–6 months">3–6 months</button>
-          <button type="button" class="wcard" data-v="Just exploring">Just exploring</button>
+          <button type="button" class="wcard wc-tall" data-v="Just exploring"><span>Just exploring</span><span class="wc-sub">No pressure — we'll move at your pace</span></button>
         </div>
       </div>
 
-      <!-- 4 · inspiration -->
-      <div class="wiz-step" data-step="4">
+      <!-- 6 · story & photos -->
+      <div class="wiz-step" data-step="6">
         <h2 class="wiz-q serif">Tell us the story.</h2>
         <p class="wiz-sub">The occasion, a stone you love, a piece to reimagine — anything at all.</p>
         <textarea id="wizMessage" rows="6" placeholder="e.g. An engagement ring for my partner who loves vintage Art Deco. I have my grandmother's diamond I'd like to use…"></textarea>
-        <p class="wiz-note">You'll be able to share inspiration photos once a designer replies.</p>
+        <div class="wiz-upload" id="wizUpload">
+          <input type="file" id="wizFile" accept="image/jpeg,image/png,image/webp,image/*" multiple hidden>
+          <div class="wup-row">
+            <button type="button" class="wup-add" id="wizAddPhoto">+ Add inspiration photos</button>
+            <div class="wup-grid" id="wizThumbs"></div>
+          </div>
+          <p class="wiz-note">Optional, up to 5 — inspiration, a stone you own, a piece to reimagine. Screenshots are perfect.</p>
+          <p class="wup-err" id="wizUpErr" hidden></p>
+        </div>
       </div>
 
-      <!-- 5 · contact -->
-      <div class="wiz-step" data-step="5">
+      <!-- 7 · contact -->
+      <div class="wiz-step" data-step="7">
         <h2 class="wiz-q serif">Where do we reach you?</h2>
         <p class="wiz-sub">A real designer — never a bot — replies within one business day.</p>
         <div id="wizErr" class="wiz-err" style="display:none">Please add your name and a valid email so we can reply.</div>
@@ -154,6 +170,7 @@
       <input name="type"><input name="metal"><input name="stone">
       <input name="budget"><input name="timeline"><input name="message">
       <input name="name"><input name="email"><input name="phone">
+      <input type="hidden" name="images">
       <!-- bot guard: page-load timestamp (stamped by wizard.js) + honeypot -->
       <input type="hidden" name="fg_ts" value="">
       <input type="text" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -181,7 +198,7 @@
   </div>
 </footer>
 
-<script src="/wizard.js?v=5" defer></script>
+<script src="/wizard.js?v=6" defer></script>
 <script src="/analytics.js" defer></script>
 <script src="nav.js?v=1" defer></script>
 <script src="/concierge.js" defer></script>

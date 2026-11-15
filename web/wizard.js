@@ -1,10 +1,14 @@
 /* Azoir & Co. — guided commission wizard.
-   5 steps, visual pickers, progress, back/forward, answers persist in localStorage. */
+   7 steps, one question per screen, visual pickers, progress, back/forward,
+   inspiration-photo upload, answers persist in localStorage. */
 (function () {
   var KEY = "azoir_wiz";
-  var TOTAL = 5;
-  var state = { type: "", metal: "", stone: "", budget: "", timeline: "", message: "", name: "", email: "", phone: "", step: 1 };
+  var TOTAL = 7;
+  var MAX_IMAGES = 5;
+  var MAX_EDGE = 1600; // longest side after the in-browser resize
+  var state = { type: "", metal: "", stone: "", budget: "", timeline: "", message: "", name: "", email: "", phone: "", images: [], step: 1 };
   try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+  if (!Array.isArray(state.images)) state.images = [];
 
   var wizard = document.getElementById("wizard");
   if (!wizard) return;
@@ -21,6 +25,11 @@
   var phoneI = document.getElementById("wizPhone");
   var summary = document.getElementById("wizSummary");
   var form = document.getElementById("wizForm");
+  var fileI = document.getElementById("wizFile");
+  var addBtn = document.getElementById("wizAddPhoto");
+  var thumbs = document.getElementById("wizThumbs");
+  var upErr = document.getElementById("wizUpErr");
+  var uploading = 0;
   // Bot guard: stamp the first render. The server rejects submissions that
   // arrive without it (direct POSTs) or faster than a human can fill a form.
   // The stamp lives in the saved answers so a return from the Stripe checkout
@@ -51,6 +60,11 @@
     var html = rows.filter(function (r) { return r[1]; }).map(function (r) {
       return '<div class="wsum-row"><span>' + r[0] + "</span><b>" + r[1] + "</b></div>";
     }).join("");
+    if (state.images.length) {
+      html += '<div class="wsum-thumbs">' + state.images.map(function (u) {
+        return '<img src="' + u + '" alt="Inspiration photo">';
+      }).join("") + "</div>";
+    }
     summary.innerHTML = html ? '<div class="wsum-title">Your commission so far</div>' + html : "";
   }
 
@@ -88,10 +102,96 @@
   }
   bind(msg, "message"); bind(nameI, "name"); bind(emailI, "email"); bind(phoneI, "phone");
 
+  // ── Inspiration photos ────────────────────────────────────────────────────
+  // Resized in the browser (longest side 1600px, JPEG) so a phone photo
+  // uploads in a moment; the bare bytes go to /inquiry/image, which stores
+  // them and returns the public URL that rides along with the request.
+  function showUpErr(text) {
+    if (!upErr) return;
+    upErr.textContent = text; upErr.hidden = !text;
+  }
+
+  function renderThumbs() {
+    if (!thumbs) return;
+    thumbs.querySelectorAll(".wup-thumb:not(.up)").forEach(function (t) { t.remove(); });
+    state.images.forEach(function (u) {
+      var t = document.createElement("div");
+      t.className = "wup-thumb";
+      t.innerHTML = '<img src="' + u + '" alt="Inspiration photo"><button type="button" class="wup-x" aria-label="Remove photo">×</button>';
+      t.querySelector(".wup-x").addEventListener("click", function () {
+        state.images = state.images.filter(function (x) { return x !== u; });
+        save(); renderThumbs(); showUpErr("");
+      });
+      thumbs.appendChild(t);
+    });
+    if (addBtn) addBtn.style.display = state.images.length + uploading >= MAX_IMAGES ? "none" : "";
+  }
+
+  function loadBitmap(file) {
+    return createImageBitmap(file, { imageOrientation: "from-image" })
+      .catch(function () { return createImageBitmap(file); });
+  }
+
+  function resizeToJpeg(file) {
+    return loadBitmap(file).then(function (bmp) {
+      var s = Math.min(1, MAX_EDGE / Math.max(bmp.width, bmp.height));
+      var c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(bmp.width * s));
+      c.height = Math.max(1, Math.round(bmp.height * s));
+      c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+      if (bmp.close) bmp.close();
+      return new Promise(function (resolve, reject) {
+        c.toBlob(function (b) { b ? resolve(b) : reject(new Error("encode")); }, "image/jpeg", 0.85);
+      });
+    });
+  }
+
+  function addFiles(files) {
+    showUpErr("");
+    [].slice.call(files).forEach(function (file) {
+      if (state.images.length + uploading >= MAX_IMAGES) { showUpErr("Five photos is the limit — remove one to add another."); return; }
+      if (file.size > 30 * 1024 * 1024) { showUpErr("That photo is too large."); return; }
+      uploading++;
+      var ph = document.createElement("div");
+      ph.className = "wup-thumb up";
+      if (thumbs) thumbs.appendChild(ph);
+      if (addBtn && state.images.length + uploading >= MAX_IMAGES) addBtn.style.display = "none";
+      resizeToJpeg(file)
+        .then(function (blob) {
+          return fetch("/inquiry/image", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob })
+            .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); });
+        })
+        .then(function (res) {
+          if (!res.ok || !res.j.url) throw new Error(res.j.error || "upload");
+          state.images.push(res.j.url); save();
+        })
+        .catch(function (err) {
+          showUpErr(err && err.message && err.message !== "upload" && err.message !== "encode"
+            ? "That photo didn't upload — a JPG, PNG or screenshot works best."
+            : "That photo didn't upload — please try again.");
+        })
+        .then(function () { uploading--; ph.remove(); renderThumbs(); });
+    });
+  }
+
+  if (addBtn && fileI) {
+    addBtn.addEventListener("click", function () { fileI.click(); });
+    fileI.addEventListener("change", function () { addFiles(fileI.files); fileI.value = ""; });
+    var zone = document.getElementById("wizUpload");
+    zone.addEventListener("dragover", function (e) { e.preventDefault(); zone.classList.add("drag"); });
+    zone.addEventListener("dragleave", function () { zone.classList.remove("drag"); });
+    zone.addEventListener("drop", function (e) {
+      e.preventDefault(); zone.classList.remove("drag");
+      if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+    });
+    renderThumbs();
+  }
+
   function submit() {
     ["type", "metal", "stone", "budget", "timeline", "message", "name", "email", "phone"].forEach(function (k) {
       form.elements[k].value = state[k] || "";
     });
+    form.elements.images.value = JSON.stringify(state.images.slice(0, MAX_IMAGES));
     // Answers stay saved until thanks.html, so backing out of the Stripe
     // checkout returns to a filled-in wizard. pendingAt flags a brief that went
     // to checkout — if the tab closed after paying, the next visit says so.
@@ -110,6 +210,7 @@
     }
     if (current === TOTAL) {
       if (!state.name.trim() || !validEmail(state.email.trim())) { errBox.textContent = errText; errBox.style.display = "block"; return; }
+      if (uploading) { errBox.textContent = "One moment — your photos are still uploading."; errBox.style.display = "block"; return; }
       submit(); return;
     }
     current++; render();

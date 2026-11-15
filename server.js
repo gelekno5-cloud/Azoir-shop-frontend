@@ -80,6 +80,26 @@ const FIELDS = ["type", "metal", "stone", "budget", "timeline", "message", "name
 // Stripe caps a metadata value at 500 chars; 250 code points never exceeds it
 // and never splits an emoji. A 4000-char story is at most 16 chunks.
 const CHUNK = 250;
+// Inspiration photos: uploaded to the public commission-images bucket by
+// /inquiry/image before the form is sent; only their URLs ride to Stripe
+// (image_0…image_4). 8 fields + ≤16 message chunks + 5 images + mode = 30
+// keys, inside Stripe's 50-key cap.
+const MAX_IMAGES = 5;
+const imagePublicPrefix = () =>
+  process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL}/storage/v1/object/public/commission-images/inquiries/` : null;
+
+// Only URLs this server itself minted pass: our bucket's public prefix, sane
+// length for metadata, no characters that could escape an email attribute.
+function parseInquiryImages(raw) {
+  const prefix = imagePublicPrefix();
+  if (!prefix || typeof raw !== "string" || !raw) return [];
+  let arr;
+  try { arr = JSON.parse(raw); } catch { return []; }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .filter((u) => typeof u === "string" && u.length <= CHUNK && u.startsWith(prefix) && /^[\w\-./]+$/.test(u.slice(prefix.length)))
+    .slice(0, MAX_IMAGES);
+}
 
 async function stripe(endpoint, params) {
   const r = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
@@ -102,13 +122,19 @@ function briefToMetadata(f) {
       meta[k] = chars.slice(0, CHUNK).join("");
     }
   }
+  (f.images || []).forEach((u, i) => { meta[`image_${i}`] = u; });
   return meta;
 }
 
 function metadataToBrief(meta) {
-  const f = {};
+  const f = { images: [] };
   for (const k of FIELDS) f[k] = meta[k] || "";
   for (let i = 0; meta[`message_${i}`]; i++) f.message += meta[`message_${i}`];
+  const prefix = imagePublicPrefix();
+  for (let i = 0; i < MAX_IMAGES && meta[`image_${i}`]; i++) {
+    const u = String(meta[`image_${i}`]);
+    if (prefix && u.startsWith(prefix) && /^[\w\-./]+$/.test(u.slice(prefix.length))) f.images.push(u);
+  }
   return f;
 }
 
@@ -168,10 +194,17 @@ async function sendInquiryEmails(f, session) {
     ["Design fee", `$${(session.amount_total / 100).toFixed(2)} paid — Stripe ${session.payment_intent}`],
   ].filter(([, v]) => clean(v));
 
-  const text = rows.map(([k, v]) => `${k}: ${clean(v)}`).join("\n");
+  const photos = f.images || [];
+  const text = rows.map(([k, v]) => `${k}: ${clean(v)}`).join("\n") +
+    (photos.length ? `\nPhotos:\n${photos.join("\n")}` : "");
   const html =
     `<h2 style="font-family:Georgia,serif">New commission inquiry</h2>` +
-    rows.map(([k, v]) => `<p><strong>${k}:</strong> ${escapeHtml(clean(v)).replace(/\n/g, "<br>")}</p>`).join("");
+    rows.map(([k, v]) => `<p><strong>${k}:</strong> ${escapeHtml(clean(v)).replace(/\n/g, "<br>")}</p>`).join("") +
+    (photos.length
+      ? `<p><strong>Photos:</strong></p><p>` +
+        photos.map((u) => `<a href="${escapeHtml(u)}"><img src="${escapeHtml(u)}" width="130" style="margin:0 6px 6px 0;border:1px solid #ddd" alt="Inspiration photo"></a>`).join("") +
+        `</p>`
+      : "");
 
   async function send(payload) {
     const r = await fetch("https://api.resend.com/emails", {
@@ -475,6 +508,9 @@ async function deliverInquiry(session) {
       budget: f.budget || null,
       timeline: f.timeline || null,
       message: f.message || null,
+      // Only when there are photos: until the reference_image_urls migration
+      // runs on the shared Supabase, a photo-less inquiry must keep inserting.
+      ...(f.images?.length ? { reference_image_urls: f.images } : {}),
       source: "azoir.co",
       design_fee_cents: session.amount_total,
       design_fee_paid_at: new Date().toISOString(),
@@ -580,6 +616,7 @@ app.post("/inquiry", async (req, res) => {
   const f = req.body || {};
   const name = clean(f.name);
   const email = clean(f.email);
+  f.images = parseInquiryImages(f.images);
 
   // Bot gate — before any Stripe call. Only a bot fills the honeypot or posts
   // without the wizard's stamp; those get the fake success page. Too fast, stale
@@ -623,6 +660,56 @@ app.post("/inquiry", async (req, res) => {
     console.error("[inquiry] checkout error", e);
     // An address our regex passes but Stripe rejects needs fixing, not retrying.
     res.redirect(e.code === "email_invalid" || e.param === "customer_email" ? "/commission.html?error=1" : "/commission.html?error=payment");
+  }
+});
+
+// Inspiration photo for a commission inquiry. The browser resizes to ≤1600px
+// and sends the bare image bytes (no multipart); they land in the public
+// commission-images bucket and the URL rides back to /inquiry in the form.
+// A never-paid inquiry orphans its photos there — accepted, same exposure as
+// every other public commission image.
+const IMAGE_TYPES = {
+  "image/jpeg": { ext: "jpg", magic: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  "image/png": { ext: "png", magic: (b) => b.length > 8 && b.readUInt32BE(0) === 0x89504e47 },
+  "image/webp": { ext: "webp", magic: (b) => b.length > 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
+};
+const UPLOAD_WINDOW_MS = 60 * 60 * 1000, MAX_UPLOADS_PER_WINDOW = 40;
+const uploadHits = new Map();
+function uploadLimited(ip) {
+  const now = Date.now();
+  const seen = (uploadHits.get(ip) || []).filter((t) => now - t < UPLOAD_WINDOW_MS);
+  if (seen.length >= MAX_UPLOADS_PER_WINDOW) return true;
+  seen.push(now);
+  uploadHits.set(ip, seen);
+  if (uploadHits.size > 2000) {
+    for (const [k, v] of uploadHits) if (v.every((t) => now - t > UPLOAD_WINDOW_MS)) uploadHits.delete(k);
+  }
+  return false;
+}
+
+app.post("/inquiry/image", express.raw({ type: Object.keys(IMAGE_TYPES), limit: "8mb" }), async (req, res) => {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return res.status(503).json({ error: "Photo uploads are unavailable right now." });
+  const contentType = String(req.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  const type = IMAGE_TYPES[contentType];
+  if (!type || !Buffer.isBuffer(req.body) || req.body.length < 16) return res.status(415).json({ error: "JPG, PNG or WebP only." });
+  if (!type.magic(req.body)) return res.status(415).json({ error: "That file doesn't look like an image." });
+  if (uploadLimited(req.ip || "unknown")) return res.status(429).json({ error: "Please wait a little and try again." });
+  const objPath = `inquiries/${new Date().toISOString().slice(0, 7)}/${crypto.randomBytes(9).toString("hex")}.${type.ext}`;
+  try {
+    const r = await fetch(`${url}/storage/v1/object/commission-images/${objPath}`, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": contentType },
+      body: req.body,
+    });
+    if (!r.ok) {
+      console.error("[inquiry] image upload failed", r.status, (await r.text()).slice(0, 300));
+      return res.status(502).json({ error: "Upload failed — please try again." });
+    }
+    res.json({ url: `${url}/storage/v1/object/public/commission-images/${objPath}` });
+  } catch (e) {
+    console.error("[inquiry] image upload error", e);
+    res.status(502).json({ error: "Upload failed — please try again." });
   }
 });
 

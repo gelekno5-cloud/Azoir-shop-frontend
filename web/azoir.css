@@ -351,6 +351,26 @@ footer{background:var(--ink);color:#B9B6AD;padding:clamp(60px,7vw,88px) 0 40px}
 .wsum-row b{color:var(--ink);font-weight:500}
 .wiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:30px;gap:12px}
 .wiz-nav .btn-fill{min-width:170px}
+/* option cards with a second line (e.g. "My own stone") */
+.wcard.wc-tall{flex-direction:column;gap:3px}
+.wc-sub{display:block;width:100%;font-size:11.5px;color:var(--faint);font-weight:400;line-height:1.4}
+/* story-step inspiration photos */
+.wiz-upload{margin-top:14px}
+.wup-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.wup-add{display:inline-flex;align-items:center;justify-content:center;min-height:72px;padding:0 22px;border:1px dashed var(--hairline-2);border-radius:0;background:none;
+  font-family:inherit;font-size:13px;color:var(--ink-2);cursor:pointer;transition:border-color .2s,color .2s}
+.wup-add:hover,.wiz-upload.drag .wup-add{border-color:var(--ink);color:var(--ink)}
+.wup-grid{display:flex;flex-wrap:wrap;gap:10px}
+.wup-thumb{position:relative;width:72px;height:72px;border:1px solid var(--hairline-2);background:var(--paper-2)}
+.wup-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.wup-thumb.up{border-style:dashed;animation:wupPulse 1.2s ease-in-out infinite}
+@keyframes wupPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.wup-x{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border:1px solid var(--hairline-2);border-radius:50%;background:var(--paper);
+  color:var(--ink);font-family:inherit;font-size:13px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wup-x:hover{border-color:var(--ink)}
+.wup-err{font-size:12.5px;color:#8A4134;margin-top:10px}
+.wsum-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.wsum-thumbs img{width:56px;height:56px;object-fit:cover;border:1px solid var(--hairline)}
 @media(max-width:560px){
   .wizard{padding:26px 18px 24px}
   .wiz-cards,.wiz-cards.sm{grid-template-columns:1fr 1fr}

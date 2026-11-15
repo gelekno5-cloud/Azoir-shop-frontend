@@ -216,14 +216,14 @@
  },
  "pricing": {
   "_comment": "Estimate only, never a quote. perGramCents per alloy; null = quoted individually. laborCents per band.",
-  "laborCents": 10000,
+  "laborCents": 25000,
   "perGramCents": {
-   "14y": 12000,
-   "14w": 12000,
-   "14r": 12000,
-   "18y": 15400,
-   "18w": 15400,
-   "18r": 15400,
+   "14y": 16500,
+   "14w": 16500,
+   "14r": 16500,
+   "18y": 21000,
+   "18w": 21000,
+   "18r": 21000,
    "pt": null
   }
  }

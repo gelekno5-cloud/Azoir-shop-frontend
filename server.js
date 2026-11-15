@@ -250,8 +250,8 @@ const BAND_MODE = "azoir_band";
 const BAND_DEPOSIT_MIN_CENTS = 25000;                  // $250 floor, and the flat deposit when there is no estimate
 const BAND_DEPOSIT_RATE = 0.25;                        // of the estimate (owner, 2026-10-17)
 const bandDepositCents = (estimateCents) => estimateCents == null ? BAND_DEPOSIT_MIN_CENTS : Math.max(BAND_DEPOSIT_MIN_CENTS, Math.round(estimateCents * BAND_DEPOSIT_RATE));
-const BAND_LABOR_CENTS = 10000;                        // per band (owner, 2026-10-17)
-const BAND_RATES = { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null }; // cents per gram; null = quoted
+const BAND_LABOR_CENTS = 25000;                        // per band (owner, 2026-11-14)
+const BAND_RATES = { "14y": 16500, "14w": 16500, "14r": 16500, "18y": 21000, "18w": 21000, "18r": 21000, pt: null }; // cents per gram; null = quoted
 const BAND_DENSITY = { "14y": 13.1, "14w": 12.7, "14r": 13.0, "18y": 15.5, "18w": 15.1, "18r": 15.2, pt: 20.6 };
 const BAND_SHIP_COUNTRIES = ["US", "CA", "GB"];
 const ADMIN_URL = (process.env.ADMIN_URL || "https://mokshdiam.com").replace(/\/+$/, "");

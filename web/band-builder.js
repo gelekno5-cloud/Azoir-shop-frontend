@@ -32,15 +32,15 @@ const METALS = {
   "18r": { name: "18k Rose Gold",   wizard: "Rose gold",   color: "#dc987b", density: 15.2, sw: "#dc987b" },
   "pt":  { name: "Platinum 950",    wizard: "Platinum",    color: "#cfcece", density: 20.6, sw: "#cfcece" },
 };
-// ── Price estimate (owner's rule, 2026-10-17) ────────────────────────────────
+// ── Price estimate (owner's rule, rates 2026-11-14) ────────────────────────────────
 // Estimate = metal weight × the alloy's rate + flat labour per band. 14k is
-// $120/g; 18k scales by fine-gold content. A metal with no rate (platinum until
+// $165/g, 18k $210/g. A metal with no rate (platinum until
 // the atelier sets one) makes the band "quoted individually". Diamonds are
 // never estimated here. Always shown as an estimate, never a quote; editable
 // in band-catalog.json under "pricing".
 let PRICING = {
-  laborCents: 10000,
-  perGramCents: { "14y": 12000, "14w": 12000, "14r": 12000, "18y": 15400, "18w": 15400, "18r": 15400, pt: null },
+  laborCents: 25000,
+  perGramCents: { "14y": 16500, "14w": 16500, "14r": 16500, "18y": 21000, "18w": 21000, "18r": 21000, pt: null },
 };
 const usd = (cents) => "$" + Math.round(cents / 100).toLocaleString("en-US");
 function estimateBand(b, m) {
@@ -1791,7 +1791,7 @@ function specText() {
   return [
     `Wedding band${ui.pair ? "s (His & Hers pair" + (ui.link ? ", linked)" : ")") : ""} — ref ${refCode()}\n${location.href}`,
     ...blocks,
-    `Estimate for the ${ui.pair ? "pair" : "band"}: ${estimateText(est)}. Metal by weight (14k $120/g, 18k by gold content) plus $100 labour per band; diamonds quoted separately. This is an estimate, not a quote — the atelier confirms the price before anything is made.`,
+    `Estimate for the ${ui.pair ? "pair" : "band"}: ${estimateText(est)}. Metal by weight (14k $165/g, 18k $210/g) plus $250 labour per band; diamonds quoted separately. This is an estimate, not a quote — the atelier confirms the price before anything is made.`,
   ].join("\n\n");
 }
 

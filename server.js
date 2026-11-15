@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
+import { limiter, mokshApi, mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 import { mountShop } from "./shop.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -630,6 +630,9 @@ mountPromos(app);
 // Ready to Ship — /shop/api/* and /ready-to-ship/:handle relay to the backend's Azoir store (shop.js).
 mountShop(app, { webDir: WEB });
 
+// web/start.html is the template of the design-fee page (GET /start/:token below), not a page.
+app.get("/start.html", (_req, res) => res.redirect("/commission.html"));
+
 // Static assets (media incl. hero.mp4 lives under web/media)
 // Pages revalidate on every visit (a deploy must show up at once); assets keep the hour.
 app.use(express.static(WEB, {
@@ -693,11 +696,133 @@ app.post("/inquiry", async (req, res) => {
 });
 
 // Design fee link for a commission that arrived by email, DM or phone. The atelier hands out
-// azoir.co/start/<token>; the pay page itself is served by the admin.
-app.get("/start/:token", (req, res) => {
+// azoir.co/start/<token> and the client stays on azoir.co: this page is rendered here (template
+// web/start.html) from the Moksh Diam backend's /fee/<token>, which owns the inquiry, the Stripe
+// session and the record of the payment. Nothing is stored or charged by this server.
+//   GET  /start/<token>                  the page: unpaid (Pay button), paid, closed, or unavailable
+//   GET  /start/<token>?session_id=cs_…  back from Stripe: confirm with the backend, then the clean address
+//   POST /start/<token>                  the Pay button (a plain form): open Stripe Checkout
+// The token is the credential, so the page is never cached or indexed, sends no referrer and
+// loads no analytics.
+const FEE_TOKEN = /^[A-Za-z0-9_-]{20,64}$/;
+// Per shopper: the backend sees every call from this server's one address.
+const feeViewLimit = limiter(60, 15 * 60_000);
+const feePayLimit = limiter(10, 15 * 60_000);
+// A return from Stripe happens once per payment, and each one is a Stripe call on the backend.
+const feeConfirmLimit = limiter(6, 15 * 60_000);
+// Only the backend's own "no such link". Any other 404 (its route not deployed yet, the channel
+// off) is "unavailable": a good link must never show the not-found page.
+const feeNotFound = (out) => out.status === 404 && !!out.body && out.body.error === "not_found";
+
+function feeHeaders(res) {
+  res.set({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex", "Referrer-Policy": "no-referrer" });
+}
+
+/** The page for one state. Every value from the backend or the address is escaped here. */
+function feePageHtml(token, view) {
+  const esc = escapeHtml;
+  const text = (v, max) => String(v ?? "").trim().slice(0, max);
+  const state = view.state;
+  const first = text(view.first_name, 60), piece = text(view.piece, 200), terms = text(view.terms, 400);
+  const amount = text(view.amount, 20) || money(DESIGN_FEE_CENTS);
+  const mail = `<a href="mailto:hello@azoir.co">hello@azoir.co</a>`;
+  const yours = `Your commission${first ? `, <em>${esc(first)}</em>` : ""}`;
+  let eyebrow = "Design fee", heading = yours, card;
+  if (state === "paid") {
+    eyebrow = "Design fee received";
+    heading = "Thank <em>you</em>";
+    card =
+      `<div class="fee-row"><span>Design fee paid</span><span>${esc(amount)}</span></div>` +
+      `<p>Your design fee is received — it is credited toward your final price. A receipt is on its way to your inbox, and a designer will reply to you personally.</p>`;
+  } else if (state === "closed") {
+    card = `<p>This request is closed. Email ${mail} if that's unexpected.</p>`;
+  } else if (state === "unpaid") {
+    card =
+      `<div class="fee-row"><span>Design fee</span><span>${esc(amount)}</span></div>` +
+      `<p>We have your brief from your message — there is nothing more to fill in.${terms ? ` ${esc(terms)}` : ""}</p>` +
+      (view.pending ? `<p>If you have just paid, your payment can take a minute to show here. Please refresh this page before paying again.</p>` : "") +
+      (view.error ? `<p class="fee-alert" role="alert">Payment is briefly unavailable. Please try again in a minute.</p>` : "") +
+      `<form method="post" action="/start/${esc(token)}">` +
+      `<button type="submit" class="btn-fill">Pay ${esc(amount)}</button>` +
+      `<p class="fee-secure">Secure card payment by Stripe.</p>` +
+      `</form>`;
+  } else {
+    heading = "One <em>moment</em>";
+    card =
+      `<p>We can't open this page right now. Please try again in a minute.</p>` +
+      `<p>If you have just paid, your payment is safe — there is no need to pay again.</p>` +
+      `<a href="/start/${esc(token)}" class="btn-outline">Try again</a>`;
+  }
+  const slots = {
+    EYEBROW: eyebrow,
+    HEADING: heading,
+    PIECE: piece && state !== "unavailable" ? `<p class="fee-piece">${esc(piece)}</p>` : "",
+    CARD: card,
+  };
+  // One pass with a function: a value is never rescanned for slots or "$" patterns.
+  return fs.readFileSync(path.join(WEB, "start.html"), "utf8").replace(/\{\{(EYEBROW|HEADING|PIECE|CARD)\}\}/g, (_m, k) => slots[k]);
+}
+
+function sendFeePage(res, status, token, view) {
+  try {
+    res.status(status).type("html").send(feePageHtml(token, view));
+  } catch (e) {
+    console.error("[fee] page render failed", e.message);
+    res.status(503).type("text/plain").send("This page is briefly unavailable. Please try again in a minute, or email hello@azoir.co.");
+  }
+}
+
+app.get("/start/:token", async (req, res) => {
   const token = String(req.params.token || "");
-  if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return res.redirect("/commission.html");
-  res.redirect(`${ADMIN_URL}/pay/fee/${token}`);
+  if (!FEE_TOKEN.test(token)) return res.redirect("/commission.html");
+  feeHeaders(res);
+  const page = `/start/${token}`;
+  if (feeViewLimit(req.ip || "unknown")) return sendFeePage(res, 429, token, { state: "unavailable" });
+
+  // Back from Stripe. The backend checks the session against this inquiry and records the payment;
+  // the redirect drops the session id, so a reload never confirms twice.
+  if (req.query.session_id !== undefined) {
+    const sessionId = String(req.query.session_id);
+    if (!/^cs_[A-Za-z0-9_]+$/.test(sessionId)) return res.redirect(page);
+    if (feeConfirmLimit(req.ip || "unknown")) return res.redirect(`${page}?pending=1`);
+    const out = await mokshApi(`/fee/${token}`, { method: "POST", body: { action: "confirm", session_id: sessionId }, timeoutMs: 20_000 });
+    const settled = feeNotFound(out) || (out.status === 200 && out.body && (out.body.state === "paid" || out.body.state === "closed"));
+    if (!settled) console.error(`[fee] confirm not settled (${out.status}${out.body && out.body.state ? ` ${out.body.state}` : ""})`);
+    // Not confirmed (backend unreachable, or the payment isn't recorded yet): the page then asks
+    // the client to refresh before paying again.
+    return res.redirect(settled ? page : `${page}?pending=1`);
+  }
+
+  const out = await mokshApi(`/fee/${token}`);
+  if (feeNotFound(out)) return res.status(404).sendFile(path.join(WEB, "404.html"));
+  const b = out.status === 200 && out.body && typeof out.body === "object" ? out.body : {};
+  if (!["unpaid", "paid", "closed"].includes(b.state)) {
+    console.error(`[fee] state unavailable (${out.status})`);
+    return sendFeePage(res, 503, token, { state: "unavailable" });
+  }
+  sendFeePage(res, 200, token, {
+    state: b.state, first_name: b.first_name, piece: b.piece, amount: b.amount, terms: b.terms,
+    error: req.query.error === "payment", pending: req.query.pending === "1",
+  });
+});
+
+// The Pay button. No fields to read: the token names the inquiry and the backend sets the amount.
+app.post("/start/:token", async (req, res) => {
+  const token = String(req.params.token || "");
+  if (!FEE_TOKEN.test(token)) return res.redirect(303, "/commission.html");
+  feeHeaders(res);
+  const page = `/start/${token}`;
+  // Only this page's own form: a browser says where a POST came from; one that doesn't is let through.
+  const site = req.get("sec-fetch-site");
+  if (site && site !== "same-origin") return res.redirect(303, page);
+  if (feePayLimit(req.ip || "unknown")) return res.redirect(303, `${page}?error=payment`);
+  const out = await mokshApi(`/fee/${token}`, { method: "POST", body: { action: "checkout" }, timeoutMs: 25_000 });
+  const url = out.status === 200 && out.body && typeof out.body.url === "string" ? out.body.url : "";
+  if (/^https:\/\/[^\s/]+\//.test(url)) return res.redirect(303, url);
+  // Already paid or closed (409), or gone (404): the page says which.
+  if (out.status === 409 || feeNotFound(out)) return res.redirect(303, page);
+  console.error(`[fee] checkout failed (${out.status}${out.body && out.body.error ? ` ${out.body.error}` : ""})`);
+  res.redirect(303, `${page}?error=payment`);
 });
 
 // Stripe success redirect. A failed lookup still thanks the customer — the

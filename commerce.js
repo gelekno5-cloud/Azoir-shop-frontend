@@ -108,7 +108,7 @@ function clearTokenCookie(res) {
 }
 
 /** Per-shopper (per-IP) sliding window, so the backend's looser per-IP limit isn't the only gate. */
-function limiter(perWindow, windowMs) {
+export function limiter(perWindow, windowMs) {
   const hits = new Map();
   return (key) => {
     const now = Date.now();

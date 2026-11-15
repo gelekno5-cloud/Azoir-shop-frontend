@@ -114,13 +114,14 @@ function usToUK(us) {
   if (idx > 25) return "Z+" + (idx - 25) + (half ? "½" : "");
   return UK[idx] + (half ? "½" : "");
 }
-const clampSize = (v) => Math.min(13, Math.max(3.75, Math.round(v * 4) / 4));
+const MAX_SIZE = 16; // US; server.js accepts the same ceiling
+const clampSize = (v) => Math.min(MAX_SIZE, Math.max(3.75, Math.round(v * 4) / 4));
 function usLabel(us) { const w = Math.floor(us), f = Math.round((us - w) * 4); return String(w) + ["", "¼", "½", "¾"][f]; }
 function sizeOptions(sys) {
   const o = [];
-  if (sys === "eu") { for (let eu = 47; eu <= 70; eu++) o.push({ v: clampSize(euToUS(eu)), label: "EU " + eu }); }
-  else if (sys === "uk") { for (let i = 7; i <= 25; i++) { o.push({ v: ukToUS(i, false), label: "UK " + UK[i] }); o.push({ v: ukToUS(i, true), label: "UK " + UK[i] + "½" }); } }
-  else { for (let s = 4; s <= 13; s += 0.5) o.push({ v: s, label: "US " + usLabel(s) }); }
+  if (sys === "eu") { for (let eu = 47; eu <= Math.round(usToEU(MAX_SIZE)); eu++) o.push({ v: clampSize(euToUS(eu)), label: "EU " + eu }); }
+  else if (sys === "uk") { for (let i = 7; ukToUS(i, true) <= MAX_SIZE; i++) { const l = "UK " + (i > 25 ? "Z+" + (i - 25) : UK[i]); o.push({ v: ukToUS(i, false), label: l }); o.push({ v: ukToUS(i, true), label: l + "½" }); } }
+  else { for (let s = 4; s <= MAX_SIZE; s += 0.5) o.push({ v: s, label: "US " + usLabel(s) }); }
   return o;
 }
 const sizeText = (us) => `US ${usLabel(us)} · EU ${Math.round(usToEU(us))} · UK ${usToUK(us)}`;
@@ -156,7 +157,7 @@ function readBand(q, p, b) {
   if (b.profile === "custom" && !CUSTOM) b.profile = "court"; // the imported section lives in this browser only
   const num = (k, lo, hi, set) => { const v = parseFloat(g(k)); if (Number.isFinite(v)) set(Math.min(hi, Math.max(lo, v))); };
   num("width", 2, 8, (v) => (b.width = v)); num("depth", 1.2, 2.6, (v) => (b.depth = v));
-  num("size", 3.75, 13, (v) => (b.size = Math.round(v * 4) / 4)); num("zones", 1, 3, (v) => (b.zones = Math.round(v)));
+  num("size", 3.75, MAX_SIZE, (v) => (b.size = Math.round(v * 4) / 4)); num("zones", 1, 3, (v) => (b.zones = Math.round(v)));
   num("zsplit", 0.2, 0.8, (v) => (b.zsplit = v)); num("zmid", 0.2, 0.7, (v) => (b.zmid = v));
   num("wave", 0, 0.4, (v) => (b.wave = v)); num("wavef", 1, 20, (v) => (b.wavef = Math.round(v)));
   const e = g("engraving"); if (e != null) b.engraving = e.slice(0, 30);

@@ -337,6 +337,17 @@ footer{background:var(--ink);color:#B9B6AD;padding:clamp(60px,7vw,88px) 0 40px}
 .sw-diamond{background-image:url(media/swatches/stone-diamond.webp)!important}
 .sw-lab-diamond{background-image:url(media/swatches/stone-lab-diamond.webp)!important}
 .sw-sapphire{background-image:url(media/swatches/stone-sapphire.webp)!important}
+/* piece icons on the wizard's first step — cropped from the approved line-art
+   sheet (media/icons), ink on transparent so they sit on any card state */
+.wcard .pic{width:26px;height:26px;flex-shrink:0;background-size:contain;background-position:center;background-repeat:no-repeat}
+.pic-engagement{background-image:url(media/icons/piece-engagement.png)}
+.pic-bands{background-image:url(media/icons/piece-bands.png)}
+.pic-necklace{background-image:url(media/icons/piece-necklace.png)}
+.pic-earrings{background-image:url(media/icons/piece-earrings.png)}
+.pic-bracelet{background-image:url(media/icons/piece-bracelet.png)}
+.pic-signet{background-image:url(media/icons/piece-signet.png)}
+.pic-heirloom{background-image:url(media/icons/piece-heirloom.png)}
+.pic-else{background-image:url(media/icons/piece-else.png)}
 .wiz-cards.nudge{animation:wizShake .5s}
 @keyframes wizShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .wizard textarea{width:100%;background:none;border:1px solid var(--hairline-2);border-radius:0;color:var(--ink);

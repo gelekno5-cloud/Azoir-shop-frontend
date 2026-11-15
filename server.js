@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { conciergeHandler } from "./concierge.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -718,6 +719,10 @@ async function bandRequest(req, res) {
 }
 app.post("/band-request", bandRequest);
 app.post("/band-order", bandRequest);
+
+// Concierge — grounded Q&A over the site's guides (concierge.js). JSON body,
+// parsed here only: the app has no global JSON parser.
+app.post("/api/concierge", express.json({ limit: "32kb" }), conciergeHandler);
 
 // Stripe success redirect for a band request. The webhook delivers it regardless.
 async function bandRequestPaid(req, res) {

@@ -1579,6 +1579,71 @@ $("bbSave").addEventListener("click", () => {
   a.href = snapshot();
   a.click();
 });
+// Spec-sheet pictures: fixed views of one band, shot on a camera of their own
+// (the stage's camera and its controls are never touched). Directions are in
+// the ring's own frame, so the lean and a pair's offset are already accounted
+// for: s = across the ring, t = toward its top (where stones are centred),
+// a = along its axis, toward the viewer. `up` is the top unless stated.
+const SHOT_W = 800, SHOT_H = 600;
+const SHOT_VIEWS = [
+  { name: "Three-quarter", s: 0.55, t: 0.5, a: 0.67, up: "world" }, // the stage's own angle, standing on the ground
+  { name: "Front", a: 1 },                                          // on the axis, straight through the hole
+  { name: "Side", s: -1 },                                          // edge-on: the profile's silhouette, L on the left as in the drawing
+  { name: "Top", t: 1, up: "back" },                                // down onto the outer face
+  { name: "Inside", t: 0.74, a: 0.67, engraved: true },             // front and above: the bottom inner wall, where the engraving sits
+];
+let shotCam = null, shotCanvas = null;
+// Returns [{name, src}] (JPEG on white), or null if anything goes wrong. One
+// synchronous pass: the drawing buffer is read back in the task that drew it,
+// and the stage never gets a frame in the capture state.
+function captureViews(i) {
+  const v = views[i], b = bands[i];
+  const ratio = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2());
+  const shown = views.map((w) => w.group.visible), family = envFamily;
+  try {
+    if (renderer.getContext().isContextLost()) return null;
+    if (!shotCam) {
+      shotCam = new THREE.PerspectiveCamera(22, SHOT_W / SHOT_H, 1, 500);
+      shotCanvas = document.createElement("canvas"); shotCanvas.width = SHOT_W; shotCanvas.height = SHOT_H;
+    }
+    const cam = shotCam, ctx = shotCanvas.getContext("2d");
+    views.forEach((w, k) => w.setVisible(k === i)); // each band alone
+    setEnvFamily(familyForMetal(b.metals[0]));      // lit for its own metal (the stage follows band 0)
+    renderer.setPixelRatio(1); renderer.setSize(SHOT_W, SHOT_H, false);
+    v.group.updateMatrixWorld(true);
+    const M = v.group.matrixWorld, centre = new THREE.Vector3().setFromMatrixPosition(M);
+    const axis = (x, y, z) => new THREE.Vector3(x, y, z).transformDirection(M);
+    const S = axis(1, 0, 0), A = axis(0, 1, 0), T = axis(0, 0, -1); // TOP is lathe −Z
+    // the band's envelope, from the section that cut it: a circle at its largest radius on each edge
+    const sp = v.sec.runs.flat(), R = Math.max(...sp.map((p) => p.x)) + 0.6, hw = Math.max(...sp.map((p) => Math.abs(p.y))) + 0.1;
+    const env = [];
+    for (let k = 0; k < 24; k++) for (const y of [-hw, hw]) env.push(new THREE.Vector3(R * Math.cos(k * Math.PI / 12), y, R * Math.sin(k * Math.PI / 12)).applyMatrix4(M).sub(centre));
+    const tanV = Math.tan(cam.fov * Math.PI / 360) * 0.86, tanH = tanV * cam.aspect; // the band fills 86% of the tile
+    const X = new THREE.Vector3(), Y = new THREE.Vector3(), Z = new THREE.Vector3(), dir = new THREE.Vector3();
+    const shots = [];
+    for (const view of SHOT_VIEWS) {
+      if (view.engraved && !b.engraving.trim()) continue;
+      dir.set(0, 0, 0).addScaledVector(S, view.s || 0).addScaledVector(T, view.t || 0).addScaledVector(A, view.a || 0).normalize();
+      if (view.up === "world") cam.up.set(0, 1, 0); else if (view.up === "back") cam.up.copy(A).negate(); else cam.up.copy(T);
+      cam.position.copy(centre).add(dir); cam.lookAt(centre); cam.updateMatrixWorld();
+      cam.matrixWorld.extractBasis(X, Y, Z);
+      // the nearest distance at which every envelope point is inside the frame
+      let d = 0;
+      for (const p of env) d = Math.max(d, p.dot(Z) + Math.abs(p.dot(X)) / tanH, p.dot(Z) + Math.abs(p.dot(Y)) / tanV);
+      cam.position.copy(centre).addScaledVector(dir, d);
+      ground.visible = v.shadow.visible = view.up === "world"; // a shadow only where the ground is level in the picture
+      renderer.render(scene, cam);
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, SHOT_W, SHOT_H);
+      ctx.drawImage(renderer.domElement, 0, 0, SHOT_W, SHOT_H);
+      shots.push({ name: view.name, src: shotCanvas.toDataURL("image/jpeg", 0.9) });
+    }
+    return shots;
+  } catch (e) { return null; }
+  finally {
+    views.forEach((w, k) => w.setVisible(shown[k])); ground.visible = true; setEnvFamily(family);
+    renderer.setSize(size.x, size.y, false); renderer.setPixelRatio(ratio); resize();
+  }
+}
 
 // ── Spec sheet (print view) ──────────────────────────────────────────────────
 function refCode() {
@@ -1624,8 +1689,9 @@ function sectionSVG(b, v) {
   s += `<text x="${pad}" y="${H - 4}" font-size="9" fill="#64748b">Cross-section · inside Ø ${fmt(usToDiameter(b.size))} mm</text>`;
   return s + "</svg>";
 }
-let sheet = null;
-function openSheet() {
+let sheet = null, sheetWait = false;
+async function openSheet() {
+  if (sheetWait) return; // already waiting for the fonts: further taps must not queue more captures
   if (!sheet) {
     sheet = document.createElement("div"); sheet.className = "bb-sheet"; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-label", "Specification sheet");
     document.body.appendChild(sheet);
@@ -1635,17 +1701,55 @@ function openSheet() {
       else if (e.target.closest("[data-close]")) sheet.classList.remove("open");
     });
   }
+  // The engraving is drawn with web fonts: let them arrive (briefly), then redraw it, before the pictures are taken.
+  if (document.fonts?.ready && bands.some((b) => b.engraving.trim())) {
+    sheetWait = true;
+    try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]); } finally { sheetWait = false; }
+  }
   writeHash();
   const code = refCode();
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const list = ui.pair ? [0, 1] : [0];
+  for (const i of list) { const text = bands[i].engraving.trim(); if (text) { drawEngraving(views[i].engraveCanvas, text, bands[i].font); views[i].engraveTex.needsUpdate = true; } }
+  const shots = list.map(captureViews);
+  const snap = shots.includes(null) ? snapshot() : null; // any capture failed: the one stage picture, as before
+  const spec = specJSON(); // sizes and zones exactly as the order carries them
+  const row = (label, html) => html == null || html === "" || html === "—" ? "" : `<div><dt>${label}</dt><dd>${html}</dd></div>`;
+  const group = (title, rows) => { const r = rows.join(""); return r ? `<div class="bb-doc-group"><h3>${title}</h3><dl>${r}</dl></div>` : ""; };
+  const lines = (s) => esc(s).split(" · ").join("<br>"); // one fact per line
+  const mm = (n) => String(n).replace("-", "−");
+  const fig = (s, cls = "") => `<figure${cls}><img src="${s.src}" alt="${s.name} view"><figcaption>${s.name}</figcaption></figure>`;
   const bandBlock = (i) => {
-    const b = bands[i], v = views[i], t = bandText(b, v);
-    const rows = Object.keys(ROW_LABELS).map((k) => `<tr><td>${ROW_LABELS[k]}</td><td>${esc(t[k])}</td></tr>`).join("");
+    const b = bands[i], v = views[i], m = v.metrics, t = bandText(b, v), j = spec.bands[i], pics = snap ? null : shots[i];
+    const custom = b.profile === "custom", text = b.engraving.trim(), font = FONTS[b.font] ? b.font : "script";
+    const metal = b.zones === 1
+      ? group("Metal &amp; finish", [row(ROW_LABELS.metal, esc(t.metal)), row(ROW_LABELS.finish, esc(t.finish))])
+      : `<div class="bb-doc-group"><h3>Metal &amp; finish</h3><table class="bb-doc-zones"><thead><tr><th>Zone</th><th>Metal</th><th>Finish</th><th>From – to, mm from centre</th><th>Est. weight</th></tr></thead><tbody>${
+        j.zones.map((z, k) => `<tr><td>${ZONE_NAMES[b.zones][k]}</td><td>${esc(z.metalName)}</td><td>${esc(z.finishName)}</td><td>${mm(z.fromMm)} to ${mm(z.toMm)}</td><td>≈ ${fmt(m.zoneGrams[k])} g</td></tr>`).join("")}</tbody></table></div>`;
     return `<section class="bb-doc-band">
+      <div class="bb-doc-ref">${code}${ui.pair ? " · " + BAND_NAMES[i] : ""}</div>
       <h2>${ui.pair ? BAND_NAMES[i] + " — " : ""}${esc(PROFILES[b.profile].name)} band, ${fmt(b.width)} mm</h2>
-      <div class="bb-doc-sec">${sectionSVG(b, v)}</div>
-      <table>${rows}</table>
+      <div class="bb-doc-keep">
+        <dl class="bb-doc-make">
+          <div><dt>Ring size</dt><dd>US ${usLabel(b.size)}<small>EU ${j.size.eu} · UK ${esc(j.size.uk)}</small></dd></div>
+          <div><dt>Inside diameter</dt><dd>${fmt(usToDiameter(b.size))}<span>mm</span></dd></div>
+          <div><dt>Circumference</dt><dd>${fmt(usToEU(b.size))}<span>mm</span></dd></div>
+          <div><dt>${ROW_LABELS.width}</dt><dd>${fmt(b.width)}<span>mm</span></dd></div>
+          <div><dt>${ROW_LABELS.depth}</dt><dd>${fmt(b.depth)}<span>mm</span></dd></div>
+        </dl>
+        ${pics ? `<div class="bb-doc-pics">${fig(pics[0], ' class="bb-doc-hero"')}<div class="bb-doc-tiles">${pics.slice(1).map((s) => fig(s)).join("")}</div></div>` : ""}
+      </div>
+      <div class="bb-doc-body">
+        <div class="bb-doc-sec">${sectionSVG(b, v)}</div>
+        <div class="bb-doc-facts">
+          ${group("Shape", [row(ROW_LABELS.profile, esc(custom ? t.profile : PROFILES[b.profile].name)), custom ? "" : row("Interior", b.profile === "round" ? "Round" : esc(INTERIORS[b.interior])), row(ROW_LABELS.edges, esc(t.edges))])}
+          ${metal}
+          ${group("Wave", t.wave === "—" ? [] : [row("Mode", esc(WAVE_MODES[b.wavemode])), row("Amplitude", `${fmt(b.wave, 2)} mm`), row("Repeats around", b.wavef)])}
+          ${group("Diamonds", !m.stones ? [] : [row("Count", m.stones), row("Shape", esc(SHAPES[b.shape].name)), row("Stone size", esc(m.stoneDims)), row(ROW_LABELS.setting, esc(SETTINGS[b.setting].name)), row("Coverage", esc(SPANS[b.stones])), row("Total carat", `≈ ${fmt(m.carats, 2)} ct`), row("Setting detail", lines(m.setting)), row(ROW_LABELS.limits, lines(m.limits))])}
+          ${group("Engraving", text ? [row("Text", `<span class="bb-doc-eng bb-doc-eng-${font}">${esc(text)}</span>`), row("Style", { script: "Script", serif: "Serif", sans: "Modern" }[font])] : [row("Text", "None")])}
+          ${group("Weight &amp; estimate", [row(ROW_LABELS.weight, esc(t.weight)), row(ROW_LABELS.estimate, esc(t.estimate))])}
+        </div>
+      </div>
     </section>`;
   };
   sheet.innerHTML = `
@@ -1655,7 +1759,7 @@ function openSheet() {
         <div><img src="media/azoir-logo.png" alt="AZOIR &amp; Co."><div class="bb-doc-sub">Wedding band specification${ui.pair ? " · His &amp; Hers pair" + (ui.link ? " (linked)" : "") : ""}</div></div>
         <div class="bb-doc-meta"><b>${code}</b>${date}<br>azoir.co · New York</div>
       </div>
-      <img class="bb-doc-snap" src="${snapshot()}" alt="3D preview">
+      ${snap ? `<img class="bb-doc-snap" src="${snap}" alt="3D preview">` : ""}
       ${list.map(bandBlock).join("")}
       <div class="bb-doc-foot">Reference ${code}. Dimensions in millimetres; weights are estimates from the 3D model and are confirmed by the atelier before casting. Prices are estimates only — metal by weight at the atelier's current rate plus labour per band; diamonds, and any metal without a set rate, are quoted individually — and are confirmed by the atelier before anything is made. Ring sizes: US chart, EU (ISO circumference) and UK letters. Every design is quoted individually — share this sheet or the link below with hello@azoir.co.<br><span class="bb-doc-link">${esc(location.href)}</span></div>
     </div>`;

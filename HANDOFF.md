@@ -306,4 +306,4 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 ] }
 ```
 
-`pages` is optional (omit = all four slots). Home shows up to 5 — more than 3 turns it into a swipe carousel with arrows; engagement/bands show up to 3; the commission form shows 1. Order in the file = order on the page. Cards use the class `rev-card` (`.rev` already means "reversed layout" on About/How). Commit to `main` and Railway deploys it.
+`pages` is optional (omit = all four slots). Home shows up to 5 — more than 3 turns it into a text-only strip (no cards) that advances itself every 8s (12s on phones), with arrows + pause, holding on hover/focus and under reduced motion; engagement/bands show up to 3; the commission form shows 1. Order in the file = order on the page. Cards use the class `rev-card` (`.rev` already means "reversed layout" on About/How). Commit to `main` and Railway deploys it.

@@ -1,3 +1,46 @@
 {
-  "reviews": []
+  "reviews": [
+    {
+      "quote": "I had my grandmother’s diamond sitting in a drawer for years because the original ring was too tall for me. AZOIR reset it in a low gold band that I can wear every day. The diamond still reminds me of her, and the ring feels like mine.",
+      "name": "Maya · Brooklyn, NY",
+      "piece": "Heirloom diamond, reset in gold",
+      "pages": ["home", "engagement"]
+    },
+    {
+      "quote": "I came in with a few screenshots and a rough idea. Seeing the ring in 3D helped me realize I wanted a thinner band, and they made the adjustment before production. It turned out exactly how I pictured it after that last revision.",
+      "name": "Jordan · Jersey City, NJ",
+      "piece": "Engagement ring, designed in 3D",
+      "pages": ["home", "engagement", "commission"]
+    },
+    {
+      "quote": "I commissioned a signet with my dad’s initials. I was picky about the lettering because I wanted it to look like his signature. They showed me a couple of options, and the one we landed on looked even better in gold.",
+      "name": "Elena · Philadelphia, PA",
+      "piece": "Gold signet with custom initials",
+      "pages": ["home"]
+    },
+    {
+      "quote": "I wanted a small gold pendant with my daughter’s birthstone. I asked them to make the loop a little bigger so it would fit a chain I already owned. It slides right on, and I’ve worn it almost every day since I got it.",
+      "name": "Priya · Boston, MA",
+      "piece": "Gold birthstone pendant",
+      "pages": ["home"]
+    },
+    {
+      "quote": "I was nervous that the sapphire and diamond would look bulky together. AZOIR helped me settle on the stone sizes and angle them just slightly toward each other. The ring feels balanced on my hand, and I keep catching myself looking down at it.",
+      "name": "Chloe · Austin, TX",
+      "piece": "Sapphire and diamond ring",
+      "pages": ["engagement"]
+    },
+    {
+      "quote": "My engagement ring has a low setting, so every straight band I tried left a gap I didn’t love. AZOIR made a gently curved band that sits flush against it. I like how subtle the curve looks when I wear the band by itself, too.",
+      "name": "Sophie · New York, NY",
+      "piece": "Curved wedding band",
+      "pages": ["bands"]
+    },
+    {
+      "quote": "I wanted a little more sparkle in my stack without covering up the side of my engagement ring. We went with a thin band with diamonds across the top. It’s also pretty on its own, which is how I usually wear it during the week.",
+      "name": "Nina · Atlanta, GA",
+      "piece": "Thin diamond band",
+      "pages": ["home", "bands"]
+    }
+  ]
 }

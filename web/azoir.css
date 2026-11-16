@@ -228,7 +228,9 @@ section[data-reviews][hidden]{display:none}
 .rev-list[data-count="2"]{grid-template-columns:repeat(2,minmax(0,520px));justify-content:center}
 .rev-list.is-carousel{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 2*var(--rg))/3);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
 .rev-list.is-carousel::-webkit-scrollbar{display:none}
-.rev-list.is-carousel .rev-card{scroll-snap-align:start}
+.rev-list.is-carousel{--rg:clamp(36px,4.5vw,72px)}
+.rev-list.is-carousel .rev-card{scroll-snap-align:start;background:none;border:0;padding:0;justify-content:flex-start}
+.rev-list.is-carousel .rev-card blockquote{font-size:clamp(22px,2vw,28px)}
 .rev-list.is-carousel:focus-visible{outline:1px solid var(--ink);outline-offset:6px}
 .rev-nav{display:flex;justify-content:center;gap:10px;margin-top:clamp(28px,3vw,40px)}
 .rev-nav button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--hairline-2);background:none;color:var(--ink);cursor:pointer;transition:border-color .2s,opacity .2s}

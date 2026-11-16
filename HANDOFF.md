@@ -295,3 +295,15 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 - **If Stripe refuses** (Stripe Tax not activated), the deposit is charged without tax and a `payment_failed` admin notification says so.
 - **Request step:** the tax row reads "Added at payment, for your address" (`band-builder.js?v=40`).
 - **Tested with fake Stripe/Supabase:** tax on; tax refused (fallback + notice); manual mode unchanged.
+
+## Client reviews (2026-11-16)
+
+`web/reviews.json` feeds a review section on four pages (home, commission form, engagement rings, wedding bands) via `web/reviews.js`. **Empty list = every section stays hidden.** Add only real clients' words, quoted with their permission (the FTC fake-review rule applies):
+
+```json
+{ "reviews": [
+  { "quote": "…their words…", "name": "Sarah", "piece": "Emerald engagement ring", "pages": ["home", "engagement"] }
+] }
+```
+
+`pages` is optional (omit = all four slots). Home/engagement/bands show up to 3; the commission form shows 1. Commit to `main` and Railway deploys it.

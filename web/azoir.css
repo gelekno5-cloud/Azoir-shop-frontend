@@ -220,6 +220,20 @@ a.chip{display:inline-block}
 .testi blockquote{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(26px,2.8vw,40px);line-height:1.25;color:var(--ink)}
 .testi cite{display:block;margin-top:26px;font-style:normal;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone)}
 .testi cite b{color:var(--ink);font-weight:500}
+
+/* ── Client reviews (reviews.js fills these from /reviews.json; empty = hidden) */
+section[data-reviews][hidden]{display:none}
+.rev-list{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(18px,2vw,28px)}
+.rev-list[data-count="1"]{grid-template-columns:minmax(0,760px);justify-content:center}
+.rev-list[data-count="2"]{grid-template-columns:repeat(2,minmax(0,520px));justify-content:center}
+.rev{margin:0;background:var(--paper);border:1px solid var(--hairline);padding:clamp(28px,3vw,40px);display:flex;flex-direction:column;justify-content:space-between;gap:26px}
+.band .rev{background:#fff}
+.rev blockquote{margin:0;font-family:'Instrument Serif',Georgia,serif;font-size:clamp(21px,1.8vw,26px);line-height:1.3;color:var(--ink)}
+.rev-list[data-count="1"] .rev{text-align:center;border:0;background:none;padding:0}
+.rev-list[data-count="1"] .rev blockquote{font-size:clamp(26px,2.8vw,38px);line-height:1.25}
+.rev figcaption{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone)}
+.rev figcaption b{display:block;color:var(--ink);font-weight:500;margin-bottom:6px}
+.rev-slim{padding:clamp(56px,6vw,84px) 0}
 .stars{color:var(--oxblood);letter-spacing:3px;font-size:14px;margin-bottom:20px}
 
 /* ── Inner-page hero ───────────────────────────────────────────────────── */
@@ -434,6 +448,7 @@ footer{background:var(--ink);color:#B9B6AD;padding:clamp(60px,7vw,88px) 0 40px}
 /* ── Responsive ────────────────────────────────────────────────────────── */
 @media(max-width:900px){
   .ed-foot{padding-top:14px;padding-bottom:14px}
+  .rev-list,.rev-list[data-count="2"]{grid-template-columns:1fr}
   .split,.testi{grid-template-columns:1fr;gap:40px}.split.rev .split-media{order:0}
   .pstep{grid-template-columns:1fr;gap:28px;padding:36px 0}.pstep.rev .pstep-media{order:0}
   .steps{grid-template-columns:1fr 1fr;gap:34px 26px}

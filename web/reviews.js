@@ -6,8 +6,8 @@
 //   { "quote": "…", "name": "Sarah", "piece": "Emerald engagement ring",
 //     "pages": ["home", "engagement"] }        // omit "pages" = every slot
 // Slots: home · commission · engagement · bands. A slot shows up to data-max
-// (default 3); a .rev-list with data-carousel becomes a swipe strip with arrows
-// once it has more than 3 (home: up to 5).
+// (default 3); a .rev-list with data-carousel becomes a slowly gliding text
+// strip once it has more than 3 (home: up to 5).
 (function () {
   "use strict";
   var slots = document.querySelectorAll("section[data-reviews]");
@@ -48,81 +48,53 @@
     })
     .catch(function () { /* no reviews shown — the page is complete without them */ });
 
-  // More reviews than fit in a row: a text strip that moves on by itself one
-  // review at a time (8s when three show, 12s when one shows — time to read),
-  // back to the start after the last. Arrows, a pause button, and it holds
-  // while hovered/focused, off screen or in a hidden tab. Reduced motion: no
-  // auto-advance, arrows only.
+  // More reviews than fit in a row: a text strip that glides forward slowly
+  // and endlessly (a second, hidden copy follows the first, so the loop has no
+  // jump). Stops while hovered or touched, off screen or in a hidden
+  // tab. Reduced motion: no movement, the strip can be swiped instead.
   function carousel(box) {
-    box.classList.add("is-carousel");
-    box.tabIndex = 0;
-    box.setAttribute("role", "region");
-    box.setAttribute("aria-label", "Client reviews");
     var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var sec = box.closest("section") || box.parentNode;
-    var nav = document.createElement("div");
-    nav.className = "rev-nav";
-    var prev = button("Previous review", '<path d="M19 12H5M11 6l-6 6 6 6"/>', function () { go(-1); });
-    var next = button("Next review", '<path d="M5 12h14M13 6l6 6-6 6"/>', function () { go(1); });
-    var PAUSE = '<path d="M9 6v12M15 6v12"/>', PLAY = '<path d="M8 5.5v13l11-6.5z"/>';
-    var stopped = calm, hovering = false, onScreen = false, timer = null;
-    nav.appendChild(prev);
-    if (!calm) {
-      var pause = button("Pause reviews", PAUSE, function () {
-        stopped = !stopped;
-        pause.setAttribute("aria-label", stopped ? "Play reviews" : "Pause reviews");
-        pause.firstChild.innerHTML = stopped ? PLAY : PAUSE;
-        schedule();
-      });
-      nav.appendChild(pause);
-    }
-    nav.appendChild(next);
-    box.parentNode.insertBefore(nav, box.nextSibling);
+    var view = document.createElement("div");
+    view.className = "rev-viewport" + (calm ? " is-still" : "");
+    view.setAttribute("role", "region");
+    view.setAttribute("aria-label", "Client reviews");
+    box.parentNode.insertBefore(view, box);
+    view.appendChild(box);
+    box.classList.add("is-carousel");
+    if (calm) return;
 
-    function button(label, icon, onClick) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.setAttribute("aria-label", label);
-      b.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true">' + icon + "</svg>";
-      b.addEventListener("click", onClick);
-      return b;
+    var cards = Array.prototype.slice.call(box.children);
+    cards.forEach(function (c) {
+      var copy = c.cloneNode(true);
+      copy.setAttribute("aria-hidden", "true");
+      box.appendChild(copy);
+    });
+    var x = 0, last = 0, raf = 0, held = false, onScreen = false;
+    function loopWidth() { return box.children[cards.length].offsetLeft - cards[0].offsetLeft; }
+    function speed() { return view.clientWidth < 600 ? 12 : 24; } // px per second
+    function frame(t) {
+      var dt = last ? Math.min(t - last, 100) : 0;
+      last = t;
+      var w = loopWidth();
+      x -= speed() * dt / 1000;
+      if (w > 0 && -x >= w) x += w;
+      box.style.transform = "translate3d(" + x.toFixed(2) + "px,0,0)";
+      raf = requestAnimationFrame(frame);
     }
-    function stepWidth() {
-      var card = box.querySelector(".rev-card");
-      return card.offsetWidth + (parseFloat(getComputedStyle(box).columnGap) || 0);
+    function update() {
+      var run = !held && onScreen && !document.hidden;
+      if (run && !raf) { last = 0; raf = requestAnimationFrame(frame); }
+      if (!run && raf) { cancelAnimationFrame(raf); raf = 0; }
     }
-    function atEnd() { return box.scrollLeft + box.clientWidth >= box.scrollWidth - 2; }
-    function go(dir) {
-      box.scrollBy({ left: dir * stepWidth(), behavior: calm ? "auto" : "smooth" });
-      schedule();
-    }
-    function advance() {
-      if (atEnd()) box.scrollTo({ left: 0, behavior: "smooth" });
-      else box.scrollBy({ left: stepWidth(), behavior: "smooth" });
-      schedule();
-    }
-    function schedule() {
-      clearTimeout(timer);
-      if (stopped || hovering || !onScreen || document.hidden) return;
-      var oneAtATime = box.clientWidth < stepWidth() * 1.5;
-      timer = setTimeout(advance, oneAtATime ? 12000 : 8000);
-    }
-    function sync() {
-      prev.disabled = box.scrollLeft <= 2;
-      next.disabled = atEnd();
-    }
-    function hold(on) { return function () { hovering = on; schedule(); }; }
-    sec.addEventListener("mouseenter", hold(true));
-    sec.addEventListener("mouseleave", hold(false));
-    sec.addEventListener("focusin", hold(true));
-    sec.addEventListener("focusout", function (e) { if (!sec.contains(e.relatedTarget)) hold(false)(); });
-    box.addEventListener("pointerdown", schedule); // a swipe restarts the wait
-    document.addEventListener("visibilitychange", schedule);
+    function hold(on) { return function () { held = on; update(); }; }
+    view.addEventListener("mouseenter", hold(true));
+    view.addEventListener("mouseleave", hold(false));
+    view.addEventListener("touchstart", hold(true), { passive: true });
+    view.addEventListener("touchend", hold(false));
+    view.addEventListener("touchcancel", hold(false));
+    document.addEventListener("visibilitychange", update);
     if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; schedule(); }, { threshold: 0.4 }).observe(box);
-    } else { onScreen = true; schedule(); }
-    box.addEventListener("scroll", sync, { passive: true });
-    window.addEventListener("resize", sync);
-    sync();
+      new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; update(); }).observe(view);
+    } else { onScreen = true; update(); }
   }
 })();

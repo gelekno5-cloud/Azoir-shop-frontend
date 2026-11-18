@@ -103,15 +103,33 @@ function parseInquiryImages(raw) {
     .slice(0, MAX_IMAGES);
 }
 
-async function stripe(endpoint, params) {
+async function stripe(endpoint, params, key = process.env.STRIPE_SECRET_KEY) {
   const r = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
     method: params ? "POST" : "GET",
-    headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+    headers: { Authorization: `Bearer ${key}` },
     body: params ? new URLSearchParams(params) : undefined,
   });
   const body = await r.json();
   if (!r.ok) throw Object.assign(new Error(`stripe ${r.status}: ${body.error?.message}`), { code: body.error?.code, param: body.error?.param });
   return body;
+}
+
+// Stripe account change (2026-11-18): azoir.co moved from the Moksh Diam account to Azoir & Co.'s.
+// A checkout opened on the old account just before the switch can still be paid afterwards (the
+// $60 form for 24 h, a band deposit for 2 h), so for a few days the old key and webhook secret stay
+// as STRIPE_SECRET_KEY_OLD / STRIPE_WEBHOOK_SECRET_OLD: a session the current account has never
+// heard of is read from the old one, and the old account's webhook still verifies. That endpoint
+// never goes quiet (it gets every Moksh checkout event too), so retire it by the clock: at least
+// 4 days after the switch (24 h checkout life + Stripe's 3-day retries), with no failed
+// deliveries pending, delete the old account's azoir.co endpoint first, then remove both _OLD vars.
+async function readCheckoutSession(id) {
+  try {
+    return await stripe(`checkout/sessions/${id}`);
+  } catch (e) {
+    const old = process.env.STRIPE_SECRET_KEY_OLD;
+    if (e.code !== "resource_missing" || !old || old === process.env.STRIPE_SECRET_KEY) throw e;
+    return stripe(`checkout/sessions/${id}`, undefined, old);
+  }
 }
 
 function briefToMetadata(f) {
@@ -919,7 +937,7 @@ app.get("/inquiry/paid", async (req, res) => {
   const id = String(req.query.session_id || "");
   if (!/^cs_\w+$/.test(id)) return res.redirect("/commission.html");
   try {
-    const session = await stripe(`checkout/sessions/${id}`);
+    const session = await readCheckoutSession(id);
     if (session.payment_status !== "paid") return res.redirect("/commission.html?fee=cancelled");
     await deliverInquiry(session);
   } catch (e) {
@@ -1054,7 +1072,7 @@ async function bandRequestPaid(req, res) {
   if (!/^cs_\w+$/.test(id)) return res.redirect("/wedding-bands.html");
   let ref = "", number = "", deposit = "", quote = false;
   try {
-    const session = await stripe(`checkout/sessions/${id}`);
+    const session = await readCheckoutSession(id);
     if (session.payment_status !== "paid") return res.redirect("/wedding-bands.html?order=cancelled");
     await deliverBandOrder(session);
     ref = session.metadata?.design_ref || "";
@@ -1074,10 +1092,12 @@ async function bandRequestPaid(req, res) {
 app.get("/band-request/paid", bandRequestPaid);
 app.get("/band-order/paid", bandRequestPaid);
 
-// Stripe webhook (checkout.session.completed) — delivers a paid request whose
-// customer closed the tab before the success redirect. A 500 makes Stripe retry.
+// Stripe webhook (checkout.session.completed + checkout.session.expired) — delivers a paid
+// request whose customer closed the tab before the success redirect. A 500 makes Stripe retry.
 app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
-  const event = verifyStripeEvent(req.body, req.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET);
+  const sig = req.get("stripe-signature");
+  // The old account's endpoint too, during the account change (see readCheckoutSession).
+  const event = verifyStripeEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET) || verifyStripeEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_OLD);
   if (!event) return res.status(400).send("invalid signature");
   try {
     const session = event.data.object;

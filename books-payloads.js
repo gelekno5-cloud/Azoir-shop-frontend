@@ -35,3 +35,15 @@ export function bandPaidPatch(session, order, nowIso) {
     ship_to: shipping ? { name: shipping.name || null, address: shipping.address || null } : undefined,
   };
 }
+
+/** A deposit paid after the admin cancelled the request: the money columns the refund is worked from. */
+export function latePaymentPatch(session, nowIso) {
+  return {
+    late_paid_cents: session.amount_total,
+    late_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
+    updated_at: nowIso,
+  };
+}
+
+/** Compare-and-set filter: matches only a cancelled request whose late payment is not yet recorded. */
+export const latePaymentPath = (id) => `band_orders?id=eq.${id}&status=eq.cancelled&late_paid_cents=is.null&late_payment_intent=is.null`;

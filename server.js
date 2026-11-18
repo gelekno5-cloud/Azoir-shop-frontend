@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { conciergeHandler } from "./concierge.js";
 import { limiter, mokshApi, mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 import { mountShop } from "./shop.js";
-import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, latePaymentPatch, latePaymentPath, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
+import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, isLatePayment, recordLateBandPayment, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -502,15 +502,12 @@ async function deliverBandOrder(session) {
   const patch = bandPaidPatch(session, found[0], new Date().toISOString());
   const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment`, { method: "PATCH", body: patch, prefer: "return=representation" });
   if (!rows || rows.length === 0) {
-    // Already delivered — or cancelled by the admin after the customer had paid.
-    const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number`);
-    if (cur && cur[0] && cur[0].status === "cancelled") {
+    // Already delivered (a paid request the admin later refunded and cancelled included) — or
+    // cancelled by the admin before the customer's payment landed.
+    const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number,paid_at,stripe_payment_intent`);
+    if (cur && isLatePayment(cur[0])) {
       // Compare-and-set: only the first delivery gets a row back, so a redelivery tells the admin once.
-      const late = await sb(latePaymentPath(id), { method: "PATCH", body: latePaymentPatch(session, new Date().toISOString()), prefer: "return=representation" });
-      if (late && late.length > 0) {
-        await bandEvent(id, "paid", "stripe", { note: "Deposit paid after the request was cancelled — refund due", data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total } });
-        await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `Band request ${cur[0].order_number} was paid after it was cancelled (${patch.stripe_payment_intent}) — refund it from /app/band-orders.` } }).catch(() => {});
-      }
+      await recordLateBandPayment({ id, orderNumber: cur[0].order_number, session, nowIso: new Date().toISOString() }, { sb, event: bandEvent });
     }
     return;
   }

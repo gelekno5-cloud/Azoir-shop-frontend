@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bandPaidPatch, latePaymentPatch, latePaymentPath, BOOKS_FLOW_MODES, RETAIL_FLOW_MODES, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
+import { bandPaidPatch, latePaymentPatch, latePaymentPath, isLatePayment, recordLateBandPayment, BOOKS_FLOW_MODES, RETAIL_FLOW_MODES, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
 
 const ORDER = { spec: { deposit: { estimateCents: 200000, depositCents: 50000 } }, subtotal_cents: 190000, shipping_cents: 10000 };
 const SESSION = { id: "cs_1", payment_intent: "pi_1", amount_total: 54438, total_details: { amount_tax: 4438 }, customer_details: {} };
@@ -14,7 +14,57 @@ test("reads a session with no tax as zero tax", () => assert.equal(bandPaidPatch
 
 test("records the late amount", () => assert.equal(latePaymentPatch(SESSION, "t").late_paid_cents, 54438));
 test("records the late PaymentIntent", () => assert.equal(latePaymentPatch(SESSION, "t").late_payment_intent, "pi_1"));
-test("only writes while both are empty", () => assert.equal(latePaymentPath("b1"), "band_orders?id=eq.b1&status=eq.cancelled&late_paid_cents=is.null&late_payment_intent=is.null"));
+test("only writes while both are empty", () => assert.equal(latePaymentPath("b1").includes("&late_paid_cents=is.null&late_payment_intent=is.null"), true));
+// A deposit paid on time, then refunded and cancelled, is not a late payment: its replay must not record it again.
+test("only writes on a request that was never paid", () => assert.equal(latePaymentPath("b1").includes("&paid_at=is.null&stripe_payment_intent=is.null"), true));
+test("records no late amount when Stripe sent none", () => assert.equal(latePaymentPatch({ ...SESSION, amount_total: undefined }, "t").late_paid_cents, null));
+
+test("a cancelled request never paid is a late payment", () => assert.equal(isLatePayment({ status: "cancelled", paid_at: null, stripe_payment_intent: null }), true));
+test("a paid request later cancelled is not a late payment", () => assert.equal(isLatePayment({ status: "cancelled", paid_at: "2026-11-01T00:00:00Z", stripe_payment_intent: "pi_1" }), false));
+test("a delivered request is not a late payment", () => assert.equal(isLatePayment({ status: "deposit_paid", paid_at: "2026-11-01T00:00:00Z", stripe_payment_intent: "pi_1" }), false));
+test("a missing request is not a late payment", () => assert.equal(isLatePayment(undefined), false));
+
+/** A fake sb: answers each call with the next scripted result (a value, or an Error to throw), and records it. */
+function fakeIo(...answers) {
+  const calls = [], events = [];
+  return {
+    calls, events,
+    sb: async (path, opts = {}) => { calls.push({ path, ...opts }); const a = answers.shift(); if (a instanceof Error) throw a; return a; },
+    event: async (...args) => { events.push(args); },
+  };
+}
+const LATE = { id: "b1", orderNumber: "AZ-B-0001", session: SESSION, nowIso: "t" };
+
+test("tells the admin about a late payment", async () => {
+  const io = fakeIo([{ id: "b1" }], null);
+  await recordLateBandPayment(LATE, io);
+  assert.equal(io.calls[1].path, "b2b_admin_notifications");
+});
+test("logs the late payment on the timeline", async () => {
+  const io = fakeIo([{ id: "b1" }], null);
+  await recordLateBandPayment(LATE, io);
+  assert.equal(io.events.length, 1);
+});
+test("tells nobody when the late payment is already recorded", async () => {
+  const io = fakeIo([]);
+  await recordLateBandPayment(LATE, io);
+  assert.equal(io.calls.length, 1);
+});
+// The webhook's retry finds the columns set and stays silent, so a failed notice must undo them.
+test("fails the delivery when the admin can't be told", async () => {
+  const io = fakeIo([{ id: "b1" }], new Error("supabase 503"), null);
+  await assert.rejects(recordLateBandPayment(LATE, io), /supabase 503/);
+});
+test("undoes the late columns when the admin can't be told", async () => {
+  const io = fakeIo([{ id: "b1" }], new Error("supabase 503"), null);
+  await recordLateBandPayment(LATE, io).catch(() => {});
+  assert.deepEqual([io.calls[2].path, io.calls[2].body], ["band_orders?id=eq.b1&late_payment_intent=eq.pi_1", { late_paid_cents: null, late_payment_intent: null }]);
+});
+test("logs nothing when the admin can't be told", async () => {
+  const io = fakeIo([{ id: "b1" }], new Error("supabase 503"), null);
+  await recordLateBandPayment(LATE, io).catch(() => {});
+  assert.equal(io.events.length, 0);
+});
 
 const ID = "3f6c1a2e-1111-4222-8333-444455556666";
 test("names Azoir as the entity", () => assert.equal(paymentIntentMetadataParams("band_deposit", "b1")["payment_intent_data[metadata][entity]"], "azoir"));

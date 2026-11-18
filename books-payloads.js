@@ -47,3 +47,28 @@ export function latePaymentPatch(session, nowIso) {
 
 /** Compare-and-set filter: matches only a cancelled request whose late payment is not yet recorded. */
 export const latePaymentPath = (id) => `band_orders?id=eq.${id}&status=eq.cancelled&late_paid_cents=is.null&late_payment_intent=is.null`;
+
+// The flow modes Books (Moksh OS, app/books/lib/payment-metadata.ts) reads off a PaymentIntent's
+// metadata. A copy: change both together.
+export const BOOKS_FLOW_MODES = ["invoice", "statement", "design_fee", "stock_order", "azoir_inquiry_fee", "retail_milestone", "band_deposit", "band_balance"];
+/** The modes this server sends. Distinct from the session-level metadata[mode] (FEE_MODE, BAND_MODE in server.js). */
+export const RETAIL_FLOW_MODES = ["azoir_inquiry_fee", "band_deposit"];
+
+/** Checkout Session params that stamp entity/mode/source_id on the PaymentIntent, for Books to attribute the charge. */
+export function paymentIntentMetadataParams(mode, sourceId) {
+  if (!RETAIL_FLOW_MODES.includes(mode)) throw new Error("unknown books mode " + mode);
+  return {
+    "payment_intent_data[metadata][entity]": "azoir",
+    "payment_intent_data[metadata][mode]": mode,
+    "payment_intent_data[metadata][source_id]": sourceId,
+  };
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The retail_inquiries columns a paid session decides: the id minted at /inquiry (when valid) and the PaymentIntent. */
+export function inquiryPaymentFields(session) {
+  const id = session.metadata?.inquiry_id;
+  const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null;
+  return { ...(UUID_RE.test(String(id || "")) ? { id } : {}), stripe_payment_intent: pi };
+}

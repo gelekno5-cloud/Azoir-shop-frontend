@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { conciergeHandler } from "./concierge.js";
 import { limiter, mokshApi, mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 import { mountShop } from "./shop.js";
-import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, latePaymentPatch, latePaymentPath } from "./books-payloads.js";
+import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, latePaymentPatch, latePaymentPath, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -85,8 +85,9 @@ const FIELDS = ["type", "metal", "stone", "budget", "timeline", "message", "name
 const CHUNK = 250;
 // Inspiration photos: uploaded to the public commission-images bucket by
 // /inquiry/image before the form is sent; only their URLs ride to Stripe
-// (image_0…image_4). 8 fields + ≤16 message chunks + 5 images + mode = 30
-// keys, inside Stripe's 50-key cap.
+// (image_0…image_4). 8 fields + ≤16 message chunks + 5 images + mode +
+// inquiry_id = 31 keys, inside Stripe's 50-key cap. The PaymentIntent's
+// metadata is a separate object (entity, mode, source_id) with its own cap.
 const MAX_IMAGES = 5;
 const imagePublicPrefix = () =>
   process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL}/storage/v1/object/public/commission-images/inquiries/` : null;
@@ -556,6 +557,7 @@ async function deliverInquiry(session) {
       design_fee_cents: session.amount_total,
       design_fee_paid_at: new Date().toISOString(),
       stripe_session_id: session.id,
+      ...inquiryPaymentFields(session),
     });
   } catch (e) { console.error("[inquiry] save error", e); }
   if (saved === false) return; // already recorded — delivered before
@@ -703,6 +705,11 @@ app.post("/inquiry", async (req, res) => {
     cancel_url: `${origin}/commission.html?fee=cancelled`,
   };
   for (const [k, v] of Object.entries(briefToMetadata(f))) params[`metadata[${k}]`] = v;
+  // The row does not exist until payment, so mint its id now: the redirect and the webhook then
+  // insert the same id, and the PaymentIntent carries it as Books' source_id.
+  const inquiryId = crypto.randomUUID();
+  params["metadata[inquiry_id]"] = inquiryId;
+  Object.assign(params, paymentIntentMetadataParams("azoir_inquiry_fee", inquiryId));
 
   try {
     const session = await stripe("checkout/sessions", params);
@@ -992,6 +999,7 @@ async function bandRequest(req, res) {
     "metadata[band_order_id]": order.id,
     "metadata[design_ref]": spec.ref,
     "payment_intent_data[metadata][band_order_id]": order.id,
+    ...paymentIntentMetadataParams("band_deposit", order.id),
     "payment_intent_data[description]": `Azoir ${what} deposit ${order.order_number} (${spec.ref})`,
     expires_at: String(Math.floor(Date.now() / 1000) + 2 * 60 * 60),
     success_url: `${origin}/band-request/paid?session_id={CHECKOUT_SESSION_ID}`,

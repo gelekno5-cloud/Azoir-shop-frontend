@@ -105,10 +105,15 @@ function parseInquiryImages(raw) {
     .slice(0, MAX_IMAGES);
 }
 
+// Pinned like the admin's Stripe client (apiVersion "2024-06-20"). Without it a call uses the
+// account's default version, and Azoir & Co.'s account (opened 2026-11-18) defaults to one that
+// refuses payment_method_types on Checkout: every fee and band deposit checkout failed with 400.
+const STRIPE_VERSION = "2024-06-20";
+
 async function stripe(endpoint, params, key = process.env.STRIPE_SECRET_KEY) {
   const r = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
     method: params ? "POST" : "GET",
-    headers: { Authorization: `Bearer ${key}` },
+    headers: { Authorization: `Bearer ${key}`, "Stripe-Version": STRIPE_VERSION },
     body: params ? new URLSearchParams(params) : undefined,
   });
   const body = await r.json();

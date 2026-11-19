@@ -98,9 +98,26 @@ export function paymentIntentMetadataParams(mode, sourceId) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The retail_inquiries columns a paid session decides: the id minted at /inquiry (when valid) and the PaymentIntent. */
+/**
+ * The retail_inquiries columns a paid session decides: the id minted at /inquiry (when valid), the
+ * PaymentIntent, and the tax Stripe added to the fee (design_fee_cents stays the amount charged).
+ * The tax column defaults to 0 and is sent only when there is tax, so an untaxed inquiry keeps
+ * inserting before the -inquiry-fee-tax migration has run.
+ */
 export function inquiryPaymentFields(session) {
   const id = session.metadata?.inquiry_id;
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null;
-  return { ...(UUID_RE.test(String(id || "")) ? { id } : {}), stripe_payment_intent: pi };
+  const tax = session.total_details?.amount_tax ?? 0;
+  return { ...(UUID_RE.test(String(id || "")) ? { id } : {}), stripe_payment_intent: pi, ...(tax > 0 ? { design_fee_tax_cents: tax } : {}) };
+}
+
+/**
+ * Stripe Tax on the $60 design fee (owner, 2026-11-19: the fee is taxable). Switched on by the env
+ * INQUIRY_FEE_STRIPE_TAX=1 (same name as Moksh OS's fee link), only once Stripe Tax is active in the
+ * Stripe account this server charges and the -inquiry-fee-tax migration has run. The tax is added on
+ * top of the fee, at the billing address.
+ */
+export function inquiryTaxParams(env) {
+  if (env.INQUIRY_FEE_STRIPE_TAX !== "1") return {};
+  return { "automatic_tax[enabled]": "true", billing_address_collection: "required", "line_items[0][price_data][tax_behavior]": "exclusive" };
 }

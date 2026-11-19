@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bandPaidPatch, latePaymentPatch, latePaymentPath, isLatePayment, recordLateBandPayment, BOOKS_FLOW_MODES, RETAIL_FLOW_MODES, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
+import { bandPaidPatch, latePaymentPatch, latePaymentPath, isLatePayment, recordLateBandPayment, BOOKS_FLOW_MODES, RETAIL_FLOW_MODES, paymentIntentMetadataParams, inquiryPaymentFields, inquiryTaxParams } from "./books-payloads.js";
 
 const ORDER = { spec: { deposit: { estimateCents: 200000, depositCents: 50000 } }, subtotal_cents: 190000, shipping_cents: 10000 };
 const SESSION = { id: "cs_1", payment_intent: "pi_1", amount_total: 54438, total_details: { amount_tax: 4438 }, customer_details: {} };
@@ -74,3 +74,13 @@ test("refuses a session-level mode", () => assert.throws(() => paymentIntentMeta
 test("uses the minted inquiry id", () => assert.equal(inquiryPaymentFields({ metadata: { inquiry_id: ID }, payment_intent: "pi_9" }).id, ID));
 test("stores the PaymentIntent", () => assert.equal(inquiryPaymentFields({ metadata: { inquiry_id: ID }, payment_intent: "pi_9" }).stripe_payment_intent, "pi_9"));
 test("ignores a malformed inquiry id", () => assert.equal("id" in inquiryPaymentFields({ metadata: { inquiry_id: "x" }, payment_intent: "pi_9" }), false));
+
+test("turns on Stripe Tax for the fee when the env says so", () => assert.equal(inquiryTaxParams({ INQUIRY_FEE_STRIPE_TAX: "1" })["automatic_tax[enabled]"], "true"));
+test("asks for the billing address the fee is taxed at", () => assert.equal(inquiryTaxParams({ INQUIRY_FEE_STRIPE_TAX: "1" }).billing_address_collection, "required"));
+test("adds the fee's tax on top of the $60", () => assert.equal(inquiryTaxParams({ INQUIRY_FEE_STRIPE_TAX: "1" })["line_items[0][price_data][tax_behavior]"], "exclusive"));
+test("leaves the fee untaxed without the env", () => assert.deepEqual(inquiryTaxParams({}), {}));
+test("leaves the fee untaxed for any other env value", () => assert.deepEqual(inquiryTaxParams({ INQUIRY_FEE_STRIPE_TAX: "true" }), {}));
+test("stores the fee's tax", () => assert.equal(inquiryPaymentFields({ metadata: { inquiry_id: ID }, payment_intent: "pi_9", total_details: { amount_tax: 533 } }).design_fee_tax_cents, 533));
+// The column defaults to 0: leaving it out keeps an untaxed inquiry inserting before -inquiry-fee-tax runs.
+test("writes no tax column for an untaxed fee", () => assert.equal("design_fee_tax_cents" in inquiryPaymentFields({ metadata: { inquiry_id: ID }, payment_intent: "pi_9", total_details: { amount_tax: 0 } }), false));
+test("writes no tax column when Stripe sent no totals", () => assert.equal("design_fee_tax_cents" in inquiryPaymentFields({ metadata: { inquiry_id: ID }, payment_intent: "pi_9" }), false));

@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { conciergeHandler } from "./concierge.js";
 import { limiter, mokshApi, mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 import { mountShop } from "./shop.js";
-import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, isLatePayment, recordLateBandPayment, paymentIntentMetadataParams, inquiryPaymentFields } from "./books-payloads.js";
+import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, isLatePayment, recordLateBandPayment, paymentIntentMetadataParams, inquiryPaymentFields, inquiryTaxParams } from "./books-payloads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -725,9 +725,20 @@ app.post("/inquiry", async (req, res) => {
   const inquiryId = crypto.randomUUID();
   params["metadata[inquiry_id]"] = inquiryId;
   Object.assign(params, paymentIntentMetadataParams("azoir_inquiry_fee", inquiryId));
+  // Stripe Tax on the fee (INQUIRY_FEE_STRIPE_TAX=1): taxed for the customer's billing address, on top of the $60.
+  const taxParams = inquiryTaxParams(process.env);
 
   try {
-    const session = await stripe("checkout/sessions", params);
+    let session;
+    try {
+      session = await stripe("checkout/sessions", { ...params, ...taxParams });
+    } catch (e) {
+      if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
+      // Stripe Tax isn't switched on in the Stripe account: take the fee without it, and say so.
+      console.error("[inquiry] Stripe Tax refused, charging the design fee without it:", e.message);
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so a commission request's design fee was charged without tax. Turn on Stripe Tax in the Stripe dashboard, or unset INQUIRY_FEE_STRIPE_TAX on the azoir.co server.` } }).catch(() => {});
+      session = await stripe("checkout/sessions", params);
+    }
     res.redirect(303, session.url);
   } catch (e) {
     console.error("[inquiry] checkout error", e);

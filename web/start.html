@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Design fee | Azoir &amp; Co.</title>
-<!-- Template for GET /start/<token> (server.js fills the {{…}} slots). The address is a private
-     link, so the page is never indexed, sends no referrer and loads no analytics. -->
+<title>{{TITLE}} | Azoir &amp; Co.</title>
+<!-- Template for the private pay links: GET /start/<token>, /pay/<token> and /pay/band/<token>
+     (server.js fills the {{…}} slots). The address is a private link, so the page is never
+     indexed, sends no referrer and loads no analytics. -->
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#FAF9F6">
@@ -22,6 +23,8 @@
 .fee-piece{font-size:14px;line-height:1.6;color:var(--ink-2);margin-top:14px;overflow-wrap:anywhere}
 .fee-card{max-width:440px;margin:36px auto 0;padding:clamp(22px,4vw,30px);background:#fff;border:1px solid var(--hairline);text-align:left}
 .fee-row{display:flex;justify-content:space-between;gap:20px;font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--hairline)}
+.fee-row small{font-size:12.5px;font-weight:400;color:var(--stone);margin-left:8px}
+.fee-row.is-paid span:last-child{color:var(--stone)}
 .fee-card p{font-size:14.5px;line-height:1.75;color:var(--ink-2)}
 .fee-card p + p{margin-top:14px}
 .fee-card form{margin-top:22px}

@@ -736,7 +736,7 @@ app.post("/inquiry", async (req, res) => {
       if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
       // Stripe Tax isn't switched on in the Stripe account: take the fee without it, and say so.
       console.error("[inquiry] Stripe Tax refused, charging the design fee without it:", e.message);
-      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so a commission request's design fee was charged without tax. Turn on Stripe Tax in the Stripe dashboard, or unset INQUIRY_FEE_STRIPE_TAX on the azoir.co server.` } }).catch(() => {});
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so a commission request's design fee was charged without tax. Turn on Stripe Tax in the Azoir & Co. Stripe account, or unset INQUIRY_FEE_STRIPE_TAX on the azoir.co server.` } }).catch(() => {});
       session = await stripe("checkout/sessions", params);
     }
     res.redirect(303, session.url);
@@ -1175,7 +1175,7 @@ async function bandRequest(req, res) {
       if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
       // Stripe Tax isn't switched on in the Stripe account: take the deposit without it, and say so.
       console.error("[band] Stripe Tax refused, charging the deposit without it:", e.message);
-      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so the deposit for ${order.order_number} was charged without tax. Turn on Stripe Tax in the Stripe dashboard, or pick another tax mode under Shipping & tax.` } }).catch(() => {});
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so the deposit for ${order.order_number} was charged without tax. Turn on Stripe Tax in the Azoir & Co. Stripe account, or pick another tax mode under Shipping & tax.` } }).catch(() => {});
       session = await stripe("checkout/sessions", params);
     }
     await sb(`band_orders?id=eq.${order.id}`, { method: "PATCH", body: { stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() } });

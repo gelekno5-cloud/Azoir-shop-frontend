@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { conciergeHandler } from "./concierge.js";
 import { limiter, mokshApi, mountAccountApi, mountPromos, normaliseCode, normaliseCountry, quoteBand, redeemDiscount, releaseDiscount } from "./commerce.js";
 import { mountShop } from "./shop.js";
+import { BAND_DEPOSIT_MIN_CENTS, BAND_DEPOSIT_RATE, bandDepositCents, bandDepositOf, bandPaidPatch, isLatePayment, recordLateBandPayment, paymentIntentMetadataParams, inquiryPaymentFields, inquiryTaxParams } from "./books-payloads.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -84,8 +85,9 @@ const FIELDS = ["type", "metal", "stone", "budget", "timeline", "message", "name
 const CHUNK = 250;
 // Inspiration photos: uploaded to the public commission-images bucket by
 // /inquiry/image before the form is sent; only their URLs ride to Stripe
-// (image_0…image_4). 8 fields + ≤16 message chunks + 5 images + mode = 30
-// keys, inside Stripe's 50-key cap.
+// (image_0…image_4). 8 fields + ≤16 message chunks + 5 images + mode +
+// inquiry_id = 31 keys, inside Stripe's 50-key cap. The PaymentIntent's
+// metadata is a separate object (entity, mode, source_id) with its own cap.
 const MAX_IMAGES = 5;
 const imagePublicPrefix = () =>
   process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL}/storage/v1/object/public/commission-images/inquiries/` : null;
@@ -304,9 +306,6 @@ async function sendInquiryEmails(f, session) {
 // have no estimate (quoteNeeded): the deposit is the flat minimum and the
 // price is quoted by the atelier.
 const BAND_MODE = "azoir_band";
-const BAND_DEPOSIT_MIN_CENTS = 25000;                  // $250 floor, and the flat deposit when there is no estimate
-const BAND_DEPOSIT_RATE = 0.25;                        // of the estimate (owner, 2026-10-17)
-const bandDepositCents = (estimateCents) => estimateCents == null ? BAND_DEPOSIT_MIN_CENTS : Math.max(BAND_DEPOSIT_MIN_CENTS, Math.round(estimateCents * BAND_DEPOSIT_RATE));
 const BAND_LABOR_CENTS = 25000;                        // per band (owner, 2026-11-14)
 const BAND_RATES = { "14y": 16500, "14w": 16500, "14r": 16500, "18y": 21000, "18w": 21000, "18r": 21000, pt: null }; // cents per gram; null = quoted
 const BAND_DENSITY = { "14y": 13.1, "14w": 12.7, "14r": 13.0, "18y": 15.5, "18w": 15.1, "18r": 15.2, pt: 20.6 };
@@ -375,15 +374,6 @@ function priceBandSpec(raw) {
   }
   metalCents = Math.round(metalCents);
   return { spec, metalCents, laborCents: BAND_LABOR_CENTS * spec.bands.length, quoteNeeded, summary: pair ? summary.map((t, i) => `${spec.bands[i].label || ["Hers", "His"][i]}: ${t}`).join(" · ") : summary[0] };
-}
-
-/** The deposit terms of a saved request, from spec.deposit (written by /band-request) with safe fallbacks. */
-function bandDepositOf(order) {
-  const d = (order.spec && order.spec.deposit) || {};
-  const quoteNeeded = !!d.quoteNeeded;
-  const estimateCents = quoteNeeded ? null : Number.isFinite(d.estimateCents) ? d.estimateCents : order.subtotal_cents + (order.shipping_cents || 0);
-  const depositCents = Number.isFinite(d.depositCents) ? d.depositCents : bandDepositCents(estimateCents);
-  return { quoteNeeded, estimateCents, depositCents, balanceCents: estimateCents == null ? null : Math.max(0, estimateCents - depositCents), notes: typeof d.notes === "string" ? d.notes : "" };
 }
 
 /**
@@ -529,35 +519,24 @@ async function deliverBandOrder(session) {
   if (session.metadata?.mode !== BAND_MODE || session.payment_status !== "paid") return;
   const id = String(session.metadata.band_order_id || "");
   if (!UUID.test(id)) { console.error("[band] paid session without an order id", session.id); return; }
-  const cd = session.customer_details || {};
-  const shipping = session.shipping_details || session.collected_information?.shipping_details || null;
-  const now = new Date().toISOString();
-  // Keys left undefined are dropped by JSON.stringify, so the form's name/email/phone
-  // stay unless Stripe collected something.
-  const patch = {
-    status: "deposit_paid", paid_at: now, updated_at: now,
-    stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
-    stripe_checkout_session_id: session.id,
-    email: cd.email || undefined, customer_name: (shipping && shipping.name) || cd.name || undefined, phone: cd.phone || undefined,
-    ship_to: shipping ? { name: shipping.name || null, address: shipping.address || null } : undefined,
-  };
+  const found = await sb(`band_orders?id=eq.${id}&select=status,order_number,spec,subtotal_cents,shipping_cents`);
+  if (!found || !found[0]) { console.error("[band] paid session for a missing request", session.id, id); return; }
+  // One compare-and-set PATCH carries the status, the deposit, its tax and the balance together.
+  const patch = bandPaidPatch(session, found[0], new Date().toISOString());
   const rows = await sb(`band_orders?id=eq.${id}&status=eq.pending_payment`, { method: "PATCH", body: patch, prefer: "return=representation" });
   if (!rows || rows.length === 0) {
-    // Already delivered — or cancelled by the admin after the customer had paid.
-    const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number`);
-    if (cur && cur[0] && cur[0].status === "cancelled") {
-      await bandEvent(id, "paid", "stripe", { note: "Deposit paid after the request was cancelled — refund due", data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total } });
-      await sb("b2b_admin_notifications", { method: "POST", body: { type: "band_order", message: `Band request ${cur[0].order_number} was paid after it was cancelled (${patch.stripe_payment_intent}) — refund it from /app/band-orders.` } }).catch(() => {});
+    // Already delivered (a paid request the admin later refunded and cancelled included) — or
+    // cancelled by the admin before the customer's payment landed.
+    const cur = await sb(`band_orders?id=eq.${id}&select=status,order_number,paid_at,stripe_payment_intent`);
+    if (cur && isLatePayment(cur[0])) {
+      // Compare-and-set: only the first delivery gets a row back, so a redelivery tells the admin once.
+      await recordLateBandPayment({ id, orderNumber: cur[0].order_number, session, nowIso: new Date().toISOString() }, { sb, event: bandEvent });
     }
     return;
   }
   const order = rows[0];
   const dep = bandDepositOf(order);
-  const paid = Number.isFinite(session.amount_total) ? session.amount_total : dep.depositCents;
-  // Deposit columns arrive with the 2026-10-18 migration; until it runs this
-  // PATCH fails and the deposit is still readable from spec.deposit.
-  await sb(`band_orders?id=eq.${id}`, { method: "PATCH", body: { deposit_cents: paid, balance_cents: dep.balanceCents, quote_needed: dep.quoteNeeded } })
-    .catch((e) => console.error("[band] deposit columns not written (migration pending?)", e.message));
+  const paid = patch.deposit_cents;
   await bandEvent(id, "paid", "stripe", { from: "pending_payment", to: "deposit_paid", note: `Deposit ${money(paid)}${dep.quoteNeeded ? " · price to be quoted" : ` · balance ≈ ${money(dep.balanceCents)}`}`, data: { payment_intent: patch.stripe_payment_intent, amount_total: session.amount_total, deposit_cents: paid, balance_cents: dep.balanceCents, quote_needed: dep.quoteNeeded } });
   const sent = await sendBandOrderEmails(order, session);
   await bandEvent(id, "email", "system", { data: { template: "deposit_confirmation", sent: sent.customer } });
@@ -598,6 +577,7 @@ async function deliverInquiry(session) {
       design_fee_cents: session.amount_total,
       design_fee_paid_at: new Date().toISOString(),
       stripe_session_id: session.id,
+      ...inquiryPaymentFields(session),
     });
   } catch (e) { console.error("[inquiry] save error", e); }
   if (saved === false) return; // already recorded — delivered before
@@ -745,9 +725,25 @@ app.post("/inquiry", async (req, res) => {
     cancel_url: `${origin}/commission.html?fee=cancelled`,
   };
   for (const [k, v] of Object.entries(briefToMetadata(f))) params[`metadata[${k}]`] = v;
+  // The row does not exist until payment, so mint its id now: the redirect and the webhook then
+  // insert the same id, and the PaymentIntent carries it as Books' source_id.
+  const inquiryId = crypto.randomUUID();
+  params["metadata[inquiry_id]"] = inquiryId;
+  Object.assign(params, paymentIntentMetadataParams("azoir_inquiry_fee", inquiryId));
+  // Stripe Tax on the fee (INQUIRY_FEE_STRIPE_TAX=1): taxed for the customer's billing address, on top of the $60.
+  const taxParams = inquiryTaxParams(process.env);
 
   try {
-    const session = await stripe("checkout/sessions", params);
+    let session;
+    try {
+      session = await stripe("checkout/sessions", { ...params, ...taxParams });
+    } catch (e) {
+      if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
+      // Stripe Tax isn't switched on in the Stripe account: take the fee without it, and say so.
+      console.error("[inquiry] Stripe Tax refused, charging the design fee without it:", e.message);
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so a commission request's design fee was charged without tax. Turn on Stripe Tax in the Azoir & Co. Stripe account, or unset INQUIRY_FEE_STRIPE_TAX on the azoir.co server.` } }).catch(() => {});
+      session = await stripe("checkout/sessions", params);
+    }
     res.redirect(303, session.url);
   } catch (e) {
     console.error("[inquiry] checkout error", e);
@@ -1165,6 +1161,7 @@ async function bandRequest(req, res) {
     "metadata[band_order_id]": order.id,
     "metadata[design_ref]": spec.ref,
     "payment_intent_data[metadata][band_order_id]": order.id,
+    ...paymentIntentMetadataParams("band_deposit", order.id),
     "payment_intent_data[description]": `Azoir ${what} deposit ${order.order_number} (${spec.ref})`,
     expires_at: String(Math.floor(Date.now() / 1000) + 2 * 60 * 60),
     success_url: `${origin}/band-request/paid?session_id={CHECKOUT_SESSION_ID}`,
@@ -1183,7 +1180,7 @@ async function bandRequest(req, res) {
       if (!taxParams["automatic_tax[enabled]"] || !/tax/i.test(String(e.message))) throw e;
       // Stripe Tax isn't switched on in the Stripe account: take the deposit without it, and say so.
       console.error("[band] Stripe Tax refused, charging the deposit without it:", e.message);
-      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so the deposit for ${order.order_number} was charged without tax. Turn on Stripe Tax in the Stripe dashboard, or pick another tax mode under Shipping & tax.` } }).catch(() => {});
+      await sb("b2b_admin_notifications", { method: "POST", body: { type: "payment_failed", message: `Stripe Tax isn't active in Stripe, so the deposit for ${order.order_number} was charged without tax. Turn on Stripe Tax in the Azoir & Co. Stripe account, or pick another tax mode under Shipping & tax.` } }).catch(() => {});
       session = await stripe("checkout/sessions", params);
     }
     await sb(`band_orders?id=eq.${order.id}`, { method: "PATCH", body: { stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() } });

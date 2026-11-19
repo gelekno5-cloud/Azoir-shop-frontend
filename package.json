@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Azoir & Co. bespoke fine jewelry — retail site (static pages + commission inquiry)",
   "scripts": {
+    "test": "node --test books-payloads.test.js",
     "start": "node server.js",
     "dev": "node server.js"
   },

@@ -105,15 +105,33 @@ function parseInquiryImages(raw) {
     .slice(0, MAX_IMAGES);
 }
 
-async function stripe(endpoint, params) {
+async function stripe(endpoint, params, key = process.env.STRIPE_SECRET_KEY) {
   const r = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
     method: params ? "POST" : "GET",
-    headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+    headers: { Authorization: `Bearer ${key}` },
     body: params ? new URLSearchParams(params) : undefined,
   });
   const body = await r.json();
   if (!r.ok) throw Object.assign(new Error(`stripe ${r.status}: ${body.error?.message}`), { code: body.error?.code, param: body.error?.param });
   return body;
+}
+
+// Stripe account change (2026-11-18): azoir.co moved from the Moksh Diam account to Azoir & Co.'s.
+// A checkout opened on the old account just before the switch can still be paid afterwards (the
+// $60 form for 24 h, a band deposit for 2 h), so for a few days the old key and webhook secret stay
+// as STRIPE_SECRET_KEY_OLD / STRIPE_WEBHOOK_SECRET_OLD: a session the current account has never
+// heard of is read from the old one, and the old account's webhook still verifies. That endpoint
+// never goes quiet (it gets every Moksh checkout event too), so retire it by the clock: at least
+// 4 days after the switch (24 h checkout life + Stripe's 3-day retries), with no failed
+// deliveries pending, delete the old account's azoir.co endpoint first, then remove both _OLD vars.
+async function readCheckoutSession(id) {
+  try {
+    return await stripe(`checkout/sessions/${id}`);
+  } catch (e) {
+    const old = process.env.STRIPE_SECRET_KEY_OLD;
+    if (e.code !== "resource_missing" || !old || old === process.env.STRIPE_SECRET_KEY) throw e;
+    return stripe(`checkout/sessions/${id}`, undefined, old);
+  }
 }
 
 function briefToMetadata(f) {
@@ -826,24 +844,31 @@ function feePageHtml(token, view) {
       `<p>If you have just paid, your payment is safe — there is no need to pay again.</p>` +
       `<a href="/start/${esc(token)}" class="btn-outline">Try again</a>`;
   }
-  const slots = {
+  return payPageHtml({
+    TITLE: "Design fee",
     EYEBROW: eyebrow,
     HEADING: heading,
     PIECE: piece && state !== "unavailable" ? `<p class="fee-piece">${esc(piece)}</p>` : "",
     CARD: card,
-  };
-  // One pass with a function: a value is never rescanned for slots or "$" patterns.
-  return fs.readFileSync(path.join(WEB, "start.html"), "utf8").replace(/\{\{(EYEBROW|HEADING|PIECE|CARD)\}\}/g, (_m, k) => slots[k]);
+  });
 }
 
-function sendFeePage(res, status, token, view) {
+/** web/start.html with its slots filled: the template of every private pay link (fee, commission, band balance). */
+function payPageHtml(slots) {
+  // One pass with a function: a value is never rescanned for slots or "$" patterns.
+  return fs.readFileSync(path.join(WEB, "start.html"), "utf8").replace(/\{\{(TITLE|EYEBROW|HEADING|PIECE|CARD)\}\}/g, (_m, k) => slots[k] ?? "");
+}
+
+function sendPayPage(res, status, render) {
   try {
-    res.status(status).type("html").send(feePageHtml(token, view));
+    res.status(status).type("html").send(render());
   } catch (e) {
-    console.error("[fee] page render failed", e.message);
+    console.error("[pay] page render failed", e.message);
     res.status(503).type("text/plain").send("This page is briefly unavailable. Please try again in a minute, or email hello@azoir.co.");
   }
 }
+
+const sendFeePage = (res, status, token, view) => sendPayPage(res, status, () => feePageHtml(token, view));
 
 app.get("/start/:token", async (req, res) => {
   const token = String(req.params.token || "");
@@ -898,13 +923,137 @@ app.post("/start/:token", async (req, res) => {
   res.redirect(303, `${page}?error=payment`);
 });
 
+// Pay links for a commission's payments (azoir.co/pay/<token>: design fee, deposit, balance) and a
+// wedding band's balance (azoir.co/pay/band/<token>). Like /start/<token>, each page is drawn here
+// from the backend (/pay/<token>, /pay/band/<token>), which owns the order and opens the Stripe
+// session; Stripe's webhook records the payment there. Nothing is stored or charged by this server.
+//   GET  /pay/…/<token>          the page; Stripe sends the client back with ?paid=1
+//   POST /pay/…/<token>          the Pay button (a plain form): open Stripe Checkout
+// Same headers as /start: never cached or indexed, no referrer, no analytics.
+const payViewLimit = limiter(60, 15 * 60_000);
+const payPressLimit = limiter(10, 15 * 60_000);
+const clip = (v, max) => String(v ?? "").trim().slice(0, max);
+const ATELIER_MAIL = `<a href="mailto:hello@azoir.co">hello@azoir.co</a>`;
+const PAY_ALERT = `<p class="fee-alert" role="alert">Payment is briefly unavailable. Please try again in a minute.</p>`;
+const payRow = (label, amount, paid = false) => `<div class="fee-row${paid ? " is-paid" : ""}"><span>${label}</span><span>${amount}</span></div>`;
+const payButton = (page, label) =>
+  `<form method="post" action="${escapeHtml(page)}"><button type="submit" class="btn-fill">${label}</button><p class="fee-secure">Secure card payment by Stripe.</p></form>`;
+
+/** The backend couldn't say (down, slow, or this server over its limit): never "no such page" for a good link. */
+const payUnavailable = (page, title) => ({
+  TITLE: title,
+  EYEBROW: "Payment",
+  HEADING: "One <em>moment</em>",
+  CARD:
+    `<p>We can't open this page right now. Please try again in a minute.</p>` +
+    `<p>If you have just paid, your payment is safe — there is no need to pay again.</p>` +
+    `<a href="${escapeHtml(page)}" class="btn-outline">Try again</a>`,
+});
+
+/** A wedding band's balance. States: due, paid, cancelled. Every value from the backend is escaped here. */
+function bandBalanceSlots(page, v, q) {
+  const esc = escapeHtml;
+  const first = clip(v.first_name, 60);
+  const piece = [clip(v.order_number, 40), clip(v.summary, 300)].filter(Boolean).join(" · ");
+  const deposit = esc(clip(v.deposit, 24)), due = esc(clip(v.due, 24));
+  let eyebrow = "Balance due", heading = `Your band${first ? `, <em>${esc(first)}</em>` : ""}`, card;
+  if (v.state === "paid") {
+    eyebrow = "Paid in full";
+    heading = "Thank <em>you</em>";
+    card =
+      payRow("Deposit paid", deposit) + payRow("Balance paid", esc(clip(v.paid, 24))) + payRow("Paid in all", esc(clip(v.paid_in_all, 24))) +
+      `<p>Your band is paid in full and goes to the bench now. We'll email tracking when it ships.</p>`;
+  } else if (v.state === "cancelled") {
+    eyebrow = "Order cancelled";
+    card = `<p>This order was cancelled. Email ${ATELIER_MAIL} if that's unexpected.</p>`;
+  } else if (q.paid) {
+    // Back from Stripe before the webhook landed: no second Pay button.
+    heading = "Thank <em>you</em>";
+    card =
+      payRow("Deposit paid", deposit) + payRow("Balance", due) +
+      `<p>We've received your payment — it can take a moment to show here. A receipt is on its way to your inbox.</p>`;
+  } else {
+    card = payRow("Deposit paid", deposit) + payRow("Balance due", due) + (q.error ? PAY_ALERT : "") + payButton(page, `Pay ${due}`);
+  }
+  return { TITLE: "Pay your balance", EYEBROW: eyebrow, HEADING: heading, PIECE: piece ? `<p class="fee-piece">${esc(piece)}</p>` : "", CARD: card };
+}
+
+/** A commission's payments, each with its status. States: due, paid (all of them), none (nothing scheduled). */
+function commissionSlots(page, v, q) {
+  const esc = escapeHtml;
+  const first = clip(v.first_name, 60);
+  const number = clip(v.order_number, 40);
+  const rows = (Array.isArray(v.milestones) ? v.milestones.slice(0, 6) : [])
+    .map((m) => payRow(`${esc(clip(m && m.label, 60))}<small>${m && m.paid ? "Paid" : "Due"}</small>`, esc(clip(m && m.amount, 24)), !!(m && m.paid)))
+    .join("");
+  const due = v.due && typeof v.due === "object" ? { label: esc(clip(v.due.label, 60)), amount: esc(clip(v.due.amount, 24)) } : null;
+  const received = q.paid
+    ? `<p>Payment received — thank you. A receipt is on its way to your inbox. It can take a minute to show here, so please refresh this page before paying again.</p>`
+    : "";
+  let card;
+  if (v.state === "none") card = `<p>No payments have been scheduled on this commission yet.</p>`;
+  else if (v.state === "paid") card = rows + `<p>Everything is paid in full — thank you.</p>`;
+  else if (!due) card = rows + received;
+  else if (!v.payable) card = rows + received + `<p>Online payment isn't available right now. Email ${ATELIER_MAIL} and we'll arrange it.</p>`;
+  else card = rows + received + (q.error ? PAY_ALERT : "") + payButton(page, `Pay ${due.amount} — ${due.label}`);
+  return {
+    TITLE: "Your commission",
+    EYEBROW: "Payments",
+    HEADING: q.paid || v.state === "paid" ? "Thank <em>you</em>" : `Your commission${first ? `, <em>${esc(first)}</em>` : ""}`,
+    PIECE: number ? `<p class="fee-piece">${esc(number)}</p>` : "",
+    CARD: card,
+  };
+}
+
+function mountPayPage(base, { title, states, slots }) {
+  const notFound = (res) => res.status(404).sendFile(path.join(WEB, "404.html"));
+
+  app.get(`${base}/:token`, async (req, res) => {
+    const token = String(req.params.token || "");
+    if (!FEE_TOKEN.test(token)) return notFound(res);
+    feeHeaders(res);
+    const page = `${base}/${token}`;
+    if (payViewLimit(req.ip || "unknown")) return sendPayPage(res, 429, () => payPageHtml(payUnavailable(page, title)));
+    const out = await mokshApi(page);
+    if (feeNotFound(out)) return notFound(res);
+    const v = out.status === 200 && out.body && typeof out.body === "object" ? out.body : {};
+    if (!states.includes(v.state)) {
+      console.error(`[pay] ${base} page unavailable (${out.status})`);
+      return sendPayPage(res, 503, () => payPageHtml(payUnavailable(page, title)));
+    }
+    sendPayPage(res, 200, () => payPageHtml(slots(page, v, { paid: req.query.paid === "1", error: req.query.error === "payment" })));
+  });
+
+  // The Pay button. No fields to read: the token names the order and the backend sets the amount.
+  app.post(`${base}/:token`, async (req, res) => {
+    const token = String(req.params.token || "");
+    if (!FEE_TOKEN.test(token)) return notFound(res);
+    feeHeaders(res);
+    const page = `${base}/${token}`;
+    // Only this page's own form: a browser says where a POST came from; one that doesn't is let through.
+    const site = req.get("sec-fetch-site");
+    if (site && site !== "same-origin") return res.redirect(303, page);
+    if (payPressLimit(req.ip || "unknown")) return res.redirect(303, `${page}?error=payment`);
+    const out = await mokshApi(page, { method: "POST", body: { action: "checkout" }, timeoutMs: 25_000 });
+    const url = out.status === 200 && out.body && typeof out.body.url === "string" ? out.body.url : "";
+    if (/^https:\/\/[^\s/]+\//.test(url)) return res.redirect(303, url);
+    // Nothing to pay any more (409), or gone (404): the page says which.
+    if (out.status === 409 || feeNotFound(out)) return res.redirect(303, page);
+    console.error(`[pay] ${base} checkout failed (${out.status}${out.body && out.body.error ? ` ${out.body.error}` : ""})`);
+    res.redirect(303, `${page}?error=payment`);
+  });
+}
+
+mountPayPage("/pay/band", { title: "Pay your balance", states: ["due", "paid", "cancelled"], slots: bandBalanceSlots });
+mountPayPage("/pay", { title: "Your commission", states: ["due", "paid", "none"], slots: commissionSlots });
+
 // Stripe success redirect. A failed lookup still thanks the customer — the
 // webhook delivers a paid request regardless.
 app.get("/inquiry/paid", async (req, res) => {
   const id = String(req.query.session_id || "");
   if (!/^cs_\w+$/.test(id)) return res.redirect("/commission.html");
   try {
-    const session = await stripe(`checkout/sessions/${id}`);
+    const session = await readCheckoutSession(id);
     if (session.payment_status !== "paid") return res.redirect("/commission.html?fee=cancelled");
     await deliverInquiry(session);
   } catch (e) {
@@ -1040,7 +1189,7 @@ async function bandRequestPaid(req, res) {
   if (!/^cs_\w+$/.test(id)) return res.redirect("/wedding-bands.html");
   let ref = "", number = "", deposit = "", quote = false;
   try {
-    const session = await stripe(`checkout/sessions/${id}`);
+    const session = await readCheckoutSession(id);
     if (session.payment_status !== "paid") return res.redirect("/wedding-bands.html?order=cancelled");
     await deliverBandOrder(session);
     ref = session.metadata?.design_ref || "";
@@ -1060,10 +1209,12 @@ async function bandRequestPaid(req, res) {
 app.get("/band-request/paid", bandRequestPaid);
 app.get("/band-order/paid", bandRequestPaid);
 
-// Stripe webhook (checkout.session.completed) — delivers a paid request whose
-// customer closed the tab before the success redirect. A 500 makes Stripe retry.
+// Stripe webhook (checkout.session.completed + checkout.session.expired) — delivers a paid
+// request whose customer closed the tab before the success redirect. A 500 makes Stripe retry.
 app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
-  const event = verifyStripeEvent(req.body, req.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET);
+  const sig = req.get("stripe-signature");
+  // The old account's endpoint too, during the account change (see readCheckoutSession).
+  const event = verifyStripeEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET) || verifyStripeEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_OLD);
   if (!event) return res.status(400).send("invalid signature");
   try {
     const session = event.data.object;

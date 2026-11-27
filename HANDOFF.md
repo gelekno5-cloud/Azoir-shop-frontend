@@ -307,3 +307,14 @@ Moksh Diam **auto-deploys from `main`**. To ship an admin change: commit on a br
 ```
 
 `pages` is optional (omit = all four slots). Home shows up to 5 — more than 3 turns it into a text-only strip (no cards, no buttons) that glides forward continuously (24px/s, 12px/s on phones) in an endless loop, stopping on hover/touch; reduced motion = still, swipeable; engagement/bands show up to 3; the commission form shows 1. Order in the file = order on the page. Cards use the class `rev-card` (`.rev` already means "reversed layout" on About/How). Commit to `main` and Railway deploys it.
+
+## SEO to-dos from the Search Console check (2026-11-27)
+
+**Done that day:** the ring size guide was rebuilt for the mm/cm/inch searches it already showed up for (PR #52, live: converter, US 4–16 chart with inches/EU/UK, lookup tables, six Q&As + FAQPage JSON-LD, numbers from `band-builder.js`'s formula). Indexing was requested for `/ring-size.html` and `/ready-to-ship.html` (Ready to Ship had never been crawled).
+
+**Open, in order:**
+1. **Improve `web/journal/redesign-inherited-jewelry.html`.** It's the post closest to page 1: about position 12 for "repurposing inherited stones" and about 24 for "redesigning inherited jewelry". Expand it for those searches and link it from `heirloom-redesign.html`. Keep existing claims; add no new ones (prices, certificates, guarantees).
+2. **Aim the weekly journal posts at what Azoir sells.** The Tuesday auto-post routine picks topics from the trend reports. Steer it toward topic groups that link to a service page (heirloom redesign, engagement rings, signet rings, wedding bands) rather than general topics like pearl earrings. Keep the pace at one a week; post more only if each post is just as good.
+3. **Links from other sites (owner task, not code):** only Pinterest and Tracxn link to azoir.co. A Google Business Profile, jeweler and wedding directories, and NYC wedding or style blogs would help every page.
+4. **Recheck around 2026-12-18** in Search Console (Domain property `azoir.co`, owner's Google account): have the ring-size page's positions for "17mm ring size", "6 1/2 ring size" and "5.5 cm ring size" moved up from 40–90? Is Ready to Ship indexed?
+5. Small: the old Shopify URL `/policies/contact-information` still returns 404. Add it to the `LEGACY` 301 map in `server.js`, pointing to `/commission.html` like `/pages/contact`.
